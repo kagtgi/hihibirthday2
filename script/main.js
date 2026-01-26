@@ -104,10 +104,43 @@ class TwelveMonthsApp {
     document.querySelector('.gallery-prev').addEventListener('click', () => this.galleryPrev());
     document.querySelector('.gallery-next').addEventListener('click', () => this.galleryNext());
 
+    // Touch swipe for gallery
+    this.setupGallerySwipe();
+
     // Gift button
     document.querySelector('.gift-btn').addEventListener('click', () => {
       alert('Quà của em đây! 💕');
     });
+  }
+
+  setupGallerySwipe() {
+    const gallery = document.querySelector('.gallery-wrapper');
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    gallery.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    gallery.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      this.handleGallerySwipe(touchStartX, touchEndX);
+    }, { passive: true });
+  }
+
+  handleGallerySwipe(startX, endX) {
+    const swipeThreshold = 50;
+    const diff = startX - endX;
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        // Swipe left - next image
+        this.galleryNext();
+      } else {
+        // Swipe right - previous image
+        this.galleryPrev();
+      }
+    }
   }
 
   updateTotalChapters() {
@@ -281,14 +314,15 @@ class TwelveMonthsApp {
   populateGallery(chapter) {
     const container = document.querySelector('.gallery-container');
     container.innerHTML = '';
+    container.style.transform = 'translateX(0%)';
     this.currentGalleryIndex = 0;
 
     if (!chapter.image || chapter.image.length === 0) return;
 
-    // Filter out video files
+    // Filter out video and HEIC files (not supported in most browsers)
     const validImages = chapter.image.filter(img => {
       const ext = img.toLowerCase().split('.').pop();
-      return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
     validImages.forEach((imgPath, index) => {
@@ -302,21 +336,20 @@ class TwelveMonthsApp {
 
       const img = document.createElement('img');
       img.className = 'gallery-image';
-      img.src = `image/${imgPath}`;
       img.alt = `Memory ${index + 1}`;
       img.style.opacity = '0';
 
-      // Check for HEIC format
-      if (imgPath.toLowerCase().endsWith('.heic')) {
-        if (!this.heicWarningShown) {
-          console.warn('⚠️ HEIC images detected. These may not display in Chrome/Firefox. Please convert to JPG for best compatibility.');
-          this.heicWarningShown = true;
-        }
-      }
+      // Set src after creating element for smoother loading
+      img.src = `image/${imgPath}`;
 
       img.onload = () => {
         spinner.remove();
-        img.style.opacity = '1';
+        // Smooth fade in
+        gsap.to(img, {
+          opacity: 1,
+          duration: 0.5,
+          ease: 'power2.out'
+        });
       };
 
       img.onerror = () => {
@@ -351,7 +384,7 @@ class TwelveMonthsApp {
     const chapter = this.chapters[this.currentChapter];
     const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
-      return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
     if (this.currentGalleryIndex > 0) {
@@ -365,7 +398,7 @@ class TwelveMonthsApp {
     const chapter = this.chapters[this.currentChapter];
     const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
-      return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
     if (this.currentGalleryIndex < validImages.length - 1) {
@@ -515,15 +548,17 @@ class TwelveMonthsApp {
     gameArea.innerHTML = '';
     this.gameCollected = 0;
     this.gameCompleted = false;
+    this.gameTarget = 5; // Easy mode - only 5 items
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
 
+    // Spawn elements faster for smoother experience
     for (let i = 0; i < this.gameTarget; i++) {
       setTimeout(() => {
         this.spawnGameElement(gameArea, gameEmojis, progressBar);
-      }, i * 350);
+      }, i * 200);
     }
   }
 
@@ -548,16 +583,23 @@ class TwelveMonthsApp {
     element.className = 'game-element';
     element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
-    const maxX = gameArea.offsetWidth - 50;
-    const maxY = gameArea.offsetHeight - 50;
-    element.style.left = `${Math.random() * maxX}px`;
-    element.style.top = `${Math.random() * maxY}px`;
+    // Larger touch area for easier tapping
+    const padding = 60;
+    const maxX = gameArea.offsetWidth - padding;
+    const maxY = gameArea.offsetHeight - padding;
+    element.style.left = `${padding/2 + Math.random() * (maxX - padding)}px`;
+    element.style.top = `${padding/2 + Math.random() * (maxY - padding)}px`;
 
-    element.addEventListener('click', () => {
+    // Support both click and touch
+    const handleCollect = (e) => {
+      e.preventDefault();
       if (element.classList.contains('collected')) return;
 
       element.classList.add('collected');
       this.gameCollected++;
+
+      // Play haptic feedback on mobile if available
+      if (navigator.vibrate) navigator.vibrate(50);
 
       const progress = (this.gameCollected / this.gameTarget) * 100;
       progressBar.style.width = `${progress}%`;
@@ -574,19 +616,23 @@ class TwelveMonthsApp {
           repeat: 1
         });
 
-        setTimeout(() => this.advanceStep(), 600);
+        setTimeout(() => this.advanceStep(), 500);
       }
-    });
+    };
+
+    element.addEventListener('click', handleCollect);
+    element.addEventListener('touchstart', handleCollect, { passive: false });
 
     gsap.from(element, {
       scale: 0,
-      duration: 0.4,
+      duration: 0.3,
       ease: 'back.out(1.7)'
     });
 
+    // Gentle floating animation
     gsap.to(element, {
-      y: '+=12',
-      duration: 0.8 + Math.random() * 0.5,
+      y: '+=10',
+      duration: 1 + Math.random() * 0.3,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut'
@@ -608,14 +654,18 @@ class TwelveMonthsApp {
     const container = document.querySelector('.collage-container');
     container.innerHTML = '';
 
-    // Use first image from each chapter for collage
+    // Use first valid image from each chapter for collage
     const collageImages = this.chapters
       .filter(ch => ch.image && ch.image.length > 0)
-      .map(ch => ch.image[0])
-      .filter(img => {
-        const ext = img.toLowerCase().split('.').pop();
-        return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+      .map(ch => {
+        // Find first valid image in chapter
+        const validImg = ch.image.find(img => {
+          const ext = img.toLowerCase().split('.').pop();
+          return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+        });
+        return validImg;
       })
+      .filter(img => img !== undefined)
       .slice(0, 31);
 
     collageImages.forEach((imgPath, index) => {
