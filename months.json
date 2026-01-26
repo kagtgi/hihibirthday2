@@ -1,0 +1,241 @@
+{
+  "title": "12 Months of Us",
+  "subtitle": "Hành trình của chúng mình",
+  "themes": {
+    "1": { "primary": "#FFB5BA", "secondary": "#FF6B7A", "bg": "linear-gradient(135deg, #FFE5E8 0%, #FFB5BA 100%)" },
+    "2": { "primary": "#FF9AA2", "secondary": "#FF4D6D", "bg": "linear-gradient(135deg, #FFDDE1 0%, #FF9AA2 100%)" },
+    "3": { "primary": "#98D8AA", "secondary": "#4CAF7D", "bg": "linear-gradient(135deg, #E8F5E9 0%, #98D8AA 100%)" },
+    "4": { "primary": "#FFD93D", "secondary": "#FF9F1C", "bg": "linear-gradient(135deg, #FFF8E1 0%, #FFD93D 100%)" },
+    "5": { "primary": "#6BCB77", "secondary": "#2D8F4E", "bg": "linear-gradient(135deg, #E8F5E9 0%, #6BCB77 100%)" },
+    "6": { "primary": "#FF8C42", "secondary": "#E85D04", "bg": "linear-gradient(135deg, #FFE8D6 0%, #FF8C42 100%)" },
+    "7": { "primary": "#FF6B6B", "secondary": "#D63447", "bg": "linear-gradient(135deg, #FFE0E0 0%, #FF6B6B 100%)" },
+    "8": { "primary": "#4ECDC4", "secondary": "#26A69A", "bg": "linear-gradient(135deg, #E0F7FA 0%, #4ECDC4 100%)" },
+    "9": { "primary": "#FFB347", "secondary": "#FF8C00", "bg": "linear-gradient(135deg, #FFF3E0 0%, #FFB347 100%)" },
+    "10": { "primary": "#DDA0DD", "secondary": "#9B59B6", "bg": "linear-gradient(135deg, #F3E5F5 0%, #DDA0DD 100%)" },
+    "11": { "primary": "#87CEEB", "secondary": "#4A90A4", "bg": "linear-gradient(135deg, #E3F2FD 0%, #87CEEB 100%)" },
+    "12": { "primary": "#B8D4E3", "secondary": "#6B98B4", "bg": "linear-gradient(135deg, #E8F4FC 0%, #B8D4E3 100%)" }
+  },
+  "months": [
+    {
+      "id": 1,
+      "name": "Tháng Hai",
+      "year": "2025",
+      "titleCard": "Khởi Đầu",
+      "gameType": "hearts",
+      "gameText": "Chạm vào những trái tim",
+      "question": "Tháng hai có gì vui nhất nè?",
+      "answers": {
+        "A": "Lựa cây 🌿",
+        "B": "Ăn dim sum 🥟",
+        "C": "Lần đầu chở dạo phố 🚶‍♂️",
+        "D": "Tất cả luôn! ✨"
+      },
+      "key": "D",
+      "caption": "Tháng này mình mới bắt đầu đi chung nhiều nè.",
+      "image": "1.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Tháng Ba",
+      "year": "2025",
+      "titleCard": "Mùa Xuân",
+      "gameType": "flowers",
+      "gameText": "Thu thập những bông hoa",
+      "question": "Mùa xuân mình đã làm gì?",
+      "answers": {
+        "A": "Đi picnic 🧺",
+        "B": "Ngắm hoa 🌸",
+        "C": "Chụp ảnh đẹp 📸",
+        "D": "Cả ba luôn! 💕"
+      },
+      "key": "D",
+      "caption": "Mùa xuân đầu tiên bên nhau.",
+      "image": "2.jpg"
+    },
+    {
+      "id": 3,
+      "name": "Tháng Tư",
+      "year": "2025",
+      "titleCard": "Ngọt Ngào",
+      "gameType": "bubbles",
+      "gameText": "Vỡ những bong bóng",
+      "question": "Kỷ niệm tháng tư là gì?",
+      "answers": {
+        "A": "Date đầu tiên 💑",
+        "B": "Ăn kem cùng 🍦",
+        "C": "Xem phim 🎬",
+        "D": "Tất cả! 🌟"
+      },
+      "key": "D",
+      "caption": "Tháng của những kỷ niệm ngọt ngào.",
+      "image": "3.jpg"
+    },
+    {
+      "id": 4,
+      "name": "Tháng Năm",
+      "year": "2025",
+      "titleCard": "Nắng Ấm",
+      "gameType": "stars",
+      "gameText": "Chạm các ngôi sao",
+      "question": "Tháng năm nhớ nhất điều gì?",
+      "answers": {
+        "A": "Đi biển 🏖️",
+        "B": "Sinh nhật 🎂",
+        "C": "Du lịch 🚗",
+        "D": "Tất cả luôn! ☀️"
+      },
+      "key": "D",
+      "caption": "Mùa hè bắt đầu với em.",
+      "image": "10.jpg"
+    },
+    {
+      "id": 5,
+      "name": "Tháng Sáu",
+      "year": "2025",
+      "titleCard": "Mùa Hè",
+      "gameType": "hearts",
+      "gameText": "Thu thập trái tim",
+      "question": "Mùa hè mình hay làm gì?",
+      "answers": {
+        "A": "Ăn kem 🍦",
+        "B": "Đi bơi 🏊",
+        "C": "Chơi game 🎮",
+        "D": "Cả ba nha! 🌴"
+      },
+      "key": "D",
+      "caption": "Mùa hè sôi động bên nhau.",
+      "image": "11.jpg"
+    },
+    {
+      "id": 6,
+      "name": "Tháng Bảy",
+      "year": "2025",
+      "titleCard": "Nồng Nhiệt",
+      "gameType": "flowers",
+      "gameText": "Hái những bông hoa",
+      "question": "Điều đặc biệt tháng bảy?",
+      "answers": {
+        "A": "Kỷ niệm ngày quen 💕",
+        "B": "Đi cafe mới ☕",
+        "C": "Nấu ăn cùng 🍳",
+        "D": "Tất cả! 🔥"
+      },
+      "key": "D",
+      "caption": "Tháng của những điều nồng nhiệt.",
+      "image": "14.jpg"
+    },
+    {
+      "id": 7,
+      "name": "Tháng Tám",
+      "year": "2025",
+      "titleCard": "Thu Sang",
+      "gameType": "bubbles",
+      "gameText": "Vỡ bong bóng nào",
+      "question": "Tháng tám làm gì vui?",
+      "answers": {
+        "A": "Đi dạo phố 🚶",
+        "B": "Ăn lẩu 🍲",
+        "C": "Xem concert 🎵",
+        "D": "Nhiều thứ lắm! 🍂"
+      },
+      "key": "D",
+      "caption": "Mùa thu đến với chúng mình.",
+      "image": "15.jpg"
+    },
+    {
+      "id": 8,
+      "name": "Tháng Chín",
+      "year": "2025",
+      "titleCard": "Lá Vàng",
+      "gameType": "stars",
+      "gameText": "Bắt sao rơi",
+      "question": "Kỷ niệm tháng chín?",
+      "answers": {
+        "A": "Trung thu 🥮",
+        "B": "Đi núi 🏔️",
+        "C": "Chụp ảnh lá 🍁",
+        "D": "Tất cả nè! 🌙"
+      },
+      "key": "D",
+      "caption": "Mùa trăng tròn bên nhau.",
+      "image": "17.jpg"
+    },
+    {
+      "id": 9,
+      "name": "Tháng Mười",
+      "year": "2025",
+      "titleCard": "Se Lạnh",
+      "gameType": "hearts",
+      "gameText": "Sưởi ấm trái tim",
+      "question": "Tháng mười nhớ gì nhất?",
+      "answers": {
+        "A": "Halloween 🎃",
+        "B": "Uống trà sữa 🧋",
+        "C": "Xem phim kinh dị 👻",
+        "D": "Đủ cả luôn! 🍂"
+      },
+      "key": "D",
+      "caption": "Mùa của những điều ấm áp.",
+      "image": "19.jpg"
+    },
+    {
+      "id": 10,
+      "name": "Tháng 11",
+      "year": "2025",
+      "titleCard": "Lãng Mạn",
+      "gameType": "flowers",
+      "gameText": "Tặng hoa cho em",
+      "question": "Tháng 11 có gì hay?",
+      "answers": {
+        "A": "Black Friday 🛍️",
+        "B": "Đi cafe sách 📚",
+        "C": "Nấu súp nóng 🥣",
+        "D": "Quá nhiều! 💜"
+      },
+      "key": "D",
+      "caption": "Thời tiết lãng mạn nhất trong năm.",
+      "image": "20.jpg"
+    },
+    {
+      "id": 11,
+      "name": "Tháng 12",
+      "year": "2025",
+      "titleCard": "Giáng Sinh",
+      "gameType": "stars",
+      "gameText": "Thắp sáng ngôi sao",
+      "question": "Giáng sinh làm gì?",
+      "answers": {
+        "A": "Tặng quà 🎁",
+        "B": "Ăn gà rán 🍗",
+        "C": "Chụp ảnh Noel 🎄",
+        "D": "Tất cả luôn! ❄️"
+      },
+      "key": "D",
+      "caption": "Giáng sinh đầu tiên của chúng mình.",
+      "image": "21.jpg"
+    },
+    {
+      "id": 12,
+      "name": "Tháng Một",
+      "year": "2026",
+      "titleCard": "Năm Mới",
+      "gameType": "hearts",
+      "gameText": "Hứng trái tim yêu thương",
+      "question": "Năm mới ước gì?",
+      "answers": {
+        "A": "Sức khỏe 💪",
+        "B": "Hạnh phúc 😊",
+        "C": "Bên nhau mãi 💕",
+        "D": "Cả ba luôn! 🎉"
+      },
+      "key": "D",
+      "caption": "Một năm mới, một hành trình mới bên em.",
+      "image": "25.JPG"
+    }
+  ],
+  "ending": {
+    "message": "Mỗi tháng qua đi, tình yêu lại đầy thêm một chút.",
+    "buttonText": "Open Your Real Gift",
+    "buttonLink": "#gift"
+  }
+}
