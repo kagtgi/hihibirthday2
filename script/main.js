@@ -554,12 +554,18 @@ class TwelveMonthsApp {
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
 
-    // Spawn elements faster for smoother experience
-    for (let i = 0; i < this.gameTarget; i++) {
-      setTimeout(() => {
-        this.spawnGameElement(gameArea, gameEmojis, progressBar);
-      }, i * 200);
-    }
+    // Wait for the game-step to render before spawning elements
+    // This ensures gameArea has proper dimensions
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Spawn elements with staggered timing for smoother experience
+        for (let i = 0; i < this.gameTarget; i++) {
+          setTimeout(() => {
+            this.spawnGameElement(gameArea, gameEmojis, progressBar);
+          }, i * 200);
+        }
+      });
+    });
   }
 
   getGameEmojis(gameType) {
@@ -583,10 +589,14 @@ class TwelveMonthsApp {
     element.className = 'game-element';
     element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
+    // Get dimensions with fallback values if not yet rendered
+    const areaWidth = gameArea.offsetWidth || 320;
+    const areaHeight = gameArea.offsetHeight || 280;
+
     // Larger touch area for easier tapping
     const padding = 60;
-    const maxX = gameArea.offsetWidth - padding;
-    const maxY = gameArea.offsetHeight - padding;
+    const maxX = areaWidth - padding;
+    const maxY = areaHeight - padding;
     element.style.left = `${padding/2 + Math.random() * (maxX - padding)}px`;
     element.style.top = `${padding/2 + Math.random() * (maxY - padding)}px`;
 
