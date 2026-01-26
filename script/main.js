@@ -589,10 +589,14 @@ class TwelveMonthsApp {
     element.className = 'game-element';
     element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
+    // Get dimensions with fallback values if not yet rendered
+    const areaWidth = gameArea.offsetWidth || 320;
+    const areaHeight = gameArea.offsetHeight || 280;
+
     // Larger touch area for easier tapping
     const padding = 60;
-    const maxX = gameArea.offsetWidth - padding;
-    const maxY = gameArea.offsetHeight - padding;
+    const maxX = areaWidth - padding;
+    const maxY = areaHeight - padding;
     element.style.left = `${padding/2 + Math.random() * (maxX - padding)}px`;
     element.style.top = `${padding/2 + Math.random() * (maxY - padding)}px`;
 
