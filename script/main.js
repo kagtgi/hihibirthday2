@@ -10,8 +10,10 @@ class TwelveMonthsApp {
     this.selectedAnswer = null;
     this.gameCollected = 0;
     this.gameTarget = 5;
+    this.gameCompleted = false;
     this.currentGalleryIndex = 0;
     this.allImages = [];
+    this.heicWarningShown = false;
 
     // DOM Elements
     this.app = document.querySelector('.app');
@@ -160,6 +162,7 @@ class TwelveMonthsApp {
     this.currentStep = 0;
     this.selectedAnswer = null;
     this.gameCollected = 0;
+    this.gameCompleted = false;
     this.currentGalleryIndex = 0;
 
     const chapter = this.chapters[chapterIndex];
@@ -292,11 +295,34 @@ class TwelveMonthsApp {
       const wrapper = document.createElement('div');
       wrapper.className = 'gallery-image-wrapper';
 
+      // Add loading spinner
+      const spinner = document.createElement('div');
+      spinner.className = 'image-loading-spinner';
+      wrapper.appendChild(spinner);
+
       const img = document.createElement('img');
       img.className = 'gallery-image';
       img.src = `image/${imgPath}`;
       img.alt = `Memory ${index + 1}`;
-      img.onerror = () => { wrapper.style.display = 'none'; };
+      img.style.opacity = '0';
+
+      // Check for HEIC format
+      if (imgPath.toLowerCase().endsWith('.heic')) {
+        if (!this.heicWarningShown) {
+          console.warn('⚠️ HEIC images detected. These may not display in Chrome/Firefox. Please convert to JPG for best compatibility.');
+          this.heicWarningShown = true;
+        }
+      }
+
+      img.onload = () => {
+        spinner.remove();
+        img.style.opacity = '1';
+      };
+
+      img.onerror = () => {
+        wrapper.style.display = 'none';
+        console.warn(`Failed to load image: ${imgPath}`);
+      };
 
       wrapper.appendChild(img);
       container.appendChild(wrapper);
@@ -399,7 +425,7 @@ class TwelveMonthsApp {
   showStep(stepIndex) {
     // Hide all steps
     [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
-     this.questionStep, this.revealStep, this.imageStep].forEach(step => {
+    this.questionStep, this.revealStep, this.imageStep].forEach(step => {
       step.classList.remove('active');
     });
 
@@ -488,7 +514,9 @@ class TwelveMonthsApp {
 
     gameArea.innerHTML = '';
     this.gameCollected = 0;
+    this.gameCompleted = false;
     progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
 
@@ -534,8 +562,19 @@ class TwelveMonthsApp {
       const progress = (this.gameCollected / this.gameTarget) * 100;
       progressBar.style.width = `${progress}%`;
 
-      if (this.gameCollected >= this.gameTarget) {
-        setTimeout(() => this.advanceStep(), 400);
+      if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
+        this.gameCompleted = true;
+        progressBar.classList.add('completed');
+
+        // Celebration animation
+        gsap.to(progressBar, {
+          scale: 1.05,
+          duration: 0.2,
+          yoyo: true,
+          repeat: 1
+        });
+
+        setTimeout(() => this.advanceStep(), 600);
       }
     });
 
@@ -584,7 +623,11 @@ class TwelveMonthsApp {
       img.className = 'collage-img';
       img.src = `image/${imgPath}`;
       img.alt = `Memory ${index + 1}`;
-      img.onerror = () => { img.style.display = 'none'; };
+      img.loading = 'lazy';
+      img.onerror = () => {
+        img.style.display = 'none';
+        console.warn(`Collage image failed to load: ${imgPath}`);
+      };
       container.appendChild(img);
     });
 

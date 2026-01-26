@@ -805,6 +805,82 @@ h1, h2, h3 {
   }
 }
 
+/* ===== Image Loading States ===== */
+.image-loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  z-index: 5;
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.gallery-image {
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* ===== Game Completion ===== */
+.game-progress .progress-bar.completed {
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  background-size: 200% 100%;
+  animation: shimmer 1s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.game-element.collected {
+  pointer-events: none;
+}
+
+/* ===== Enhanced Animations ===== */
+@keyframes collectPop {
+  0% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: scale(1.5) rotate(180deg); 
+  }
+  100% { 
+    transform: scale(0) rotate(360deg); 
+    opacity: 0; 
+  }
+}
+
+/* ===== Accessibility Improvements ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .chapter-progress,
+  .gallery-nav,
+  .next-chapter-btn,
+  .start-btn,
+  .gift-btn {
+    display: none !important;
+  }
+}
+
 /* ===== Utility Classes ===== */
 .hidden {
   display: none !important;
