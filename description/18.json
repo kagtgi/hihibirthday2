@@ -1,16 +1,18 @@
 {
     "id": 18,
-    "month": "",
-    "minigameType": "",
+    "month": "August 2025",
+    "minigameType": "animate",
+    "text": "Hehe vui lên vì sau đó là chuỗi ngày photobooth cực đã",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "30.HEIC",
+        "31.JPG",
+        "32.JPG",
+        "33.JPG",
+        "33 (2).jpg"
+    ]
 }

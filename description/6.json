@@ -1,16 +1,14 @@
 {
     "id": 6,
-    "month": "",
-    "minigameType": "",
+    "month": "April 2025",
+    "minigameType": "animate",
+    "text": "Tháng này hai kỹ sư cũng ráp xong công trình đầu tiên nè ^^, mê chưa",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
-    "caption": "",
-    "image": []
+    "caption": "Nào đi ráp lego khumm",
+    "image": [
+        "9.JPG"
+    ]
 }

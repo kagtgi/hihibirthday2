@@ -1,16 +1,14 @@
 {
     "id": 28,
-    "month": "",
-    "minigameType": "",
+    "month": "December 2025",
+    "minigameType": "animate",
+    "text": "giáng sinh đầu tiên với nhau",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
-    "myNote": "",
+    "myNote": "chụp hình cũng khổ đấy, mà đáng hong",
     "caption": "",
-    "image": []
+    "image": [
+        "49.JPG"
+    ]
 }

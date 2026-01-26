@@ -1,16 +1,14 @@
 {
     "id": 20,
-    "month": "",
-    "minigameType": "",
+    "month": "September 2025",
+    "minigameType": "animate",
+    "text": "Hải đăng to nhất vũng tàu...",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "35.jpg"
+    ]
 }

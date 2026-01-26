@@ -1,16 +1,14 @@
 {
     "id": 15,
-    "month": "",
-    "minigameType": "",
+    "month": "June 2025",
+    "minigameType": "animate",
+    "text": "Hôm này là bữa cuối đi học bài trước khi thi đại học nè, giờ nghĩ lại còn lo á, trộm vía là bạn nhỏ thi quá ố kê",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "27.jpg"
+    ]
 }

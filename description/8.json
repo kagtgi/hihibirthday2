@@ -1,16 +1,18 @@
 {
     "id": 8,
-    "month": "",
-    "minigameType": "",
+    "month": "April 2025",
+    "minigameType": "animate",
+    "text": "Bắt đầu quấn nhau rùi mèo ơiii",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "12.JPG",
+        "13.HEIC",
+        "14.jpg",
+        "15.jpg",
+        "16.jpg"
+    ]
 }

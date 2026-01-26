@@ -1,16 +1,14 @@
 {
     "id": 23,
-    "month": "",
-    "minigameType": "",
+    "month": "October 2025",
+    "minigameType": "animate",
+    "text": "và đó là trung thu đầu tiên bên nhau với lồng đèn em thích nhứt",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "38.jpg"
+    ]
 }

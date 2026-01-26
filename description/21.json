@@ -1,16 +1,14 @@
 {
     "id": 21,
-    "month": "",
-    "minigameType": "",
+    "month": "September 2025",
+    "minigameType": "animate",
+    "text": "Lần đầu đi coi phim chung",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "36.jpg"
+    ]
 }

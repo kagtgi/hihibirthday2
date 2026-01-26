@@ -1,16 +1,15 @@
 {
     "id": 12,
-    "month": "",
-    "minigameType": "",
+    "month": "May 2025",
+    "minigameType": "animate",
+    "text": "Xong ời tới lễ tốt nghiệp của em",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
-    "myNote": "",
+    "myNote": "Khúc đầu còn ngại ngại, khúc sau mưa quá cười suốt hì hì",
     "caption": "",
-    "image": []
+    "image": [
+        "22.JPG",
+        "23.HEIC"
+    ]
 }

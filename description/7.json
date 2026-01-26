@@ -1,16 +1,14 @@
 {
     "id": 7,
-    "month": "",
-    "minigameType": "",
+    "month": "April 2025",
+    "minigameType": "animate",
+    "text": "Em, mình tìm hiểu nhau nha",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "11.jpg"
+    ]
 }

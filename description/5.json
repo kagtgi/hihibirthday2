@@ -1,16 +1,14 @@
 {
     "id": 5,
-    "month": "",
-    "minigameType": "",
+    "month": "April 2025",
+    "minigameType": "animate",
+    "text": "Rùi sang tháng tư, càng ngày càng thân, khúc này ghiền em lắm rùi á, mà cứ sợ thui",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
-    "myNote": "",
-    "caption": "",
-    "image": []
+    "myNote": "Anh vẫn còn nhớ cái đêm ở đà nẵng, hai đứa mình meet thâu đêm luôn, khúc đó anh vui nhất luôn á",
+    "caption": "Anh thích meet với mèo lắm, biết mèo lâu lâu lừi mà meet với anh cho vui nghe",
+    "image": [
+        "10.jpg"
+    ]
 }

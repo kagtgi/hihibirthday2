@@ -1,16 +1,14 @@
 {
     "id": 14,
-    "month": "",
-    "minigameType": "",
+    "month": "June 2025",
+    "minigameType": "animate",
+    "text": "Xong ời tới tốt nghiệp BHP he",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "26.JPG"
+    ]
 }

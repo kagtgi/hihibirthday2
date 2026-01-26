@@ -1,16 +1,18 @@
 {
     "id": 25,
-    "month": "",
-    "minigameType": "",
+    "month": "November 2025",
+    "minigameType": "animate",
+    "text": "tháng mừi một hai đứa mình cũng ưng photobooth típ",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
-    "myNote": "",
+    "myNote": "Lâu ời chưa chụp đó, muốn đi lắm ùi",
     "caption": "",
-    "image": []
+    "image": [
+        "41.HEIC",
+        "42.HEIC",
+        "43.HEIC",
+        "44.JPG",
+        "45.JPG"
+    ]
 }

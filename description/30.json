@@ -1,16 +1,15 @@
 {
     "id": 30,
-    "month": "",
-    "minigameType": "",
+    "month": "January 2026",
+    "minigameType": "animate",
+    "text": "qua năm mới luôn rùi, tháng một chill chill đi dạo đi shopping chuẩn bị quân sự",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
-    "myNote": "",
+    "myNote": "Coi xiếc quá đã mắt lun mèo ơi",
     "caption": "",
-    "image": []
+    "image": [
+        "51.HEIC",
+        "52.jpg"
+    ]
 }

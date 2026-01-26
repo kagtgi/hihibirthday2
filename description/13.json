@@ -1,16 +1,15 @@
 {
     "id": 13,
-    "month": "",
-    "minigameType": "",
+    "month": "June 2025",
+    "minigameType": "animate",
+    "text": "Em dẫn tui đi quán hidden gần trường nè, hôm này chụp em với bó hoa em mix đỉnh cực",
     "question": "",
-    "answers": {
-        "A": "",
-        "B": "",
-        "C": "",
-        "D": ""
-    },
+    "answers": "",
     "key": "",
     "myNote": "",
     "caption": "",
-    "image": []
+    "image": [
+        "24.JPG",
+        "25.JPG"
+    ]
 }
