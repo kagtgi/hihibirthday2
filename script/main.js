@@ -1,306 +1,617 @@
-// Import the data to customize and insert them into page
-const fetchData = () => {
-  fetch("customize.json")
-    .then(data => data.json())
-    .then(data => {
-      dataArr = Object.keys(data);
-      dataArr.map(customData => {
-        if (data[customData] !== "") {
-          if (customData === "imagePath") {
-            document
-              .querySelector(`[data-node-name*="${customData}"]`)
-              .setAttribute("src", data[customData]);
-          } else {
-            document.querySelector(`[data-node-name*="${customData}"]`).innerText = data[customData];
-          }
-        }
+// ===== 12 Months of Us - Main Application =====
+// Loads all 31 chapters from description/*.json
 
-        // Check if the iteration is over
-        // Run amimation if so
-        if ( dataArr.length === dataArr.indexOf(customData) + 1 ) {
-          animationTimeline();
-        } 
-      });
+class TwelveMonthsApp {
+  constructor() {
+    this.chapters = [];
+    this.currentChapter = 0;
+    this.currentStep = 0;
+    this.stepSequence = [];
+    this.selectedAnswer = null;
+    this.gameCollected = 0;
+    this.gameTarget = 5;
+    this.currentGalleryIndex = 0;
+    this.allImages = [];
+
+    // DOM Elements
+    this.app = document.querySelector('.app');
+    this.introScreen = document.querySelector('.intro-screen');
+    this.chapterScreen = document.querySelector('.chapter-screen');
+    this.endingScreen = document.querySelector('.ending-screen');
+    this.progressContainer = document.querySelector('.chapter-progress');
+
+    // Steps
+    this.titleCard = document.querySelector('.title-card');
+    this.quoteStep = document.querySelector('.quote-step');
+    this.noteStep = document.querySelector('.note-step');
+    this.gameStep = document.querySelector('.game-step');
+    this.questionStep = document.querySelector('.question-step');
+    this.revealStep = document.querySelector('.reveal-step');
+    this.imageStep = document.querySelector('.image-step');
+
+    // Color themes by month
+    this.themes = {
+      'February': { bg: 'linear-gradient(135deg, #FFE5E8 0%, #FFB5BA 100%)', primary: '#FF6B7A' },
+      'March': { bg: 'linear-gradient(135deg, #E8F5E9 0%, #A5D6A7 100%)', primary: '#66BB6A' },
+      'April': { bg: 'linear-gradient(135deg, #FFF8E1 0%, #FFE082 100%)', primary: '#FFB300' },
+      'May': { bg: 'linear-gradient(135deg, #FCE4EC 0%, #F8BBD9 100%)', primary: '#EC407A' },
+      'June': { bg: 'linear-gradient(135deg, #E3F2FD 0%, #90CAF9 100%)', primary: '#42A5F5' },
+      'July': { bg: 'linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%)', primary: '#EF5350' },
+      'August': { bg: 'linear-gradient(135deg, #E0F7FA 0%, #80DEEA 100%)', primary: '#26C6DA' },
+      'September': { bg: 'linear-gradient(135deg, #FFF3E0 0%, #FFCC80 100%)', primary: '#FFA726' },
+      'October': { bg: 'linear-gradient(135deg, #F3E5F5 0%, #CE93D8 100%)', primary: '#AB47BC' },
+      'November': { bg: 'linear-gradient(135deg, #EFEBE9 0%, #BCAAA4 100%)', primary: '#8D6E63' },
+      'December': { bg: 'linear-gradient(135deg, #E8EAF6 0%, #9FA8DA 100%)', primary: '#5C6BC0' },
+      'January': { bg: 'linear-gradient(135deg, #E1F5FE 0%, #81D4FA 100%)', primary: '#29B6F6' }
+    };
+
+    this.init();
+  }
+
+  async init() {
+    try {
+      await this.loadAllChapters();
+      this.setupEventListeners();
+      this.updateTotalChapters();
+      this.animateIntro();
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+
+  async loadAllChapters() {
+    const chapterPromises = [];
+    for (let i = 1; i <= 31; i++) {
+      chapterPromises.push(
+        fetch(`description/${i}.json`)
+          .then(res => res.json())
+          .catch(() => null)
+      );
+    }
+    const results = await Promise.all(chapterPromises);
+    this.chapters = results.filter(ch => ch !== null);
+
+    // Collect all images for ending collage
+    this.chapters.forEach(ch => {
+      if (ch.image && ch.image.length > 0) {
+        this.allImages.push(...ch.image);
+      }
     });
-};
+  }
 
-// Animation Timeline
-const animationTimeline = () => {
-  // Spit chars that needs to be animated individually
-  const textBoxChars = document.getElementsByClassName("hbd-chatbox")[0];
-  const hbd = document.getElementsByClassName("wish-hbd")[0];
+  setupEventListeners() {
+    // Start button
+    document.querySelector('.start-btn').addEventListener('click', () => this.startJourney());
 
-  textBoxChars.innerHTML = `<span>${textBoxChars.innerHTML
-    .split("")
-    .join("</span><span>")}</span`;
+    // Title card click
+    this.titleCard.addEventListener('click', () => this.advanceStep());
 
-  hbd.innerHTML = `<span>${hbd.innerHTML
-    .split("")
-    .join("</span><span>")}</span`;
+    // Quote step click
+    this.quoteStep.addEventListener('click', () => this.advanceStep());
 
-  const ideaTextTrans = {
-    opacity: 0,
-    y: -20,
-    rotationX: 5,
-    skewX: "15deg"
-  };
+    // Note step click
+    this.noteStep.addEventListener('click', () => this.advanceStep());
 
-  const ideaTextTransLeave = {
-    opacity: 0,
-    y: 20,
-    rotationY: 5,
-    skewX: "-15deg"
-  };
+    // Reveal step click
+    this.revealStep.addEventListener('click', () => this.advanceStep());
 
-  const tl = new TimelineMax();
+    // Next chapter button
+    document.querySelector('.next-chapter-btn').addEventListener('click', () => this.nextChapter());
 
-  tl
-    .to(".container", 0.1, {
-      visibility: "visible"
-    })
-    .from(".one", 0.7, {
-      opacity: 0,
-      y: 10
-    })
-    .from(".two", 0.4, {
-      opacity: 0,
-      y: 10
-    })
-    .to(
-      ".one",
-      0.7,
-      {
-        opacity: 0,
-        y: 10
-      },
-      "+=2.5"
-    )
-    .to(
-      ".two",
-      0.7,
-      {
-        opacity: 0,
-        y: 10
-      },
-      "-=1"
-    )
-    .from(".three", 0.7, {
-      opacity: 0,
-      y: 10
-      // scale: 0.7
-    })
-    .to(
-      ".three",
-      0.7,
-      {
-        opacity: 0,
-        y: 10
-      },
-      "+=2"
-    )
-    .from(".four", 0.7, {
-      scale: 0.2,
-      opacity: 0
-    })
-    .from(".fake-btn", 0.3, {
-      scale: 0.2,
-      opacity: 0
-    })
-    .staggerTo(
-      ".hbd-chatbox span",
-      0.5,
-      {
-        visibility: "visible"
-      },
-      0.05
-    )
-    .to(".fake-btn", 0.1, {
-      backgroundColor: "rgb(127, 206, 248)"
-    })
-    .to(
-      ".four",
-      0.5,
-      {
-        scale: 0.2,
-        opacity: 0,
-        y: -150
-      },
-      "+=0.7"
-    )
-    .from(".idea-1", 0.7, ideaTextTrans)
-    .to(".idea-1", 0.7, ideaTextTransLeave, "+=1.5")
-    .from(".idea-2", 0.7, ideaTextTrans)
-    .to(".idea-2", 0.7, ideaTextTransLeave, "+=1.5")
-    .from(".idea-3", 0.7, ideaTextTrans)
-    .to(".idea-3 strong", 0.5, {
-      scale: 1.2,
-      x: 10,
-      backgroundColor: "rgb(21, 161, 237)",
-      color: "#fff"
-    })
-    .to(".idea-3", 0.7, ideaTextTransLeave, "+=1.5")
-    .from(".idea-4", 0.7, ideaTextTrans)
-    .to(".idea-4", 0.7, ideaTextTransLeave, "+=1.5")
-    .from(
-      ".idea-5",
-      0.7,
-      {
-        rotationX: 15,
-        rotationZ: -10,
-        skewY: "-5deg",
-        y: 50,
-        z: 10,
-        opacity: 0
-      },
-      "+=0.5"
-    )
-    .to(
-      ".idea-5 .smiley",
-      0.7,
-      {
-        rotation: 90,
-        x: 8
-      },
-      "+=0.4"
-    )
-    .to(
-      ".idea-5",
-      0.7,
-      {
-        scale: 0.2,
-        opacity: 0
-      },
-      "+=2"
-    )
-    .staggerFrom(
-      ".idea-6 span",
-      0.8,
-      {
-        scale: 3,
-        opacity: 0,
-        rotation: 15,
-        ease: Expo.easeOut
-      },
-      0.2
-    )
-    .staggerTo(
-      ".idea-6 span",
-      0.8,
-      {
-        scale: 3,
-        opacity: 0,
-        rotation: -15,
-        ease: Expo.easeOut
-      },
-      0.2,
-      "+=1"
-    )
-    .staggerFromTo(
-      ".baloons img",
-      2.5,
-      {
-        opacity: 0.9,
-        y: 1400
-      },
-      {
-        opacity: 1,
-        y: -1000
-      },
-      0.2
-    )
-    .from(
-      ".lydia-dp",
-      0.5,
-      {
-        scale: 3.5,
-        opacity: 0,
-        x: 25,
-        y: -25,
-        rotationZ: -45
-      },
-      "-=2"
-    )
-    .from(".hat", 0.5, {
-      x: -100,
-      y: 350,
-      rotation: -180,
-      opacity: 0
-    })
-    .staggerFrom(
-      ".wish-hbd span",
-      0.7,
-      {
-        opacity: 0,
-        y: -50,
-        // scale: 0.3,
-        rotation: 150,
-        skewX: "30deg",
-        ease: Elastic.easeOut.config(1, 0.5)
-      },
-      0.1
-    )
-    .staggerFromTo(
-      ".wish-hbd span",
-      0.7,
-      {
-        scale: 1.4,
-        rotationY: 150
-      },
-      {
-        scale: 1,
-        rotationY: 0,
-        color: "#ff69b4",
-        ease: Expo.easeOut
-      },
-      0.1,
-      "party"
-    )
-    .from(
-      ".wish h5",
-      0.5,
-      {
-        opacity: 0,
-        y: 10,
-        skewX: "-15deg"
-      },
-      "party"
-    )
-    .staggerTo(
-      ".eight svg",
-      1.5,
-      {
-        visibility: "visible",
-        opacity: 0,
-        scale: 80,
-        repeat: 3,
-        repeatDelay: 1.4
-      },
-      0.3
-    )
-    .to(".six", 0.5, {
+    // Gallery navigation
+    document.querySelector('.gallery-prev').addEventListener('click', () => this.galleryPrev());
+    document.querySelector('.gallery-next').addEventListener('click', () => this.galleryNext());
+
+    // Gift button
+    document.querySelector('.gift-btn').addEventListener('click', () => {
+      alert('Quà của em đây! 💕');
+    });
+  }
+
+  updateTotalChapters() {
+    document.querySelector('.total-chapters').textContent = this.chapters.length;
+  }
+
+  animateIntro() {
+    gsap.from('.intro-title', {
       opacity: 0,
       y: 30,
-      zIndex: "-1"
-    })
-    .staggerFrom(".nine p", 1, ideaTextTrans, 1.2)
-    .to(
-      ".last-smile",
-      0.5,
-      {
-        rotation: 90
+      duration: 1,
+      delay: 0.3
+    });
+
+    gsap.from('.intro-subtitle', {
+      opacity: 0,
+      y: 20,
+      duration: 0.8,
+      delay: 0.6
+    });
+
+    gsap.from('.intro-hearts .heart', {
+      opacity: 0,
+      scale: 0,
+      duration: 0.5,
+      stagger: 0.15,
+      delay: 1
+    });
+
+    gsap.from('.start-btn', {
+      opacity: 0,
+      y: 20,
+      duration: 0.8,
+      delay: 1.5
+    });
+  }
+
+  startJourney() {
+    this.introScreen.classList.remove('active');
+    this.chapterScreen.classList.add('active');
+    this.progressContainer.classList.add('visible');
+    this.loadChapter(0);
+  }
+
+  loadChapter(chapterIndex) {
+    if (chapterIndex >= this.chapters.length) {
+      this.showEnding();
+      return;
+    }
+
+    this.currentChapter = chapterIndex;
+    this.currentStep = 0;
+    this.selectedAnswer = null;
+    this.gameCollected = 0;
+    this.currentGalleryIndex = 0;
+
+    const chapter = this.chapters[chapterIndex];
+
+    // Update theme based on month
+    this.updateTheme(chapter.month);
+    this.updateProgress();
+
+    // Populate chapter data
+    this.populateChapterData(chapter);
+
+    // Build step sequence based on chapter type
+    this.buildStepSequence(chapter);
+
+    // Show first step
+    this.showStep(0);
+  }
+
+  buildStepSequence(chapter) {
+    this.stepSequence = [];
+
+    // Always start with title card
+    this.stepSequence.push('title');
+
+    // Check if it's animate type or question type
+    const isAnimateType = chapter.minigameType === 'animate' || !chapter.question || chapter.question === '';
+
+    if (isAnimateType) {
+      // Animate type: show quote animation
+      if (chapter.text && chapter.text !== '') {
+        this.stepSequence.push('quote');
+      }
+      // Show note if exists
+      if (chapter.myNote && chapter.myNote !== '') {
+        this.stepSequence.push('note');
+      }
+    } else {
+      // Question type: game -> question -> reveal
+      this.stepSequence.push('game');
+      this.stepSequence.push('question');
+      this.stepSequence.push('reveal');
+      // Show note if exists
+      if (chapter.myNote && chapter.myNote !== '') {
+        this.stepSequence.push('note');
+      }
+    }
+
+    // Always end with image
+    this.stepSequence.push('image');
+  }
+
+  updateTheme(monthStr) {
+    // Extract month name from string like "February 2025"
+    const monthName = monthStr.split(' ')[0];
+    const theme = this.themes[monthName] || this.themes['February'];
+
+    document.body.style.background = theme.bg;
+    document.documentElement.style.setProperty('--primary', theme.primary);
+  }
+
+  updateProgress() {
+    const progress = ((this.currentChapter + 1) / this.chapters.length) * 100;
+    document.querySelector('.current-chapter').textContent = this.currentChapter + 1;
+    document.querySelector('.progress-fill').style.width = `${progress}%`;
+  }
+
+  populateChapterData(chapter) {
+    // Title Card
+    document.querySelector('.chapter-number').textContent = this.currentChapter + 1;
+    document.querySelector('.chapter-month').textContent = chapter.month;
+
+    // Quote
+    document.querySelector('.quote-text').textContent = chapter.text || '';
+
+    // Note
+    document.querySelector('.note-text').textContent = chapter.myNote || '';
+
+    // Game text
+    document.querySelector('.game-text').textContent = chapter.text || 'Thu thập những trái tim';
+
+    // Question
+    document.querySelector('.question-text').textContent = chapter.question || '';
+    this.populateAnswers(chapter);
+
+    // Caption
+    document.querySelector('.image-caption').textContent = chapter.caption || '';
+
+    // Images
+    this.populateGallery(chapter);
+
+    // Update next button text for last chapter
+    const nextBtn = document.querySelector('.next-chapter-btn');
+    if (this.currentChapter === this.chapters.length - 1) {
+      nextBtn.textContent = 'Xem Kết Thúc 💕';
+    } else {
+      nextBtn.textContent = 'Tiếp Theo →';
+    }
+  }
+
+  populateAnswers(chapter) {
+    const grid = document.querySelector('.answers-grid');
+    grid.innerHTML = '';
+
+    if (!chapter.answers || typeof chapter.answers !== 'object') return;
+
+    Object.entries(chapter.answers).forEach(([key, value]) => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = value;
+      btn.dataset.key = key;
+      btn.addEventListener('click', () => this.selectAnswer(btn, key, chapter.key, chapter));
+      grid.appendChild(btn);
+    });
+  }
+
+  populateGallery(chapter) {
+    const container = document.querySelector('.gallery-container');
+    container.innerHTML = '';
+    this.currentGalleryIndex = 0;
+
+    if (!chapter.image || chapter.image.length === 0) return;
+
+    // Filter out video files
+    const validImages = chapter.image.filter(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+    });
+
+    validImages.forEach((imgPath, index) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'gallery-image-wrapper';
+
+      const img = document.createElement('img');
+      img.className = 'gallery-image';
+      img.src = `image/${imgPath}`;
+      img.alt = `Memory ${index + 1}`;
+      img.onerror = () => { wrapper.style.display = 'none'; };
+
+      wrapper.appendChild(img);
+      container.appendChild(wrapper);
+    });
+
+    this.updateGalleryNav(validImages.length);
+  }
+
+  updateGalleryNav(total) {
+    const counter = document.querySelector('.gallery-counter');
+    const prevBtn = document.querySelector('.gallery-prev');
+    const nextBtn = document.querySelector('.gallery-next');
+    const nav = document.querySelector('.gallery-nav');
+
+    if (total <= 1) {
+      nav.style.display = 'none';
+    } else {
+      nav.style.display = 'flex';
+      counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
+      prevBtn.disabled = this.currentGalleryIndex === 0;
+      nextBtn.disabled = this.currentGalleryIndex === total - 1;
+    }
+  }
+
+  galleryPrev() {
+    const chapter = this.chapters[this.currentChapter];
+    const validImages = (chapter.image || []).filter(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+    });
+
+    if (this.currentGalleryIndex > 0) {
+      this.currentGalleryIndex--;
+      this.slideGallery();
+      this.updateGalleryNav(validImages.length);
+    }
+  }
+
+  galleryNext() {
+    const chapter = this.chapters[this.currentChapter];
+    const validImages = (chapter.image || []).filter(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+    });
+
+    if (this.currentGalleryIndex < validImages.length - 1) {
+      this.currentGalleryIndex++;
+      this.slideGallery();
+      this.updateGalleryNav(validImages.length);
+    }
+  }
+
+  slideGallery() {
+    const container = document.querySelector('.gallery-container');
+    const offset = -this.currentGalleryIndex * 100;
+    container.style.transform = `translateX(${offset}%)`;
+  }
+
+  selectAnswer(btn, selectedKey, correctKey, chapter) {
+    if (this.selectedAnswer) return;
+
+    this.selectedAnswer = selectedKey;
+    btn.classList.add('selected');
+
+    setTimeout(() => {
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach(b => {
+        if (b.dataset.key === correctKey) {
+          b.classList.add('key-answer');
+        }
+      });
+
+      this.updateRevealStep(selectedKey, correctKey, chapter);
+
+      setTimeout(() => this.advanceStep(), 1000);
+    }, 500);
+  }
+
+  updateRevealStep(selectedKey, correctKey, chapter) {
+    const herChoiceBox = document.querySelector('.her-choice .choice-box');
+    const myChoiceBox = document.querySelector('.my-choice .choice-box');
+
+    herChoiceBox.textContent = chapter.answers[selectedKey] || '';
+    myChoiceBox.innerHTML = `${chapter.answers[correctKey] || ''}<span class="heart-icon">💛</span>`;
+  }
+
+  getStepElement(stepName) {
+    const stepMap = {
+      'title': this.titleCard,
+      'quote': this.quoteStep,
+      'note': this.noteStep,
+      'game': this.gameStep,
+      'question': this.questionStep,
+      'reveal': this.revealStep,
+      'image': this.imageStep
+    };
+    return stepMap[stepName];
+  }
+
+  showStep(stepIndex) {
+    // Hide all steps
+    [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
+     this.questionStep, this.revealStep, this.imageStep].forEach(step => {
+      step.classList.remove('active');
+    });
+
+    const stepName = this.stepSequence[stepIndex];
+    const stepElement = this.getStepElement(stepName);
+
+    if (stepElement) {
+      stepElement.classList.add('active');
+      this.animateStepEntrance(stepName, stepElement);
+    }
+
+    // Special handling
+    if (stepName === 'game') {
+      this.startGame();
+    }
+
+    if (stepName === 'quote') {
+      this.animateQuote();
+    }
+
+    if (stepName === 'image') {
+      this.resetGalleryAnimation();
+    }
+  }
+
+  animateStepEntrance(stepName, stepElement) {
+    gsap.from(stepElement.children, {
+      opacity: 0,
+      y: 20,
+      duration: 0.6,
+      stagger: 0.1
+    });
+  }
+
+  animateQuote() {
+    const quoteText = document.querySelector('.quote-text');
+    const text = quoteText.textContent;
+
+    // Split into characters
+    quoteText.innerHTML = text.split('').map(char =>
+      char === ' ' ? ' ' : `<span class="quote-char">${char}</span>`
+    ).join('');
+
+    // Animate each character
+    gsap.to('.quote-char', {
+      opacity: 1,
+      duration: 0.03,
+      stagger: 0.03,
+      ease: 'none'
+    });
+  }
+
+  resetGalleryAnimation() {
+    const images = document.querySelectorAll('.gallery-image');
+    images.forEach(img => {
+      img.style.animation = 'none';
+      setTimeout(() => {
+        img.style.animation = 'slowZoom 10s ease-in-out forwards';
+      }, 50);
+    });
+  }
+
+  advanceStep() {
+    if (this.currentStep < this.stepSequence.length - 1) {
+      this.currentStep++;
+      this.showStep(this.currentStep);
+    }
+  }
+
+  nextChapter() {
+    gsap.to(this.imageStep, {
+      opacity: 0,
+      duration: 0.4,
+      onComplete: () => {
+        this.imageStep.style.opacity = 1;
+        this.loadChapter(this.currentChapter + 1);
+      }
+    });
+  }
+
+  // ===== Mini Games =====
+  startGame() {
+    const chapter = this.chapters[this.currentChapter];
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    this.gameCollected = 0;
+    progressBar.style.width = '0%';
+
+    const gameEmojis = this.getGameEmojis(chapter.minigameType);
+
+    for (let i = 0; i < this.gameTarget; i++) {
+      setTimeout(() => {
+        this.spawnGameElement(gameArea, gameEmojis, progressBar);
+      }, i * 350);
+    }
+  }
+
+  getGameEmojis(gameType) {
+    const emojiSets = {
+      'hearts': ['💕', '💗', '💖', '💝', '❤️'],
+      'flowers': ['🌸', '🌺', '🌹', '🌷', '💐'],
+      'bubbles': ['🫧', '💭', '🔮', '⭕', '🌀'],
+      'stars': ['⭐', '🌟', '✨', '💫', '🌠'],
+      'doggo go': ['🐕', '🐶', '🦮', '🐩', '🐾'],
+      'blockblast': ['🧱', '🟦', '🟩', '🟨', '🟥'],
+      'pikachu_match': ['⚡', '🔴', '🟡', '💛', '⭐'],
+      'flappy bird': ['🐦', '🕊️', '🦅', '🐤', '🪶'],
+      'Love Letter': ['💌', '💕', '💖', '💝', '❤️'],
+      'Bubble Pop': ['🫧', '💭', '🔵', '🟣', '⚪']
+    };
+    return emojiSets[gameType] || emojiSets['hearts'];
+  }
+
+  spawnGameElement(gameArea, emojis, progressBar) {
+    const element = document.createElement('div');
+    element.className = 'game-element';
+    element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+    const maxX = gameArea.offsetWidth - 50;
+    const maxY = gameArea.offsetHeight - 50;
+    element.style.left = `${Math.random() * maxX}px`;
+    element.style.top = `${Math.random() * maxY}px`;
+
+    element.addEventListener('click', () => {
+      if (element.classList.contains('collected')) return;
+
+      element.classList.add('collected');
+      this.gameCollected++;
+
+      const progress = (this.gameCollected / this.gameTarget) * 100;
+      progressBar.style.width = `${progress}%`;
+
+      if (this.gameCollected >= this.gameTarget) {
+        setTimeout(() => this.advanceStep(), 400);
+      }
+    });
+
+    gsap.from(element, {
+      scale: 0,
+      duration: 0.4,
+      ease: 'back.out(1.7)'
+    });
+
+    gsap.to(element, {
+      y: '+=12',
+      duration: 0.8 + Math.random() * 0.5,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut'
+    });
+
+    gameArea.appendChild(element);
+  }
+
+  // ===== Ending Experience =====
+  showEnding() {
+    this.chapterScreen.classList.remove('active');
+    this.progressContainer.classList.remove('visible');
+    this.endingScreen.classList.add('active');
+
+    this.createCollage();
+  }
+
+  createCollage() {
+    const container = document.querySelector('.collage-container');
+    container.innerHTML = '';
+
+    // Use first image from each chapter for collage
+    const collageImages = this.chapters
+      .filter(ch => ch.image && ch.image.length > 0)
+      .map(ch => ch.image[0])
+      .filter(img => {
+        const ext = img.toLowerCase().split('.').pop();
+        return ['jpg', 'jpeg', 'png', 'heic', 'gif', 'webp'].includes(ext);
+      })
+      .slice(0, 31);
+
+    collageImages.forEach((imgPath, index) => {
+      const img = document.createElement('img');
+      img.className = 'collage-img';
+      img.src = `image/${imgPath}`;
+      img.alt = `Memory ${index + 1}`;
+      img.onerror = () => { img.style.display = 'none'; };
+      container.appendChild(img);
+    });
+
+    // Animate collage entrance
+    gsap.to('.collage-img', {
+      opacity: 1,
+      scale: 1,
+      duration: 0.4,
+      stagger: {
+        each: 0.08,
+        from: 'random'
       },
-      "+=1"
-    );
+      delay: 0.3,
+      ease: 'back.out(1.2)'
+    });
 
-  // tl.seek("currentStep");
-  // tl.timeScale(2);
+    // Animate ending content
+    gsap.from('.ending-content', {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      delay: 2
+    });
+  }
+}
 
-  // Restart Animation on click
-  const replyBtn = document.getElementById("replay");
-  replyBtn.addEventListener("click", () => {
-    tl.restart();
-  });
-};
-
-// Run fetch and animation in sequence
-fetchData();
+// Initialize the app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  new TwelveMonthsApp();
+});
