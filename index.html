@@ -29,17 +29,33 @@
       </div>
     </section>
 
-    <!-- Month Container (dynamically populated) -->
-    <section class="screen month-screen">
+    <!-- Chapter Screen -->
+    <section class="screen chapter-screen">
       <!-- Step 1: Title Card -->
       <div class="step title-card">
-        <span class="month-number"></span>
-        <h2 class="month-name"></h2>
-        <p class="month-title"></p>
+        <span class="chapter-number"></span>
+        <h2 class="chapter-month"></h2>
         <p class="tap-hint">Chạm để tiếp tục</p>
       </div>
 
-      <!-- Step 2: Metaphor Game / Animation -->
+      <!-- Step 2: Quote/Text Animation (for animate type) -->
+      <div class="step quote-step">
+        <div class="quote-container">
+          <p class="quote-text"></p>
+        </div>
+        <p class="tap-hint">Chạm để tiếp tục</p>
+      </div>
+
+      <!-- Step 3: My Note (appears after quote or after reveal) -->
+      <div class="step note-step">
+        <div class="note-container">
+          <span class="note-icon">💭</span>
+          <p class="note-text"></p>
+        </div>
+        <p class="tap-hint">Chạm để tiếp tục</p>
+      </div>
+
+      <!-- Step 4: Mini Game (for question type) -->
       <div class="step game-step">
         <p class="game-text"></p>
         <div class="game-area">
@@ -50,7 +66,7 @@
         </div>
       </div>
 
-      <!-- Step 3: Reflection Question -->
+      <!-- Step 5: Reflection Question -->
       <div class="step question-step">
         <h3 class="question-text"></h3>
         <div class="answers-grid">
@@ -58,7 +74,7 @@
         </div>
       </div>
 
-      <!-- Step 4: Two Hearts Reveal -->
+      <!-- Step 6: Two Hearts Reveal -->
       <div class="step reveal-step">
         <h3 class="reveal-title">Sự Lựa Chọn</h3>
         <div class="hearts-reveal">
@@ -74,17 +90,25 @@
             </div>
           </div>
         </div>
-        <p class="tap-continue">Chạm để xem ảnh</p>
+        <p class="tap-continue">Chạm để tiếp tục</p>
       </div>
 
-      <!-- Step 5: Grand Reveal (Image + Caption) -->
+      <!-- Step 7: Image Gallery -->
       <div class="step image-step">
-        <div class="image-container">
-          <div class="image-overlay"></div>
-          <img class="reveal-image" src="" alt="">
+        <div class="image-gallery">
+          <div class="gallery-wrapper">
+            <div class="gallery-container">
+              <!-- Images dynamically added -->
+            </div>
+          </div>
+          <div class="gallery-nav">
+            <button class="gallery-prev">←</button>
+            <span class="gallery-counter"></span>
+            <button class="gallery-next">→</button>
+          </div>
         </div>
         <p class="image-caption"></p>
-        <button class="next-month-btn">Tháng Tiếp Theo →</button>
+        <button class="next-chapter-btn">Tiếp Theo →</button>
       </div>
     </section>
 
@@ -94,15 +118,17 @@
         <!-- Collage images dynamically added -->
       </div>
       <div class="ending-content">
-        <p class="ending-message"></p>
-        <button class="gift-btn"></button>
+        <p class="ending-message">Mỗi tháng qua đi, tình yêu lại đầy thêm một chút.</p>
+        <p class="ending-note">Anh yêu em vì một năm trọn vẹn!! 💕</p>
+        <button class="gift-btn">Open Your Real Gift</button>
       </div>
     </section>
 
     <!-- Progress Indicator -->
-    <div class="month-progress">
-      <div class="progress-dots">
-        <!-- 12 dots dynamically added -->
+    <div class="chapter-progress">
+      <div class="progress-text"><span class="current-chapter">1</span> / <span class="total-chapters">31</span></div>
+      <div class="progress-bar-container">
+        <div class="progress-fill"></div>
       </div>
     </div>
   </div>

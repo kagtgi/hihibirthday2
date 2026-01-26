@@ -137,8 +137,8 @@ h1, h2, h3 {
   transform: translateY(0);
 }
 
-/* ===== Month Screen ===== */
-.month-screen {
+/* ===== Chapter Screen ===== */
+.chapter-screen {
   padding: 1rem;
 }
 
@@ -169,33 +169,91 @@ h1, h2, h3 {
   cursor: pointer;
 }
 
-.month-number {
-  font-size: 6rem;
+.chapter-number {
+  font-size: 8rem;
   font-weight: 700;
-  opacity: 0.15;
+  opacity: 0.1;
   position: absolute;
-  top: 15%;
+  top: 10%;
   font-family: 'Playfair Display', serif;
 }
 
-.month-name {
-  font-size: 2.5rem;
+.chapter-month {
+  font-size: 2rem;
   margin-bottom: 0.5rem;
-}
-
-.month-title {
-  font-size: 1.5rem;
-  opacity: 0.7;
-  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .tap-hint {
   font-size: 0.9rem;
   opacity: 0.5;
   animation: fadeInOut 2s ease-in-out infinite;
+  margin-top: 2rem;
 }
 
-/* Step 2: Game Step */
+/* Step 2: Quote Step */
+.quote-step {
+  cursor: pointer;
+  padding: 2rem;
+}
+
+.quote-container {
+  max-width: 600px;
+  text-align: center;
+}
+
+.quote-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  line-height: 1.6;
+  color: var(--text-dark);
+  position: relative;
+}
+
+.quote-text::before {
+  content: '"';
+  font-size: 4rem;
+  position: absolute;
+  top: -2rem;
+  left: -1rem;
+  opacity: 0.2;
+  font-family: 'Playfair Display', serif;
+}
+
+.quote-char {
+  display: inline-block;
+  opacity: 0;
+}
+
+/* Step 3: Note Step */
+.note-step {
+  cursor: pointer;
+  padding: 2rem;
+}
+
+.note-container {
+  max-width: 500px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.note-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.note-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: var(--text-dark);
+}
+
+/* Step 4: Game Step */
 .game-step {
   position: relative;
 }
@@ -208,8 +266,8 @@ h1, h2, h3 {
 
 .game-area {
   width: 100%;
-  max-width: 400px;
-  height: 300px;
+  max-width: 350px;
+  height: 280px;
   position: relative;
   border-radius: 20px;
   overflow: hidden;
@@ -218,7 +276,7 @@ h1, h2, h3 {
 
 .game-element {
   position: absolute;
-  font-size: 2rem;
+  font-size: 2.2rem;
   cursor: pointer;
   transition: transform 0.2s ease;
   user-select: none;
@@ -241,7 +299,7 @@ h1, h2, h3 {
   overflow: hidden;
 }
 
-.progress-bar {
+.game-progress .progress-bar {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, var(--primary), var(--gold-choice));
@@ -249,15 +307,15 @@ h1, h2, h3 {
   transition: width 0.3s ease;
 }
 
-/* Step 3: Question Step */
+/* Step 5: Question Step */
 .question-step {
   text-align: center;
   padding: 1.5rem;
 }
 
 .question-text {
-  font-size: 1.8rem;
-  margin-bottom: 2.5rem;
+  font-size: 1.6rem;
+  margin-bottom: 2rem;
   line-height: 1.4;
   max-width: 500px;
 }
@@ -314,7 +372,7 @@ h1, h2, h3 {
   background: linear-gradient(135deg, var(--pink-choice) 0%, var(--gold-choice) 100%);
 }
 
-/* Step 4: Reveal Step */
+/* Step 6: Reveal Step */
 .reveal-step {
   text-align: center;
   cursor: pointer;
@@ -346,14 +404,16 @@ h1, h2, h3 {
 
 .choice-box {
   width: 120px;
-  height: 80px;
+  height: 70px;
   border-radius: 15px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   position: relative;
+  padding: 0.5rem;
+  text-align: center;
 }
 
 .her-choice .choice-box {
@@ -379,60 +439,115 @@ h1, h2, h3 {
 }
 
 .tap-continue {
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   font-size: 0.9rem;
   opacity: 0.5;
   animation: fadeInOut 2s ease-in-out infinite;
 }
 
-/* Step 5: Image Step */
+/* Step 7: Image Step */
 .image-step {
-  padding: 0;
+  padding: 1rem;
   width: 100%;
   height: 100%;
 }
 
-.image-container {
-  position: relative;
+.image-gallery {
   width: 100%;
-  height: 70%;
-  overflow: hidden;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.reveal-image {
+.gallery-wrapper {
   width: 100%;
+  height: 55vh;
+  overflow: hidden;
+  border-radius: 15px;
+  position: relative;
+}
+
+.gallery-container {
+  display: flex;
+  height: 100%;
+  transition: transform 0.4s ease;
+}
+
+.gallery-image {
+  min-width: 100%;
   height: 100%;
   object-fit: cover;
   animation: slowZoom 10s ease-in-out forwards;
 }
 
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+.gallery-image-wrapper {
+  min-width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom,
-    transparent 0%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.2) 70%,
-    rgba(0, 0, 0, 0.4) 100%);
-  z-index: 1;
+  position: relative;
+}
+
+.gallery-image-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, rgba(0,0,0,0.3), transparent);
   pointer-events: none;
+}
+
+.gallery-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.gallery-prev,
+.gallery-next {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.gallery-prev:hover,
+.gallery-next:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.gallery-prev:disabled,
+.gallery-next:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.gallery-counter {
+  font-size: 0.9rem;
+  opacity: 0.7;
 }
 
 .image-caption {
   font-family: 'Montserrat', sans-serif;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 400;
   color: var(--text-dark);
   text-align: center;
-  padding: 1.5rem 2rem;
-  max-width: 600px;
-  line-height: 1.6;
+  padding: 1rem 1.5rem;
+  max-width: 500px;
+  line-height: 1.5;
+  min-height: 3rem;
 }
 
-.next-month-btn {
+.next-chapter-btn {
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   font-weight: 500;
@@ -443,10 +558,10 @@ h1, h2, h3 {
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
-.next-month-btn:hover {
+.next-chapter-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -463,22 +578,21 @@ h1, h2, h3 {
   left: 0;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  opacity: 0.3;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 4px;
+  padding: 4px;
+  opacity: 0.25;
 }
 
 .collage-img {
-  width: calc(25% - 0.5rem);
-  height: calc(33.33% - 0.5rem);
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 4px;
   opacity: 0;
-  transform: scale(0.5) rotate(-10deg);
+  transform: scale(0.8);
 }
 
 .ending-content {
@@ -486,7 +600,7 @@ h1, h2, h3 {
   z-index: 10;
   text-align: center;
   padding: 2rem;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   border-radius: 20px;
   backdrop-filter: blur(10px);
   max-width: 500px;
@@ -494,8 +608,14 @@ h1, h2, h3 {
 
 .ending-message {
   font-family: 'Playfair Display', serif;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.ending-note {
+  font-size: 1.1rem;
+  opacity: 0.8;
   margin-bottom: 2rem;
 }
 
@@ -518,41 +638,42 @@ h1, h2, h3 {
   box-shadow: 0 6px 25px rgba(255, 215, 0, 0.5);
 }
 
-/* ===== Month Progress ===== */
-.month-progress {
+/* ===== Chapter Progress ===== */
+.chapter-progress {
   position: fixed;
-  bottom: 2rem;
+  bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   opacity: 0;
   transition: opacity 0.5s ease;
+  text-align: center;
 }
 
-.month-progress.visible {
+.chapter-progress.visible {
   opacity: 1;
 }
 
-.progress-dots {
-  display: flex;
-  gap: 0.5rem;
+.progress-text {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.7;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+.progress-bar-container {
+  width: 150px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.dot.completed {
-  background: var(--gold-choice);
-}
-
-.dot.current {
-  background: var(--primary);
-  transform: scale(1.3);
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary), var(--gold-choice));
+  border-radius: 2px;
+  transition: width 0.5s ease;
 }
 
 /* ===== Animations ===== */
@@ -582,28 +703,9 @@ h1, h2, h3 {
   100% { transform: scale(0); opacity: 0; }
 }
 
-@keyframes floatUp {
-  0% {
-    transform: translateY(100vh) rotate(0deg);
-    opacity: 0;
-  }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% {
-    transform: translateY(-100px) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-@keyframes collageEnter {
-  0% {
-    transform: scale(0.5) rotate(-10deg);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
+@keyframes typewriter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== Responsive Design ===== */
@@ -616,16 +718,20 @@ h1, h2, h3 {
     font-size: 1.1rem;
   }
 
-  .month-number {
-    font-size: 4rem;
+  .chapter-number {
+    font-size: 5rem;
   }
 
-  .month-name {
-    font-size: 2rem;
+  .chapter-month {
+    font-size: 1.6rem;
+  }
+
+  .quote-text {
+    font-size: 1.4rem;
   }
 
   .question-text {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .answers-grid {
@@ -648,22 +754,26 @@ h1, h2, h3 {
   }
 
   .choice-box {
-    width: 150px;
-    height: 60px;
+    width: 140px;
+    height: 55px;
+  }
+
+  .gallery-wrapper {
+    height: 45vh;
   }
 
   .image-caption {
-    font-size: 1.1rem;
-    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
   }
 
   .ending-message {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
-  .collage-img {
-    width: calc(33.33% - 0.5rem);
-    height: calc(25% - 0.5rem);
+  .collage-container {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(8, 1fr);
   }
 }
 
@@ -676,9 +786,9 @@ h1, h2, h3 {
     margin-bottom: 1.5rem;
   }
 
-  .month-number {
-    font-size: 3.5rem;
-    top: 10%;
+  .chapter-number {
+    font-size: 4rem;
+    top: 5%;
   }
 
   .game-area {
@@ -686,12 +796,12 @@ h1, h2, h3 {
   }
 
   .question-text {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin-bottom: 1.5rem;
   }
 
-  .image-container {
-    height: 60%;
+  .gallery-wrapper {
+    height: 40vh;
   }
 }
 
