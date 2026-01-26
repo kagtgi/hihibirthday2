@@ -554,12 +554,18 @@ class TwelveMonthsApp {
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
 
-    // Spawn elements faster for smoother experience
-    for (let i = 0; i < this.gameTarget; i++) {
-      setTimeout(() => {
-        this.spawnGameElement(gameArea, gameEmojis, progressBar);
-      }, i * 200);
-    }
+    // Wait for the game-step to render before spawning elements
+    // This ensures gameArea has proper dimensions
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Spawn elements with staggered timing for smoother experience
+        for (let i = 0; i < this.gameTarget; i++) {
+          setTimeout(() => {
+            this.spawnGameElement(gameArea, gameEmojis, progressBar);
+          }, i * 200);
+        }
+      });
+    });
   }
 
   getGameEmojis(gameType) {
