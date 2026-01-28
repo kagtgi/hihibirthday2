@@ -289,8 +289,9 @@ class TwelveMonthsApp {
     // Note
     document.querySelector('.note-text').textContent = chapter.myNote || '';
 
-    // Game text - dynamic based on game type
+    // Game text and hint - dynamic based on game type
     document.querySelector('.game-text').textContent = chapter.text || this.getGameText(chapter.minigameType);
+    document.querySelector('.game-hint').textContent = this.getGameHint(chapter.minigameType);
 
     // Question
     document.querySelector('.question-text').textContent = chapter.question || '';
@@ -558,10 +559,18 @@ class TwelveMonthsApp {
   // ===== Mini Games =====
   startGame() {
     const chapter = this.chapters[this.currentChapter];
+
+    // Check if this is a Memory Match game
+    if (chapter.minigameType === 'memory_match') {
+      this.startMemoryMatch();
+      return;
+    }
+
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
+    gameArea.classList.remove('memory-match-grid'); // Clean up from memory match
     this.gameCollected = 0;
     this.gameCompleted = false;
     this.gameTarget = 5; // Easy mode - only 5 items
@@ -584,6 +593,154 @@ class TwelveMonthsApp {
     }, 550);
   }
 
+  // ===== Memory Match Game =====
+  startMemoryMatch() {
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.add('memory-match-grid');
+    this.gameCompleted = false;
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
+
+    // Memory match state
+    this.memoryCards = [];
+    this.flippedCards = [];
+    this.matchedPairs = 0;
+    this.totalPairs = 4; // 4 pairs = 8 cards
+    this.isChecking = false;
+
+    // Use images from the project
+    const cardImages = [
+      'image/1.jpg',
+      'image/2.jpg',
+      'image/6.jpg',
+      'image/10.jpg'
+    ];
+
+    // Create pairs and shuffle
+    const cards = [...cardImages, ...cardImages];
+    this.shuffleArray(cards);
+
+    setTimeout(() => {
+      cards.forEach((imgSrc, index) => {
+        const card = this.createMemoryCard(imgSrc, index, progressBar);
+        gameArea.appendChild(card);
+        this.memoryCards.push(card);
+      });
+
+      // Animate cards entrance
+      gsap.from('.memory-card', {
+        scale: 0,
+        duration: 0.3,
+        stagger: 0.08,
+        ease: 'back.out(1.7)'
+      });
+    }, 550);
+  }
+
+  createMemoryCard(imgSrc, index, progressBar) {
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.dataset.index = index;
+    card.dataset.image = imgSrc;
+
+    card.innerHTML = `
+      <div class="memory-card-inner">
+        <div class="memory-card-front">
+          <span>💕</span>
+        </div>
+        <div class="memory-card-back">
+          <img src="${imgSrc}" alt="Memory card">
+        </div>
+      </div>
+    `;
+
+    const handleClick = () => {
+      if (this.isChecking || card.classList.contains('flipped') || card.classList.contains('matched')) {
+        return;
+      }
+
+      // Flip card
+      card.classList.add('flipped');
+      this.flippedCards.push(card);
+
+      // Play haptic feedback
+      if (navigator.vibrate) navigator.vibrate(30);
+
+      // Check for match when 2 cards are flipped
+      if (this.flippedCards.length === 2) {
+        this.isChecking = true;
+        this.checkMemoryMatch(progressBar);
+      }
+    };
+
+    card.addEventListener('click', handleClick);
+    card.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      handleClick();
+    }, { passive: false });
+
+    return card;
+  }
+
+  checkMemoryMatch(progressBar) {
+    const [card1, card2] = this.flippedCards;
+    const isMatch = card1.dataset.image === card2.dataset.image;
+
+    setTimeout(() => {
+      if (isMatch) {
+        // Match found!
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        this.matchedPairs++;
+
+        // Update progress
+        const progress = (this.matchedPairs / this.totalPairs) * 100;
+        progressBar.style.width = `${progress}%`;
+
+        // Celebration animation
+        gsap.to([card1, card2], {
+          scale: 1.1,
+          duration: 0.2,
+          yoyo: true,
+          repeat: 1
+        });
+
+        // Check win condition
+        if (this.matchedPairs >= this.totalPairs && !this.gameCompleted) {
+          this.gameCompleted = true;
+          progressBar.classList.add('completed');
+
+          gsap.to(progressBar, {
+            scale: 1.05,
+            duration: 0.2,
+            yoyo: true,
+            repeat: 1
+          });
+
+          setTimeout(() => this.advanceStep(), 800);
+        }
+      } else {
+        // No match - flip back
+        card1.classList.remove('flipped');
+        card2.classList.remove('flipped');
+      }
+
+      this.flippedCards = [];
+      this.isChecking = false;
+    }, 800);
+  }
+
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
   getGameText(gameType) {
     const gameTexts = {
       'hearts': 'Thu thập những trái tim yêu thương',
@@ -599,9 +756,17 @@ class TwelveMonthsApp {
       'sparkles': 'Thu thập những ánh sao',
       'roses': 'Hái những đóa hồng',
       'sweets': 'Thu thập những viên kẹo ngọt',
-      'kisses': 'Thu thập những nụ hôn'
+      'kisses': 'Thu thập những nụ hôn',
+      'memory_match': 'Lật thẻ tìm cặp hình giống nhau'
     };
     return gameTexts[gameType] || 'Thu thập các biểu tượng';
+  }
+
+  getGameHint(gameType) {
+    if (gameType === 'memory_match') {
+      return 'Chạm vào thẻ để lật! Tìm các cặp hình giống nhau 🎴';
+    }
+    return 'Chạm vào các biểu tượng để thu thập! 👆';
   }
 
   getGameEmojis(gameType) {

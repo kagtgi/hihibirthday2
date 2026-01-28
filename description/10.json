@@ -1,7 +1,7 @@
 {
     "id": 10,
     "month": "May 2025",
-    "minigameType": "pikachu_match",
+    "minigameType": "memory_match",
     "text": "Hãy trả lời câu hỏi sau:",
     "question": "Điều gì đẹp nhất của tháng năm",
     "answers": {
