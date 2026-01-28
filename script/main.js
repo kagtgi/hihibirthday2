@@ -566,6 +566,12 @@ class TwelveMonthsApp {
       return;
     }
 
+    // Check if this is a Greeting animation
+    if (chapter.minigameType === 'greeting') {
+      this.startGreetingAnimation();
+      return;
+    }
+
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
@@ -733,6 +739,61 @@ class TwelveMonthsApp {
     }, 800);
   }
 
+  // ===== Greeting Animation =====
+  startGreetingAnimation() {
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.remove('memory-match-grid');
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
+
+    // Create greeting container
+    const greetingContainer = document.createElement('div');
+    greetingContainer.className = 'greeting-container';
+    greetingContainer.innerHTML = `
+      <div class="greeting-text">Xin chào!</div>
+      <div class="greeting-emoji">👋</div>
+    `;
+
+    gameArea.appendChild(greetingContainer);
+
+    // Animate the greeting
+    setTimeout(() => {
+      gsap.fromTo('.greeting-text',
+        { opacity: 0, y: 30, scale: 0.8 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.7)' }
+      );
+
+      gsap.fromTo('.greeting-emoji',
+        { opacity: 0, scale: 0, rotation: -45 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 0.6, delay: 0.4, ease: 'back.out(1.7)' }
+      );
+
+      // Waving animation for emoji
+      gsap.to('.greeting-emoji', {
+        rotation: 20,
+        duration: 0.3,
+        delay: 1,
+        repeat: 3,
+        yoyo: true,
+        ease: 'power1.inOut'
+      });
+
+      // Progress animation
+      gsap.to(progressBar, {
+        width: '100%',
+        duration: 2.5,
+        ease: 'power1.inOut',
+        onComplete: () => {
+          progressBar.classList.add('completed');
+          setTimeout(() => this.advanceStep(), 500);
+        }
+      });
+    }, 550);
+  }
+
   shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -743,6 +804,7 @@ class TwelveMonthsApp {
 
   getGameText(gameType) {
     const gameTexts = {
+      'greeting': 'Chào mừng bạn!',
       'hearts': 'Thu thập những trái tim yêu thương',
       'flowers': 'Hái những bông hoa xinh đẹp',
       'bubbles': 'Chạm vào những bong bóng lung linh',
@@ -765,6 +827,9 @@ class TwelveMonthsApp {
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
       return 'Chạm vào thẻ để lật! Tìm các cặp hình giống nhau 🎴';
+    }
+    if (gameType === 'greeting') {
+      return 'Chờ một chút nhé... 💕';
     }
     return 'Chạm vào các biểu tượng để thu thập! 👆';
   }
