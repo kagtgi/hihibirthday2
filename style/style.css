@@ -343,6 +343,29 @@ h1, h2, h3 {
   animation: collectPop 0.35s ease forwards;
 }
 
+/* Greeting Animation */
+.greeting-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.greeting-text {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-shadow: 0 2px 10px rgba(255, 107, 122, 0.3);
+  margin-bottom: 1rem;
+}
+
+.greeting-emoji {
+  font-size: 4rem;
+  display: inline-block;
+}
+
 .game-progress {
   width: 200px;
   height: 8px;
