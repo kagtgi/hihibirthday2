@@ -1,7 +1,7 @@
 {
     "id": 1,
     "month": "February 2025",
-    "minigameType": "css_hearts",
+    "minigameType": "hearts",
     "question": "Tháng hai có gì vui nhất nè?",
     "answers": {
         "A": "Lựa cây 🌿",
