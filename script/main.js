@@ -553,6 +553,7 @@ class TwelveMonthsApp {
     progressBar.classList.remove('completed');
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
+    const useCssHearts = chapter.minigameType === 'css_hearts';
 
     // Wait for the CSS transition to complete (0.5s) before spawning elements
     // This ensures the game-step is fully visible and has proper dimensions
@@ -561,7 +562,7 @@ class TwelveMonthsApp {
       // Spawn elements with staggered timing for smoother experience
       for (let i = 0; i < this.gameTarget; i++) {
         setTimeout(() => {
-          this.spawnGameElement(gameArea, gameEmojis, progressBar);
+          this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
         }, i * 200);
       }
     }, 550);
@@ -587,10 +588,17 @@ class TwelveMonthsApp {
     return emojiSets[gameType] || emojiSets['hearts'];
   }
 
-  spawnGameElement(gameArea, emojis, progressBar) {
+  spawnGameElement(gameArea, emojis, progressBar, useCssHearts = false) {
     const element = document.createElement('div');
     element.className = 'game-element';
-    element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+    if (useCssHearts) {
+      // Create CSS heart instead of emoji
+      element.innerHTML = '<span class="css-heart-game"></span>';
+      element.classList.add('css-heart-element');
+    } else {
+      element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    }
 
     // Get dimensions with fallback values if not yet rendered
     const areaWidth = gameArea.offsetWidth || 320;
