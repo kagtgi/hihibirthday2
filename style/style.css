@@ -1069,13 +1069,12 @@ h1, h2, h3 {
   transform-origin: 100% 100%;
 }
 
-/* CSS Heart for Game - Larger and more visible */
+/* CSS Heart for Game - Larger and more visible (2x scale from .css-heart) */
 .css-heart-game {
   position: relative;
   display: inline-block;
   width: 40px;
   height: 36px;
-  transform: rotate(0deg);
 }
 
 .css-heart-game::before,
@@ -1083,15 +1082,15 @@ h1, h2, h3 {
   content: '';
   position: absolute;
   top: 0;
-  width: 24px;
-  height: 38px;
-  border-radius: 24px 24px 0 0;
+  width: 20px;
+  height: 32px;
+  border-radius: 20px 20px 0 0;
   background: linear-gradient(135deg, #FF6B7A 0%, #FF4D6D 100%);
   box-shadow: 0 0 15px rgba(255, 77, 109, 0.5);
 }
 
 .css-heart-game::before {
-  left: 22px;
+  left: 20px;
   transform: rotate(-45deg);
   transform-origin: 0 100%;
 }
