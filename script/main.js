@@ -53,11 +53,27 @@ class TwelveMonthsApp {
   async init() {
     try {
       await this.loadAllChapters();
+      if (this.chapters.length === 0) {
+        this.showError('Không thể tải dữ liệu. Vui lòng tải lại trang.');
+        return;
+      }
       this.setupEventListeners();
       this.updateTotalChapters();
       this.animateIntro();
     } catch (error) {
       console.error('Error loading data:', error);
+      this.showError('Đã xảy ra lỗi. Vui lòng tải lại trang.');
+    }
+  }
+
+  showError(message) {
+    const introContent = document.querySelector('.intro-content');
+    if (introContent) {
+      introContent.innerHTML = `
+        <h1 class="intro-title">Oops!</h1>
+        <p class="intro-subtitle">${message}</p>
+        <button class="start-btn" onclick="location.reload()">Tải Lại</button>
+      `;
     }
   }
 
@@ -273,8 +289,8 @@ class TwelveMonthsApp {
     // Note
     document.querySelector('.note-text').textContent = chapter.myNote || '';
 
-    // Game text
-    document.querySelector('.game-text').textContent = chapter.text || 'Thu thập những trái tim';
+    // Game text - dynamic based on game type
+    document.querySelector('.game-text').textContent = chapter.text || this.getGameText(chapter.minigameType);
 
     // Question
     document.querySelector('.question-text').textContent = chapter.question || '';
@@ -566,6 +582,26 @@ class TwelveMonthsApp {
         }, i * 200);
       }
     }, 550);
+  }
+
+  getGameText(gameType) {
+    const gameTexts = {
+      'hearts': 'Thu thập những trái tim yêu thương',
+      'flowers': 'Hái những bông hoa xinh đẹp',
+      'bubbles': 'Chạm vào những bong bóng lung linh',
+      'stars': 'Thu thập những ngôi sao lấp lánh',
+      'doggo go': 'Chơi với những chú cún đáng yêu',
+      'blockblast': 'Thu thập những viên đá quý',
+      'pikachu_match': 'Bắt những tia sét Pikachu',
+      'flappy bird': 'Thu thập những chú chim nhỏ',
+      'Love Letter': 'Thu thập những lá thư tình',
+      'Bubble Pop': 'Bấm vỡ những bong bóng',
+      'sparkles': 'Thu thập những ánh sao',
+      'roses': 'Hái những đóa hồng',
+      'sweets': 'Thu thập những viên kẹo ngọt',
+      'kisses': 'Thu thập những nụ hôn'
+    };
+    return gameTexts[gameType] || 'Thu thập các biểu tượng';
   }
 
   getGameEmojis(gameType) {
