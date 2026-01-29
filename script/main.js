@@ -174,7 +174,8 @@ class TwelveMonthsApp {
   }
 
   handleGalleryDrag(startX, endX) {
-    const threshold = 50;
+    // Lowered threshold for more responsive swipes (from 50 to 30)
+    const threshold = 30;
     const diff = startX - endX;
 
     if (Math.abs(diff) > threshold) {
@@ -255,33 +256,38 @@ class TwelveMonthsApp {
   }
 
   animateIntro() {
+    // Optimized intro animations - faster durations, smoother easing
     gsap.from('.intro-title', {
       opacity: 0,
-      y: 30,
-      duration: 1,
-      delay: 0.3
+      y: 20,
+      duration: 0.6,
+      delay: 0.15,
+      ease: 'power2.out'
     });
 
     gsap.from('.intro-subtitle', {
       opacity: 0,
-      y: 20,
-      duration: 0.8,
-      delay: 0.6
+      y: 15,
+      duration: 0.5,
+      delay: 0.35,
+      ease: 'power2.out'
     });
 
     gsap.from('.intro-hearts .heart', {
       opacity: 0,
       scale: 0,
-      duration: 0.5,
-      stagger: 0.15,
-      delay: 1
+      duration: 0.35,
+      stagger: 0.08,
+      delay: 0.55,
+      ease: 'back.out(1.5)'
     });
 
     gsap.from('.start-btn', {
       opacity: 0,
-      y: 20,
-      duration: 0.8,
-      delay: 1.5
+      y: 15,
+      duration: 0.5,
+      delay: 0.85,
+      ease: 'power2.out'
     });
   }
 
@@ -452,11 +458,12 @@ class TwelveMonthsApp {
 
       img.onload = () => {
         spinner.remove();
-        // Smooth fade in
+        // Optimized fade in - faster, GPU accelerated
         gsap.to(img, {
           opacity: 1,
-          duration: 0.5,
-          ease: 'power2.out'
+          duration: 0.3,
+          ease: 'power2.out',
+          force3D: true
         });
       };
 
@@ -528,6 +535,7 @@ class TwelveMonthsApp {
     this.selectedAnswer = selectedKey;
     btn.classList.add('selected');
 
+    // Faster answer reveal - reduced delays
     setTimeout(() => {
       const buttons = document.querySelectorAll('.answer-btn');
       buttons.forEach(b => {
@@ -538,8 +546,8 @@ class TwelveMonthsApp {
 
       this.updateRevealStep(selectedKey, correctKey, chapter);
 
-      setTimeout(() => this.advanceStep(), 1000);
-    }, 500);
+      setTimeout(() => this.advanceStep(), 700); // Reduced from 1000ms
+    }, 350); // Reduced from 500ms
   }
 
   updateRevealStep(selectedKey, correctKey, chapter) {
@@ -593,11 +601,14 @@ class TwelveMonthsApp {
   }
 
   animateStepEntrance(stepName, stepElement) {
+    // Optimized step entrance - faster, smoother with GPU-friendly transforms
     gsap.from(stepElement.children, {
       opacity: 0,
-      y: 20,
-      duration: 0.6,
-      stagger: 0.1
+      y: 15,
+      duration: 0.4,
+      stagger: 0.06,
+      ease: 'power2.out',
+      force3D: true
     });
   }
 
@@ -610,12 +621,13 @@ class TwelveMonthsApp {
       char === ' ' ? ' ' : `<span class="quote-char">${char}</span>`
     ).join('');
 
-    // Animate each character
+    // Optimized character animation - faster stagger for smoother reveal
     gsap.to('.quote-char', {
       opacity: 1,
-      duration: 0.03,
-      stagger: 0.03,
-      ease: 'none'
+      duration: 0.02,
+      stagger: 0.018,
+      ease: 'none',
+      force3D: true
     });
   }
 
@@ -623,9 +635,9 @@ class TwelveMonthsApp {
     const images = document.querySelectorAll('.gallery-image');
     images.forEach(img => {
       img.style.animation = 'none';
-      setTimeout(() => {
-        img.style.animation = 'slowZoom 10s ease-in-out forwards';
-      }, 50);
+      // Force reflow for instant animation reset
+      img.offsetHeight;
+      img.style.animation = 'slowZoom 8s ease-in-out forwards';
     });
   }
 
@@ -637,9 +649,11 @@ class TwelveMonthsApp {
   }
 
   nextChapter() {
+    // Optimized chapter transition - faster, smoother
     gsap.to(this.imageStep, {
       opacity: 0,
-      duration: 0.4,
+      duration: 0.25,
+      ease: 'power2.inOut',
       onComplete: () => {
         this.imageStep.style.opacity = 1;
         this.loadChapter(this.currentChapter + 1);
@@ -677,17 +691,15 @@ class TwelveMonthsApp {
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
     const useCssHearts = chapter.minigameType === 'css_hearts';
 
-    // Wait for the CSS transition to complete (0.5s) before spawning elements
-    // This ensures the game-step is fully visible and has proper dimensions
-    // Using 550ms to give a small buffer after the 500ms transition
+    // Wait for CSS transition then spawn elements with faster stagger
     setTimeout(() => {
-      // Spawn elements with staggered timing for smoother experience
+      // Spawn elements with faster staggered timing for snappier experience
       for (let i = 0; i < this.gameTarget; i++) {
         setTimeout(() => {
           this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
-        }, i * 200);
+        }, i * 100); // Reduced from 200ms to 100ms
       }
-    }, 550);
+    }, 350); // Reduced from 550ms to 350ms
   }
 
   // ===== Memory Match Game =====
@@ -727,14 +739,15 @@ class TwelveMonthsApp {
         this.memoryCards.push(card);
       });
 
-      // Animate cards entrance
+      // Optimized cards entrance - faster, snappier
       gsap.from('.memory-card', {
         scale: 0,
-        duration: 0.3,
-        stagger: 0.08,
-        ease: 'back.out(1.7)'
+        duration: 0.25,
+        stagger: 0.05,
+        ease: 'back.out(1.4)',
+        force3D: true
       });
-    }, 550);
+    }, 350); // Reduced from 550ms
   }
 
   createMemoryCard(imgSrc, index, progressBar) {
@@ -779,6 +792,7 @@ class TwelveMonthsApp {
     const [card1, card2] = this.flippedCards;
     const isMatch = card1.dataset.image === card2.dataset.image;
 
+    // Reduced delay from 800ms to 500ms for faster gameplay
     setTimeout(() => {
       if (isMatch) {
         // Match found!
@@ -790,12 +804,14 @@ class TwelveMonthsApp {
         const progress = (this.matchedPairs / this.totalPairs) * 100;
         progressBar.style.width = `${progress}%`;
 
-        // Celebration animation
+        // Optimized celebration animation - faster, snappier
         gsap.to([card1, card2], {
-          scale: 1.1,
-          duration: 0.2,
+          scale: 1.08,
+          duration: 0.15,
           yoyo: true,
-          repeat: 1
+          repeat: 1,
+          ease: 'power2.out',
+          force3D: true
         });
 
         // Check win condition
@@ -805,12 +821,13 @@ class TwelveMonthsApp {
 
           gsap.to(progressBar, {
             scale: 1.05,
-            duration: 0.2,
+            duration: 0.15,
             yoyo: true,
-            repeat: 1
+            repeat: 1,
+            ease: 'power2.out'
           });
 
-          setTimeout(() => this.advanceStep(), 800);
+          setTimeout(() => this.advanceStep(), 500); // Reduced from 800ms
         }
       } else {
         // No match - flip back
@@ -820,7 +837,7 @@ class TwelveMonthsApp {
 
       this.flippedCards = [];
       this.isChecking = false;
-    }, 800);
+    }, 500); // Reduced from 800ms
   }
 
   // ===== Greeting Animation =====
@@ -843,39 +860,40 @@ class TwelveMonthsApp {
 
     gameArea.appendChild(greetingContainer);
 
-    // Animate the greeting
+    // Optimized greeting animations - faster, smoother
     setTimeout(() => {
       gsap.fromTo('.greeting-text',
-        { opacity: 0, y: 50, scale: 0.5 },
-        { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'back.out(1.7)' }
+        { opacity: 0, y: 30, scale: 0.7 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.5)', force3D: true }
       );
 
       gsap.fromTo('.greeting-emoji',
-        { opacity: 0, scale: 0, rotation: -90 },
-        { opacity: 1, scale: 1, rotation: 0, duration: 0.8, delay: 0.5, ease: 'back.out(2)' }
+        { opacity: 0, scale: 0, rotation: -60 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 0.5, delay: 0.3, ease: 'back.out(1.8)', force3D: true }
       );
 
-      // Waving animation for emoji - more playful on web
+      // Waving animation - faster, snappier
       gsap.to('.greeting-emoji', {
-        rotation: 25,
-        duration: 0.25,
-        delay: 1.3,
-        repeat: 5,
+        rotation: 20,
+        duration: 0.18,
+        delay: 0.8,
+        repeat: 4,
         yoyo: true,
-        ease: 'power2.inOut'
+        ease: 'power2.inOut',
+        force3D: true
       });
 
-      // Progress animation
+      // Faster progress animation
       gsap.to(progressBar, {
         width: '100%',
-        duration: 3,
+        duration: 2,
         ease: 'power1.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
-          setTimeout(() => this.advanceStep(), 500);
+          setTimeout(() => this.advanceStep(), 300);
         }
       });
-    }, 550);
+    }, 350);
   }
 
   shuffleArray(array) {
@@ -980,45 +998,49 @@ class TwelveMonthsApp {
         this.gameCompleted = true;
         progressBar.classList.add('completed');
 
-        // Celebration animation
+        // Optimized celebration animation - faster
         gsap.to(progressBar, {
           scale: 1.05,
-          duration: 0.2,
+          duration: 0.12,
           yoyo: true,
-          repeat: 1
+          repeat: 1,
+          ease: 'power2.out'
         });
 
-        setTimeout(() => this.advanceStep(), 500);
+        setTimeout(() => this.advanceStep(), 350);
       }
     };
 
     element.addEventListener('click', handleCollect);
 
-    // Entry animation
+    // Optimized entry animation - faster, snappier
     gsap.from(element, {
       scale: 0,
-      rotation: -180,
-      duration: 0.4,
-      ease: 'back.out(1.7)'
+      rotation: -90,
+      duration: 0.3,
+      ease: 'back.out(1.4)',
+      force3D: true
     });
 
-    // Gentle floating animation with random delay
+    // Optimized floating animation - smoother with reduced complexity
     gsap.to(element, {
-      y: '+=15',
-      duration: 1.2 + Math.random() * 0.5,
+      y: '+=12',
+      duration: 1.5 + Math.random() * 0.3,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
-      delay: Math.random() * 0.5
+      delay: Math.random() * 0.3,
+      force3D: true
     });
 
-    // Add subtle rotation animation
+    // Lighter rotation animation
     gsap.to(element, {
-      rotation: '+=10',
-      duration: 2 + Math.random(),
+      rotation: '+=8',
+      duration: 2.5 + Math.random() * 0.5,
       repeat: -1,
       yoyo: true,
-      ease: 'sine.inOut'
+      ease: 'sine.inOut',
+      force3D: true
     });
 
     gameArea.appendChild(element);
@@ -1064,25 +1086,28 @@ class TwelveMonthsApp {
       container.appendChild(img);
     });
 
-    // Animate collage entrance
+    // Optimized collage entrance - faster stagger
     gsap.to('.collage-img', {
       opacity: 1,
       scale: 1,
-      duration: 0.4,
+      duration: 0.3,
       stagger: {
-        each: 0.08,
+        each: 0.04,
         from: 'random'
       },
-      delay: 0.3,
-      ease: 'back.out(1.2)'
+      delay: 0.2,
+      ease: 'back.out(1.1)',
+      force3D: true
     });
 
-    // Animate ending content
+    // Optimized ending content animation
     gsap.from('.ending-content', {
       opacity: 0,
-      y: 30,
-      duration: 0.8,
-      delay: 2
+      y: 20,
+      duration: 0.6,
+      delay: 1.5,
+      ease: 'power2.out',
+      force3D: true
     });
   }
 }
