@@ -124,6 +124,9 @@ class TwelveMonthsApp {
     // Note step click
     this.noteStep.addEventListener('click', () => this.advanceStep());
 
+    // Game step click (after game completion)
+    this.gameStep.addEventListener('click', () => this.advanceStep());
+
     // Reveal step click
     this.revealStep.addEventListener('click', () => this.advanceStep());
 
@@ -753,10 +756,9 @@ class TwelveMonthsApp {
         this.canAdvance = true;
         this.showReadyToAdvance(stepName);
       }, delay);
-    } else if (stepName !== 'quote') {
-      // For game and question, canAdvance is set by their completion handlers
-      this.canAdvance = true;
     }
+    // For game, question, and quote - canAdvance is set by their completion handlers
+    // Do NOT set canAdvance = true here for these steps
   }
 
   showReadyToAdvance(stepName) {
@@ -1186,12 +1188,12 @@ class TwelveMonthsApp {
 
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
-      return 'Click vào thẻ để lật! Tìm các cặp hình giống nhau';
+      return 'Chạm vào thẻ để lật và tìm các cặp hình giống nhau';
     }
     if (gameType === 'greeting') {
       return 'Chờ một chút nhé...';
     }
-    return 'Click vào các biểu tượng để thu thập!';
+    return 'Chạm vào các biểu tượng để thu thập!';
   }
 
   getGameEmojis(gameType) {
