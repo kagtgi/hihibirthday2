@@ -544,6 +544,11 @@ h1, h2, h3 {
   padding: 1rem;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .image-gallery {
@@ -552,6 +557,7 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .gallery-wrapper {
@@ -612,7 +618,7 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .gallery-prev,
@@ -689,6 +695,7 @@ h1, h2, h3 {
   opacity: 0.5;
   margin-top: 0.5rem;
   text-align: center;
+  transition: opacity 0.3s ease, display 0s;
 }
 
 .image-caption {
@@ -697,10 +704,10 @@ h1, h2, h3 {
   font-weight: 400;
   color: var(--text-dark);
   text-align: center;
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   max-width: 500px;
   line-height: 1.5;
-  min-height: 3rem;
+  min-height: 2rem;
 }
 
 .next-chapter-btn {
@@ -714,7 +721,7 @@ h1, h2, h3 {
   color: white;
   cursor: pointer;
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   box-shadow: 0 4px 15px rgba(255, 107, 122, 0.3);
   position: relative;
   overflow: hidden;
