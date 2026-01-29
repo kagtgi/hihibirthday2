@@ -308,7 +308,7 @@ h1, h2, h3 {
   font-size: 1.4rem;
   margin-bottom: 1rem;
   text-align: center;
-  max-width: 400px;
+  max-width: 520px;
   line-height: 1.5;
 }
 
@@ -1278,28 +1278,26 @@ h1, h2, h3 {
 }
 
 .memory-card {
-  perspective: 1000px;
+  perspective: 1200px;
   cursor: pointer;
-  transition: transform 0.15s ease-out;
-  will-change: transform;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease;
 }
 
 .memory-card:hover:not(.flipped):not(.matched) {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .memory-card:hover:not(.flipped):not(.matched) .memory-card-front {
-  box-shadow: 0 6px 20px rgba(255, 107, 122, 0.5);
+  box-shadow: 0 8px 25px rgba(255, 107, 122, 0.45);
 }
 
 .memory-card-inner {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .memory-card.flipped .memory-card-inner,
@@ -1324,13 +1322,15 @@ h1, h2, h3 {
 .memory-card-front {
   background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
   font-size: 1.8rem;
-  box-shadow: 0 3px 10px rgba(255, 107, 122, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.35);
+  transition: box-shadow 0.3s ease;
 }
 
 .memory-card-back {
   background: white;
   transform: rotateY(180deg);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease;
 }
 
 .memory-card-back img {
@@ -1339,18 +1339,10 @@ h1, h2, h3 {
   object-fit: cover;
 }
 
-.memory-card.matched {
-  animation: matchPulse 0.35s ease-out;
-}
-
 .memory-card.matched .memory-card-front,
 .memory-card.matched .memory-card-back {
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-}
-
-@keyframes matchPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+  transition: box-shadow 0.4s ease;
 }
 
 /* Responsive adjustments for memory match */
@@ -1410,6 +1402,7 @@ h1, h2, h3 {
 
   .game-text {
     font-size: 1.5rem;
+    max-width: 580px;
   }
 
   .game-hint {
@@ -1507,6 +1500,10 @@ h1, h2, h3 {
 @media screen and (min-width: 1200px) {
   .intro-title {
     font-size: 6rem;
+  }
+
+  .game-text {
+    max-width: 650px;
   }
 
   .game-area {
