@@ -15,6 +15,10 @@ class TwelveMonthsApp {
     this.allImages = [];
     this.heicWarningShown = false;
 
+    // Prevent double advance
+    this.isAdvancing = false;
+    this.advanceDebounceTime = 300;
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -484,11 +488,16 @@ class TwelveMonthsApp {
     const prevBtn = document.querySelector('.gallery-prev');
     const nextBtn = document.querySelector('.gallery-next');
     const nav = document.querySelector('.gallery-nav');
+    const swipeHint = document.querySelector('.swipe-hint');
 
     if (total <= 1) {
+      // Hide navigation and swipe hint when only 1 image
       nav.style.display = 'none';
+      if (swipeHint) swipeHint.style.display = 'none';
     } else {
+      // Show navigation and swipe hint when multiple images
       nav.style.display = 'flex';
+      if (swipeHint) swipeHint.style.display = 'block';
       counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
       prevBtn.disabled = this.currentGalleryIndex === 0;
       nextBtn.disabled = this.currentGalleryIndex === total - 1;
@@ -642,10 +651,37 @@ class TwelveMonthsApp {
   }
 
   advanceStep() {
-    if (this.currentStep < this.stepSequence.length - 1) {
-      this.currentStep++;
-      this.showStep(this.currentStep);
+    // Prevent double advance with debounce
+    if (this.isAdvancing) return;
+    if (this.currentStep >= this.stepSequence.length - 1) return;
+
+    this.isAdvancing = true;
+
+    // Cleanup GSAP tweens in game area before advancing
+    const currentStepName = this.stepSequence[this.currentStep];
+    if (currentStepName === 'game') {
+      this.cleanupGameArea();
     }
+
+    this.currentStep++;
+    this.showStep(this.currentStep);
+
+    // Reset debounce flag after delay
+    setTimeout(() => {
+      this.isAdvancing = false;
+    }, this.advanceDebounceTime);
+  }
+
+  cleanupGameArea() {
+    // Kill all GSAP tweens in game area to prevent memory leaks
+    const gameArea = document.querySelector('.game-area');
+    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container');
+    gameElements.forEach(el => {
+      gsap.killTweensOf(el);
+    });
+    // Also kill progress bar animations
+    const progressBar = document.querySelector('.game-step .progress-bar');
+    gsap.killTweensOf(progressBar);
   }
 
   nextChapter() {
@@ -769,7 +805,13 @@ class TwelveMonthsApp {
       </div>
     `;
 
-    const handleFlip = () => {
+    let lastFlipTime = 0;
+    const handleFlip = (e) => {
+      // Prevent double trigger from touch and click events
+      const now = Date.now();
+      if (now - lastFlipTime < 100) return;
+      lastFlipTime = now;
+
       if (this.isChecking || card.classList.contains('flipped') || card.classList.contains('matched')) {
         return;
       }
@@ -785,11 +827,11 @@ class TwelveMonthsApp {
       }
     };
 
-    // Click and touch handlers
+    // Click and touch handlers - use debounce to prevent double trigger
     card.addEventListener('click', handleFlip);
     card.addEventListener('touchend', (e) => {
       e.preventDefault();
-      handleFlip();
+      handleFlip(e);
     }, { passive: false });
 
     return card;
@@ -989,10 +1031,17 @@ class TwelveMonthsApp {
     element.style.left = `${padding + Math.random() * maxX}px`;
     element.style.top = `${padding + Math.random() * maxY}px`;
 
-    // Click handler for web
+    // Click handler for web - with debounce to prevent touch/click double trigger
+    let lastCollectTime = 0;
     const handleCollect = (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // Prevent double trigger from touch and click events
+      const now = Date.now();
+      if (now - lastCollectTime < 100) return;
+      lastCollectTime = now;
+
       if (element.classList.contains('collected')) return;
 
       // Kill all GSAP animations and reset transform for clean CSS animation
