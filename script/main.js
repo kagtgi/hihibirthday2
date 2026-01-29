@@ -668,10 +668,10 @@ class TwelveMonthsApp {
 
       this.updateRevealStep(selectedKey, correctKey, chapter);
 
-      // Allow time to see correct answer before advancing (increased from 700ms to 1500ms)
+      // Allow time to see correct answer, then wait for user tap
       setTimeout(() => {
         this.canAdvance = true;
-        this.advanceStep();
+        this.showReadyToAdvance('question');
       }, 1500);
     }, 500); // Increased from 350ms to 500ms for selection feedback
   }
@@ -850,7 +850,7 @@ class TwelveMonthsApp {
 
     // Check if we can advance (prevents skipping before content is viewed)
     const currentStepName = this.stepSequence[this.currentStep];
-    if (!this.canAdvance && currentStepName === 'quote') {
+    if (!this.canAdvance) {
       // Show visual feedback that user needs to wait
       this.showWaitIndicator();
       return;
@@ -1077,10 +1077,10 @@ class TwelveMonthsApp {
             ease: 'power2.out'
           });
 
-          // Longer delay to appreciate the win (increased from 500ms to 1200ms)
+          // Wait for user tap after game completion
           setTimeout(() => {
             this.canAdvance = true;
-            this.advanceStep();
+            this.showReadyToAdvance('game');
           }, 1200);
         }
       } else {
@@ -1144,10 +1144,10 @@ class TwelveMonthsApp {
         ease: 'power1.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
-          // Longer delay before auto-advance (increased from 400ms to 1200ms)
+          // Wait for user tap after animation completion
           setTimeout(() => {
             this.canAdvance = true;
-            this.advanceStep();
+            this.showReadyToAdvance('game');
           }, 1200);
         }
       });
@@ -1277,10 +1277,10 @@ class TwelveMonthsApp {
           ease: 'power2.out'
         });
 
-        // Longer delay for user to see completion (increased from 400ms to 1000ms)
+        // Wait for user tap after game completion
           setTimeout(() => {
             this.canAdvance = true;
-            this.advanceStep();
+            this.showReadyToAdvance('game');
           }, 1000);
       }
     };
