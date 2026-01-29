@@ -290,8 +290,9 @@ h1, h2, h3 {
 }
 
 .note-text {
-  font-size: 1.2rem;
-  line-height: 1.6;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  line-height: 1.7;
   font-style: italic;
   color: var(--text-dark);
 }
@@ -299,13 +300,16 @@ h1, h2, h3 {
 /* Step 4: Game Step */
 .game-step {
   position: relative;
+  cursor: pointer;
 }
 
 .game-text {
-  font-size: 1.3rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
   margin-bottom: 1rem;
   text-align: center;
-  max-width: 350px;
+  max-width: 400px;
+  line-height: 1.5;
 }
 
 .game-hint {
@@ -363,6 +367,7 @@ h1, h2, h3 {
 }
 
 .greeting-text {
+  font-family: 'Playfair Display', serif;
   font-size: 3.5rem;
   font-weight: 600;
   color: var(--primary);
@@ -532,12 +537,7 @@ h1, h2, h3 {
   animation: heartBeat 1s ease-in-out infinite;
 }
 
-.tap-continue {
-  margin-top: 2rem;
-  font-size: 0.9rem;
-  opacity: 0.5;
-  animation: fadeInOut 2s ease-in-out infinite;
-}
+/* Tap continue - now handled by dynamic tap-hint */
 
 /* Step 7: Image Step */
 .image-step {

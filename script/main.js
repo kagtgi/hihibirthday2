@@ -24,6 +24,11 @@ class TwelveMonthsApp {
     this.quoteAnimationComplete = false;
     this.minViewingTimeMs = 1500; // Minimum time to view any step
 
+    // Gallery swipe controls - prevent swiping before image displays
+    this.galleryImageLoaded = [];  // Track which images have loaded
+    this.gallerySwiping = false;   // Prevent rapid swiping
+    this.gallerySwipeCooldown = 400; // ms between swipes
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -118,6 +123,9 @@ class TwelveMonthsApp {
 
     // Note step click
     this.noteStep.addEventListener('click', () => this.advanceStep());
+
+    // Game step click (after game completion)
+    this.gameStep.addEventListener('click', () => this.advanceStep());
 
     // Reveal step click
     this.revealStep.addEventListener('click', () => this.advanceStep());
@@ -448,6 +456,10 @@ class TwelveMonthsApp {
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
+    // Reset image loaded tracking and swipe state
+    this.galleryImageLoaded = new Array(validImages.length).fill(false);
+    this.gallerySwiping = false;
+
     validImages.forEach((imgPath, index) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'gallery-image-wrapper';
@@ -467,6 +479,8 @@ class TwelveMonthsApp {
 
       img.onload = () => {
         spinner.remove();
+        // Mark this image as loaded
+        this.galleryImageLoaded[index] = true;
         // Optimized fade in - faster, GPU accelerated
         gsap.to(img, {
           opacity: 1,
@@ -474,10 +488,16 @@ class TwelveMonthsApp {
           ease: 'power2.out',
           force3D: true
         });
+        // When first image loads, start preloading next images
+        if (index === 0) {
+          this.preloadAdjacentImages();
+        }
       };
 
       img.onerror = () => {
         wrapper.style.display = 'none';
+        // Mark as "loaded" so it doesn't block navigation
+        this.galleryImageLoaded[index] = true;
         console.warn(`Failed to load image: ${imgPath}`);
       };
 
@@ -547,37 +567,91 @@ class TwelveMonthsApp {
   }
 
   galleryPrev() {
+    // Prevent rapid swiping
+    if (this.gallerySwiping) return;
+
     const chapter = this.chapters[this.currentChapter];
     const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
-    if (this.currentGalleryIndex > 0) {
-      this.currentGalleryIndex--;
-      this.slideGallery();
-      this.updateGalleryNav(validImages.length);
+    const targetIndex = this.currentGalleryIndex - 1;
+    if (targetIndex < 0) return;
+
+    // Check if target image has loaded, or wait briefly
+    if (!this.galleryImageLoaded[targetIndex]) {
+      // Image not loaded yet, wait a bit and try again
+      setTimeout(() => this.galleryPrev(), 100);
+      return;
     }
+
+    this.gallerySwiping = true;
+    this.currentGalleryIndex = targetIndex;
+    this.slideGallery();
+    this.updateGalleryNav(validImages.length);
+
+    // Reset swipe cooldown
+    setTimeout(() => {
+      this.gallerySwiping = false;
+    }, this.gallerySwipeCooldown);
   }
 
   galleryNext() {
+    // Prevent rapid swiping
+    if (this.gallerySwiping) return;
+
     const chapter = this.chapters[this.currentChapter];
     const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
-    if (this.currentGalleryIndex < validImages.length - 1) {
-      this.currentGalleryIndex++;
-      this.slideGallery();
-      this.updateGalleryNav(validImages.length);
+    const targetIndex = this.currentGalleryIndex + 1;
+    if (targetIndex >= validImages.length) return;
+
+    // Check if target image has loaded, or wait briefly
+    if (!this.galleryImageLoaded[targetIndex]) {
+      // Image not loaded yet, wait a bit and try again
+      setTimeout(() => this.galleryNext(), 100);
+      return;
     }
+
+    this.gallerySwiping = true;
+    this.currentGalleryIndex = targetIndex;
+    this.slideGallery();
+    this.updateGalleryNav(validImages.length);
+
+    // Reset swipe cooldown
+    setTimeout(() => {
+      this.gallerySwiping = false;
+    }, this.gallerySwipeCooldown);
   }
 
   slideGallery() {
     const container = document.querySelector('.gallery-container');
     const offset = -this.currentGalleryIndex * 100;
     container.style.transform = `translateX(${offset}%)`;
+
+    // Preload adjacent images for smoother experience
+    this.preloadAdjacentImages();
+  }
+
+  preloadAdjacentImages() {
+    const chapter = this.chapters[this.currentChapter];
+    const validImages = (chapter.image || []).filter(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+    });
+
+    // Preload next 2 images
+    for (let i = 1; i <= 2; i++) {
+      const nextIndex = this.currentGalleryIndex + i;
+      if (nextIndex < validImages.length && !this.galleryImageLoaded[nextIndex]) {
+        const preloadImg = new Image();
+        preloadImg.src = `image/${validImages[nextIndex]}`;
+      }
+    }
   }
 
   selectAnswer(btn, selectedKey, correctKey, chapter) {
@@ -597,10 +671,10 @@ class TwelveMonthsApp {
 
       this.updateRevealStep(selectedKey, correctKey, chapter);
 
-      // Allow time to see correct answer before advancing (increased from 700ms to 1500ms)
+      // Allow time to see correct answer, then wait for user tap
       setTimeout(() => {
         this.canAdvance = true;
-        this.advanceStep();
+        this.showReadyToAdvance('question');
       }, 1500);
     }, 500); // Increased from 350ms to 500ms for selection feedback
   }
@@ -670,7 +744,7 @@ class TwelveMonthsApp {
       'quote': 0,       // Quote - handled by animation completion
       'note': 2000,     // Note - needs time to read
       'reveal': 2500,   // Reveal - needs time to compare answers
-      'image': 500,     // Image - quick, user controls gallery
+      'image': 1500,    // Image - wait for images to load and display
       'game': 0,        // Game - controlled by game completion
       'question': 0     // Question - controlled by answer selection
     };
@@ -682,10 +756,9 @@ class TwelveMonthsApp {
         this.canAdvance = true;
         this.showReadyToAdvance(stepName);
       }, delay);
-    } else if (stepName !== 'quote') {
-      // For game and question, canAdvance is set by their completion handlers
-      this.canAdvance = true;
     }
+    // For game, question, and quote - canAdvance is set by their completion handlers
+    // Do NOT set canAdvance = true here for these steps
   }
 
   showReadyToAdvance(stepName) {
@@ -779,7 +852,7 @@ class TwelveMonthsApp {
 
     // Check if we can advance (prevents skipping before content is viewed)
     const currentStepName = this.stepSequence[this.currentStep];
-    if (!this.canAdvance && currentStepName === 'quote') {
+    if (!this.canAdvance) {
       // Show visual feedback that user needs to wait
       this.showWaitIndicator();
       return;
@@ -1006,10 +1079,10 @@ class TwelveMonthsApp {
             ease: 'power2.out'
           });
 
-          // Longer delay to appreciate the win (increased from 500ms to 1200ms)
+          // Wait for user tap after game completion
           setTimeout(() => {
             this.canAdvance = true;
-            this.advanceStep();
+            this.showReadyToAdvance('game');
           }, 1200);
         }
       } else {
@@ -1073,10 +1146,10 @@ class TwelveMonthsApp {
         ease: 'power1.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
-          // Longer delay before auto-advance (increased from 400ms to 1200ms)
+          // Wait for user tap after animation completion
           setTimeout(() => {
             this.canAdvance = true;
-            this.advanceStep();
+            this.showReadyToAdvance('game');
           }, 1200);
         }
       });
@@ -1115,12 +1188,12 @@ class TwelveMonthsApp {
 
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
-      return 'Click vào thẻ để lật! Tìm các cặp hình giống nhau';
+      return 'Chạm vào thẻ để lật và tìm các cặp hình giống nhau';
     }
     if (gameType === 'greeting') {
       return 'Chờ một chút nhé...';
     }
-    return 'Click vào các biểu tượng để thu thập!';
+    return 'Chạm vào các biểu tượng để thu thập!';
   }
 
   getGameEmojis(gameType) {
@@ -1206,10 +1279,10 @@ class TwelveMonthsApp {
           ease: 'power2.out'
         });
 
-        // Longer delay for user to see completion (increased from 400ms to 1000ms)
+        // Wait for user tap after game completion
           setTimeout(() => {
             this.canAdvance = true;
-            this.advanceStep();
+            this.showReadyToAdvance('game');
           }, 1000);
       }
     };
