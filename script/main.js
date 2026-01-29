@@ -24,6 +24,11 @@ class TwelveMonthsApp {
     this.quoteAnimationComplete = false;
     this.minViewingTimeMs = 1500; // Minimum time to view any step
 
+    // Gallery swipe controls - prevent swiping before image displays
+    this.galleryImageLoaded = [];  // Track which images have loaded
+    this.gallerySwiping = false;   // Prevent rapid swiping
+    this.gallerySwipeCooldown = 400; // ms between swipes
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -448,6 +453,10 @@ class TwelveMonthsApp {
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
+    // Reset image loaded tracking and swipe state
+    this.galleryImageLoaded = new Array(validImages.length).fill(false);
+    this.gallerySwiping = false;
+
     validImages.forEach((imgPath, index) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'gallery-image-wrapper';
@@ -467,6 +476,8 @@ class TwelveMonthsApp {
 
       img.onload = () => {
         spinner.remove();
+        // Mark this image as loaded
+        this.galleryImageLoaded[index] = true;
         // Optimized fade in - faster, GPU accelerated
         gsap.to(img, {
           opacity: 1,
@@ -474,10 +485,16 @@ class TwelveMonthsApp {
           ease: 'power2.out',
           force3D: true
         });
+        // When first image loads, start preloading next images
+        if (index === 0) {
+          this.preloadAdjacentImages();
+        }
       };
 
       img.onerror = () => {
         wrapper.style.display = 'none';
+        // Mark as "loaded" so it doesn't block navigation
+        this.galleryImageLoaded[index] = true;
         console.warn(`Failed to load image: ${imgPath}`);
       };
 
@@ -547,37 +564,91 @@ class TwelveMonthsApp {
   }
 
   galleryPrev() {
+    // Prevent rapid swiping
+    if (this.gallerySwiping) return;
+
     const chapter = this.chapters[this.currentChapter];
     const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
-    if (this.currentGalleryIndex > 0) {
-      this.currentGalleryIndex--;
-      this.slideGallery();
-      this.updateGalleryNav(validImages.length);
+    const targetIndex = this.currentGalleryIndex - 1;
+    if (targetIndex < 0) return;
+
+    // Check if target image has loaded, or wait briefly
+    if (!this.galleryImageLoaded[targetIndex]) {
+      // Image not loaded yet, wait a bit and try again
+      setTimeout(() => this.galleryPrev(), 100);
+      return;
     }
+
+    this.gallerySwiping = true;
+    this.currentGalleryIndex = targetIndex;
+    this.slideGallery();
+    this.updateGalleryNav(validImages.length);
+
+    // Reset swipe cooldown
+    setTimeout(() => {
+      this.gallerySwiping = false;
+    }, this.gallerySwipeCooldown);
   }
 
   galleryNext() {
+    // Prevent rapid swiping
+    if (this.gallerySwiping) return;
+
     const chapter = this.chapters[this.currentChapter];
     const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
-    if (this.currentGalleryIndex < validImages.length - 1) {
-      this.currentGalleryIndex++;
-      this.slideGallery();
-      this.updateGalleryNav(validImages.length);
+    const targetIndex = this.currentGalleryIndex + 1;
+    if (targetIndex >= validImages.length) return;
+
+    // Check if target image has loaded, or wait briefly
+    if (!this.galleryImageLoaded[targetIndex]) {
+      // Image not loaded yet, wait a bit and try again
+      setTimeout(() => this.galleryNext(), 100);
+      return;
     }
+
+    this.gallerySwiping = true;
+    this.currentGalleryIndex = targetIndex;
+    this.slideGallery();
+    this.updateGalleryNav(validImages.length);
+
+    // Reset swipe cooldown
+    setTimeout(() => {
+      this.gallerySwiping = false;
+    }, this.gallerySwipeCooldown);
   }
 
   slideGallery() {
     const container = document.querySelector('.gallery-container');
     const offset = -this.currentGalleryIndex * 100;
     container.style.transform = `translateX(${offset}%)`;
+
+    // Preload adjacent images for smoother experience
+    this.preloadAdjacentImages();
+  }
+
+  preloadAdjacentImages() {
+    const chapter = this.chapters[this.currentChapter];
+    const validImages = (chapter.image || []).filter(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+    });
+
+    // Preload next 2 images
+    for (let i = 1; i <= 2; i++) {
+      const nextIndex = this.currentGalleryIndex + i;
+      if (nextIndex < validImages.length && !this.galleryImageLoaded[nextIndex]) {
+        const preloadImg = new Image();
+        preloadImg.src = `image/${validImages[nextIndex]}`;
+      }
+    }
   }
 
   selectAnswer(btn, selectedKey, correctKey, chapter) {
@@ -670,7 +741,7 @@ class TwelveMonthsApp {
       'quote': 0,       // Quote - handled by animation completion
       'note': 2000,     // Note - needs time to read
       'reveal': 2500,   // Reveal - needs time to compare answers
-      'image': 500,     // Image - quick, user controls gallery
+      'image': 1500,    // Image - wait for images to load and display
       'game': 0,        // Game - controlled by game completion
       'question': 0     // Question - controlled by answer selection
     };
