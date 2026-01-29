@@ -957,15 +957,14 @@ class TwelveMonthsApp {
     this.memoryCards = [];
     this.flippedCards = [];
     this.matchedPairs = 0;
-    this.totalPairs = 4; // 4 pairs = 8 cards
+    this.totalPairs = 3; // 3 pairs = 6 cards
     this.isChecking = false;
 
-    // Use images from the project
+    // Use 3 images from the project
     const cardImages = [
       'image/1.jpg',
       'image/2.jpg',
-      'image/6.jpg',
-      'image/10.jpg'
+      'image/6.jpg'
     ];
 
     // Create pairs and shuffle
