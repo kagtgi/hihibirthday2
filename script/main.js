@@ -691,15 +691,16 @@ class TwelveMonthsApp {
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
     const useCssHearts = chapter.minigameType === 'css_hearts';
 
-    // Wait for CSS transition then spawn elements with faster stagger
+    // Wait for CSS transition to complete before spawning elements
+    // Step transition is 0.3s (300ms), adding buffer for proper rendering
     setTimeout(() => {
-      // Spawn elements with faster staggered timing for snappier experience
+      // Spawn elements with staggered timing
       for (let i = 0; i < this.gameTarget; i++) {
         setTimeout(() => {
           this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
-        }, i * 100); // Reduced from 200ms to 100ms
+        }, i * 120);
       }
-    }, 350); // Reduced from 550ms to 350ms
+    }, 400);
   }
 
   // ===== Memory Match Game =====
@@ -732,6 +733,7 @@ class TwelveMonthsApp {
     const cards = [...cardImages, ...cardImages];
     this.shuffleArray(cards);
 
+    // Wait for CSS transition to complete before rendering cards
     setTimeout(() => {
       cards.forEach((imgSrc, index) => {
         const card = this.createMemoryCard(imgSrc, index, progressBar);
@@ -739,15 +741,15 @@ class TwelveMonthsApp {
         this.memoryCards.push(card);
       });
 
-      // Optimized cards entrance - faster, snappier
+      // Animate cards entrance
       gsap.from('.memory-card', {
         scale: 0,
-        duration: 0.25,
-        stagger: 0.05,
+        duration: 0.3,
+        stagger: 0.06,
         ease: 'back.out(1.4)',
         force3D: true
       });
-    }, 350); // Reduced from 550ms
+    }, 400);
   }
 
   createMemoryCard(imgSrc, index, progressBar) {
@@ -860,7 +862,7 @@ class TwelveMonthsApp {
 
     gameArea.appendChild(greetingContainer);
 
-    // Optimized greeting animations - faster, smoother
+    // Wait for CSS transition then animate greeting
     setTimeout(() => {
       gsap.fromTo('.greeting-text',
         { opacity: 0, y: 30, scale: 0.7 },
@@ -872,28 +874,28 @@ class TwelveMonthsApp {
         { opacity: 1, scale: 1, rotation: 0, duration: 0.5, delay: 0.3, ease: 'back.out(1.8)', force3D: true }
       );
 
-      // Waving animation - faster, snappier
+      // Waving animation
       gsap.to('.greeting-emoji', {
         rotation: 20,
-        duration: 0.18,
-        delay: 0.8,
+        duration: 0.2,
+        delay: 0.9,
         repeat: 4,
         yoyo: true,
         ease: 'power2.inOut',
         force3D: true
       });
 
-      // Faster progress animation
+      // Progress animation - auto advance after completion
       gsap.to(progressBar, {
         width: '100%',
-        duration: 2,
+        duration: 2.5,
         ease: 'power1.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
-          setTimeout(() => this.advanceStep(), 300);
+          setTimeout(() => this.advanceStep(), 400);
         }
       });
-    }, 350);
+    }, 400);
   }
 
   shuffleArray(array) {
@@ -988,6 +990,8 @@ class TwelveMonthsApp {
       e.stopPropagation();
       if (element.classList.contains('collected')) return;
 
+      // Kill all GSAP animations on this element before adding collected class
+      gsap.killTweensOf(element);
       element.classList.add('collected');
       this.gameCollected++;
 
@@ -1013,19 +1017,31 @@ class TwelveMonthsApp {
 
     element.addEventListener('click', handleCollect);
 
-    // Optimized entry animation - faster, snappier
+    // Add hover effect via GSAP to avoid CSS transform conflicts
+    element.addEventListener('mouseenter', () => {
+      if (!element.classList.contains('collected')) {
+        gsap.to(element, { scale: 1.3, duration: 0.15, ease: 'power2.out' });
+      }
+    });
+    element.addEventListener('mouseleave', () => {
+      if (!element.classList.contains('collected')) {
+        gsap.to(element, { scale: 1, duration: 0.15, ease: 'power2.out' });
+      }
+    });
+
+    // Entry animation
     gsap.from(element, {
       scale: 0,
       rotation: -90,
-      duration: 0.3,
+      duration: 0.35,
       ease: 'back.out(1.4)',
       force3D: true
     });
 
-    // Optimized floating animation - smoother with reduced complexity
+    // Floating animation
     gsap.to(element, {
-      y: '+=12',
-      duration: 1.5 + Math.random() * 0.3,
+      y: '+=10',
+      duration: 1.4 + Math.random() * 0.4,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
@@ -1033,10 +1049,10 @@ class TwelveMonthsApp {
       force3D: true
     });
 
-    // Lighter rotation animation
+    // Subtle rotation animation
     gsap.to(element, {
-      rotation: '+=8',
-      duration: 2.5 + Math.random() * 0.5,
+      rotation: '+=6',
+      duration: 2.2 + Math.random() * 0.6,
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut',
