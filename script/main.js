@@ -769,7 +769,7 @@ class TwelveMonthsApp {
       </div>
     `;
 
-    const handleClick = () => {
+    const handleFlip = () => {
       if (this.isChecking || card.classList.contains('flipped') || card.classList.contains('matched')) {
         return;
       }
@@ -785,7 +785,12 @@ class TwelveMonthsApp {
       }
     };
 
-    card.addEventListener('click', handleClick);
+    // Click and touch handlers
+    card.addEventListener('click', handleFlip);
+    card.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      handleFlip();
+    }, { passive: false });
 
     return card;
   }
@@ -990,8 +995,11 @@ class TwelveMonthsApp {
       e.stopPropagation();
       if (element.classList.contains('collected')) return;
 
-      // Kill all GSAP animations on this element before adding collected class
+      // Kill all GSAP animations and reset transform for clean CSS animation
       gsap.killTweensOf(element);
+      gsap.set(element, { clearProps: 'transform' });
+
+      // Add collected class after clearing GSAP props
       element.classList.add('collected');
       this.gameCollected++;
 
@@ -1002,22 +1010,27 @@ class TwelveMonthsApp {
         this.gameCompleted = true;
         progressBar.classList.add('completed');
 
-        // Optimized celebration animation - faster
+        // Celebration animation
         gsap.to(progressBar, {
           scale: 1.05,
-          duration: 0.12,
+          duration: 0.15,
           yoyo: true,
           repeat: 1,
           ease: 'power2.out'
         });
 
-        setTimeout(() => this.advanceStep(), 350);
+        setTimeout(() => this.advanceStep(), 400);
       }
     };
 
+    // Click and touch handlers
     element.addEventListener('click', handleCollect);
+    element.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      handleCollect(e);
+    }, { passive: false });
 
-    // Add hover effect via GSAP to avoid CSS transform conflicts
+    // Hover effect for desktop
     element.addEventListener('mouseenter', () => {
       if (!element.classList.contains('collected')) {
         gsap.to(element, { scale: 1.3, duration: 0.15, ease: 'power2.out' });
