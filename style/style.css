@@ -305,18 +305,18 @@ h1, h2, h3 {
 
 .game-text {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  margin-bottom: 0.8rem;
   text-align: center;
-  max-width: 520px;
-  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .game-hint {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   opacity: 0.7;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
   text-align: center;
+  white-space: nowrap;
 }
 
 .game-area {
@@ -382,11 +382,11 @@ h1, h2, h3 {
 }
 
 .game-progress {
-  width: 200px;
-  height: 8px;
+  width: 180px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  margin-top: 2rem;
+  border-radius: 3px;
+  margin-top: 1.2rem;
   overflow: hidden;
 }
 
@@ -1271,10 +1271,10 @@ h1, h2, h3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 15px;
-  padding: 15px;
-  height: 350px;
-  max-width: 450px;
+  gap: 12px;
+  padding: 12px;
+  height: 280px;
+  max-width: 380px;
 }
 
 .memory-card {
@@ -1349,18 +1349,28 @@ h1, h2, h3 {
 @media screen and (max-width: 400px) {
   .game-area.memory-match-grid {
     gap: 8px;
-    padding: 10px;
-    max-width: 320px;
+    padding: 8px;
+    height: 220px;
+    max-width: 300px;
   }
 
   .memory-card-front {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+  }
+
+  .game-text {
+    font-size: 1.1rem;
+  }
+
+  .game-hint {
+    font-size: 0.8rem;
   }
 }
 
 @media screen and (max-height: 700px) {
   .game-area.memory-match-grid {
     height: 200px;
+    max-width: 320px;
   }
 }
 
@@ -1402,12 +1412,11 @@ h1, h2, h3 {
   }
 
   .game-text {
-    font-size: 1.5rem;
-    max-width: 580px;
+    font-size: 1.4rem;
   }
 
   .game-hint {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .game-area {
@@ -1421,8 +1430,8 @@ h1, h2, h3 {
   }
 
   .game-progress {
-    width: 280px;
-    height: 10px;
+    width: 220px;
+    height: 8px;
   }
 
   .question-text {
@@ -1487,13 +1496,13 @@ h1, h2, h3 {
   }
 
   .game-area.memory-match-grid {
-    height: 400px;
-    max-width: 520px;
-    gap: 18px;
+    height: 340px;
+    max-width: 460px;
+    gap: 14px;
   }
 
   .memory-card-front {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
 }
 
@@ -1504,7 +1513,7 @@ h1, h2, h3 {
   }
 
   .game-text {
-    max-width: 650px;
+    font-size: 1.5rem;
   }
 
   .game-area {
@@ -1525,9 +1534,9 @@ h1, h2, h3 {
   }
 
   .game-area.memory-match-grid {
-    height: 450px;
-    max-width: 580px;
-    gap: 20px;
+    height: 380px;
+    max-width: 520px;
+    gap: 16px;
   }
 }
 
