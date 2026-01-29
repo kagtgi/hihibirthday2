@@ -120,8 +120,11 @@ class TwelveMonthsApp {
     document.querySelector('.gallery-prev').addEventListener('click', () => this.galleryPrev());
     document.querySelector('.gallery-next').addEventListener('click', () => this.galleryNext());
 
-    // Touch swipe for gallery
-    this.setupGallerySwipe();
+    // Mouse drag and touch swipe for gallery
+    this.setupGalleryInteractions();
+
+    // Keyboard navigation
+    this.setupKeyboardNavigation();
 
     // Gift button
     document.querySelector('.gift-btn').addEventListener('click', () => {
@@ -129,34 +132,122 @@ class TwelveMonthsApp {
     });
   }
 
-  setupGallerySwipe() {
+  setupGalleryInteractions() {
     const gallery = document.querySelector('.gallery-wrapper');
-    let touchStartX = 0;
-    let touchEndX = 0;
+    let startX = 0;
+    let isDragging = false;
 
+    // Mouse drag for desktop
+    gallery.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      gallery.style.cursor = 'grabbing';
+    });
+
+    gallery.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+    });
+
+    gallery.addEventListener('mouseup', (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      gallery.style.cursor = 'grab';
+      this.handleGalleryDrag(startX, e.clientX);
+    });
+
+    gallery.addEventListener('mouseleave', () => {
+      if (isDragging) {
+        isDragging = false;
+        gallery.style.cursor = 'grab';
+      }
+    });
+
+    // Touch swipe for touch devices
     gallery.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
+      startX = e.changedTouches[0].screenX;
     }, { passive: true });
 
     gallery.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      this.handleGallerySwipe(touchStartX, touchEndX);
+      this.handleGalleryDrag(startX, e.changedTouches[0].screenX);
     }, { passive: true });
   }
 
-  handleGallerySwipe(startX, endX) {
-    const swipeThreshold = 50;
+  handleGalleryDrag(startX, endX) {
+    const threshold = 50;
     const diff = startX - endX;
 
-    if (Math.abs(diff) > swipeThreshold) {
+    if (Math.abs(diff) > threshold) {
       if (diff > 0) {
-        // Swipe left - next image
         this.galleryNext();
       } else {
-        // Swipe right - previous image
         this.galleryPrev();
       }
     }
+  }
+
+  setupKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+      // Get current active screen
+      const introActive = this.introScreen.classList.contains('active');
+      const chapterActive = this.chapterScreen.classList.contains('active');
+      const endingActive = this.endingScreen.classList.contains('active');
+
+      // Intro screen - Enter or Space to start
+      if (introActive) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.startJourney();
+        }
+        return;
+      }
+
+      // Chapter screen navigation
+      if (chapterActive) {
+        const currentStepName = this.stepSequence[this.currentStep];
+
+        // Space or Enter to advance step (except on game and question steps)
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (['title', 'quote', 'note', 'reveal'].includes(currentStepName)) {
+            e.preventDefault();
+            this.advanceStep();
+          }
+        }
+
+        // Arrow keys for gallery
+        if (currentStepName === 'image') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            this.galleryPrev();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            this.galleryNext();
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.nextChapter();
+          }
+        }
+
+        // Number keys for answers (1-4)
+        if (currentStepName === 'question' && !this.selectedAnswer) {
+          const num = parseInt(e.key);
+          if (num >= 1 && num <= 4) {
+            const buttons = document.querySelectorAll('.answer-btn');
+            if (buttons[num - 1]) {
+              buttons[num - 1].click();
+            }
+          }
+        }
+      }
+
+      // Ending screen
+      if (endingActive) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          document.querySelector('.gift-btn').click();
+        }
+      }
+    });
   }
 
   updateTotalChapters() {
@@ -672,9 +763,6 @@ class TwelveMonthsApp {
       card.classList.add('flipped');
       this.flippedCards.push(card);
 
-      // Play haptic feedback
-      if (navigator.vibrate) navigator.vibrate(30);
-
       // Check for match when 2 cards are flipped
       if (this.flippedCards.length === 2) {
         this.isChecking = true;
@@ -683,10 +771,6 @@ class TwelveMonthsApp {
     };
 
     card.addEventListener('click', handleClick);
-    card.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      handleClick();
-    }, { passive: false });
 
     return card;
   }
@@ -762,29 +846,29 @@ class TwelveMonthsApp {
     // Animate the greeting
     setTimeout(() => {
       gsap.fromTo('.greeting-text',
-        { opacity: 0, y: 30, scale: 0.8 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.7)' }
+        { opacity: 0, y: 50, scale: 0.5 },
+        { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'back.out(1.7)' }
       );
 
       gsap.fromTo('.greeting-emoji',
-        { opacity: 0, scale: 0, rotation: -45 },
-        { opacity: 1, scale: 1, rotation: 0, duration: 0.6, delay: 0.4, ease: 'back.out(1.7)' }
+        { opacity: 0, scale: 0, rotation: -90 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 0.8, delay: 0.5, ease: 'back.out(2)' }
       );
 
-      // Waving animation for emoji
+      // Waving animation for emoji - more playful on web
       gsap.to('.greeting-emoji', {
-        rotation: 20,
-        duration: 0.3,
-        delay: 1,
-        repeat: 3,
+        rotation: 25,
+        duration: 0.25,
+        delay: 1.3,
+        repeat: 5,
         yoyo: true,
-        ease: 'power1.inOut'
+        ease: 'power2.inOut'
       });
 
       // Progress animation
       gsap.to(progressBar, {
         width: '100%',
-        duration: 2.5,
+        duration: 3,
         ease: 'power1.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
@@ -826,12 +910,12 @@ class TwelveMonthsApp {
 
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
-      return 'Chạm vào thẻ để lật! Tìm các cặp hình giống nhau 🎴';
+      return 'Click vào thẻ để lật! Tìm các cặp hình giống nhau';
     }
     if (gameType === 'greeting') {
-      return 'Chờ một chút nhé... 💕';
+      return 'Chờ một chút nhé...';
     }
-    return 'Chạm vào các biểu tượng để thu thập! 👆';
+    return 'Click vào các biểu tượng để thu thập!';
   }
 
   getGameEmojis(gameType) {
@@ -867,26 +951,27 @@ class TwelveMonthsApp {
     }
 
     // Get dimensions with fallback values if not yet rendered
-    const areaWidth = gameArea.offsetWidth || 320;
-    const areaHeight = gameArea.offsetHeight || 280;
+    const areaWidth = gameArea.offsetWidth || 500;
+    const areaHeight = gameArea.offsetHeight || 400;
 
-    // Larger touch area for easier tapping
-    const padding = 60;
-    const maxX = areaWidth - padding;
-    const maxY = areaHeight - padding;
-    element.style.left = `${padding/2 + Math.random() * (maxX - padding)}px`;
-    element.style.top = `${padding/2 + Math.random() * (maxY - padding)}px`;
+    // Calculate element size for proper positioning
+    const elementSize = 80;
+    const padding = 40;
+    const maxX = areaWidth - elementSize - padding;
+    const maxY = areaHeight - elementSize - padding;
 
-    // Support both click and touch
+    // Better distribution across the game area
+    element.style.left = `${padding + Math.random() * maxX}px`;
+    element.style.top = `${padding + Math.random() * maxY}px`;
+
+    // Click handler for web
     const handleCollect = (e) => {
       e.preventDefault();
+      e.stopPropagation();
       if (element.classList.contains('collected')) return;
 
       element.classList.add('collected');
       this.gameCollected++;
-
-      // Play haptic feedback on mobile if available
-      if (navigator.vibrate) navigator.vibrate(50);
 
       const progress = (this.gameCollected / this.gameTarget) * 100;
       progressBar.style.width = `${progress}%`;
@@ -908,18 +993,29 @@ class TwelveMonthsApp {
     };
 
     element.addEventListener('click', handleCollect);
-    element.addEventListener('touchstart', handleCollect, { passive: false });
 
+    // Entry animation
     gsap.from(element, {
       scale: 0,
-      duration: 0.3,
+      rotation: -180,
+      duration: 0.4,
       ease: 'back.out(1.7)'
     });
 
-    // Gentle floating animation
+    // Gentle floating animation with random delay
     gsap.to(element, {
-      y: '+=10',
-      duration: 1 + Math.random() * 0.3,
+      y: '+=15',
+      duration: 1.2 + Math.random() * 0.5,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: Math.random() * 0.5
+    });
+
+    // Add subtle rotation animation
+    gsap.to(element, {
+      rotation: '+=10',
+      duration: 2 + Math.random(),
       repeat: -1,
       yoyo: true,
       ease: 'sine.inOut'
