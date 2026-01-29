@@ -19,6 +19,11 @@ class TwelveMonthsApp {
     this.isAdvancing = false;
     this.advanceDebounceTime = 300;
 
+    // Timing controls - prevent skipping before content is viewed
+    this.canAdvance = true;
+    this.quoteAnimationComplete = false;
+    this.minViewingTimeMs = 1500; // Minimum time to view any step
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -489,11 +494,17 @@ class TwelveMonthsApp {
     const nextBtn = document.querySelector('.gallery-next');
     const nav = document.querySelector('.gallery-nav');
     const swipeHint = document.querySelector('.swipe-hint');
+    const nextChapterBtn = document.querySelector('.next-chapter-btn');
 
     if (total <= 1) {
       // Hide navigation and swipe hint when only 1 image
       nav.style.display = 'none';
       if (swipeHint) swipeHint.style.display = 'none';
+      // Single image - show continue button immediately
+      if (nextChapterBtn) {
+        nextChapterBtn.style.opacity = '1';
+        nextChapterBtn.style.pointerEvents = 'auto';
+      }
     } else {
       // Show navigation and swipe hint when multiple images
       nav.style.display = 'flex';
@@ -501,6 +512,37 @@ class TwelveMonthsApp {
       counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
       prevBtn.disabled = this.currentGalleryIndex === 0;
       nextBtn.disabled = this.currentGalleryIndex === total - 1;
+
+      // Update swipe hint based on position
+      if (swipeHint) {
+        if (this.currentGalleryIndex < total - 1) {
+          swipeHint.textContent = `← Vuốt để xem thêm ${total - this.currentGalleryIndex - 1} ảnh →`;
+          swipeHint.classList.add('has-more');
+        } else {
+          swipeHint.textContent = 'Đã xem hết ảnh';
+          swipeHint.classList.remove('has-more');
+        }
+      }
+
+      // Show continue button more prominently after viewing all images
+      if (nextChapterBtn) {
+        if (this.currentGalleryIndex >= total - 1) {
+          nextChapterBtn.style.opacity = '1';
+          nextChapterBtn.style.pointerEvents = 'auto';
+          // Pulse animation to draw attention
+          gsap.to(nextChapterBtn, {
+            scale: 1.05,
+            duration: 0.3,
+            yoyo: true,
+            repeat: 1,
+            ease: 'power2.inOut'
+          });
+        } else {
+          // Still visible but less prominent until all images viewed
+          nextChapterBtn.style.opacity = '0.6';
+          nextChapterBtn.style.pointerEvents = 'auto';
+        }
+      }
     }
   }
 
@@ -544,7 +586,7 @@ class TwelveMonthsApp {
     this.selectedAnswer = selectedKey;
     btn.classList.add('selected');
 
-    // Faster answer reveal - reduced delays
+    // Show correct answer after user selects (increased for better viewing)
     setTimeout(() => {
       const buttons = document.querySelectorAll('.answer-btn');
       buttons.forEach(b => {
@@ -555,8 +597,12 @@ class TwelveMonthsApp {
 
       this.updateRevealStep(selectedKey, correctKey, chapter);
 
-      setTimeout(() => this.advanceStep(), 700); // Reduced from 1000ms
-    }, 350); // Reduced from 500ms
+      // Allow time to see correct answer before advancing (increased from 700ms to 1500ms)
+      setTimeout(() => {
+        this.canAdvance = true;
+        this.advanceStep();
+      }, 1500);
+    }, 500); // Increased from 350ms to 500ms for selection feedback
   }
 
   updateRevealStep(selectedKey, correctKey, chapter) {
@@ -581,10 +627,13 @@ class TwelveMonthsApp {
   }
 
   showStep(stepIndex) {
-    // Hide all steps
+    // Hide all steps and clean up tap hints
     [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
     this.questionStep, this.revealStep, this.imageStep].forEach(step => {
       step.classList.remove('active');
+      // Remove any existing tap hints
+      const hint = step.querySelector('.tap-hint');
+      if (hint) hint.remove();
     });
 
     const stepName = this.stepSequence[stepIndex];
@@ -594,6 +643,9 @@ class TwelveMonthsApp {
       stepElement.classList.add('active');
       this.animateStepEntrance(stepName, stepElement);
     }
+
+    // Set up advance timing based on step type
+    this.setupStepTiming(stepName);
 
     // Special handling
     if (stepName === 'game') {
@@ -606,6 +658,63 @@ class TwelveMonthsApp {
 
     if (stepName === 'image') {
       this.resetGalleryAnimation();
+    }
+  }
+
+  setupStepTiming(stepName) {
+    // Different steps have different minimum viewing times
+    this.canAdvance = false;
+
+    const timings = {
+      'title': 800,     // Title card - quick
+      'quote': 0,       // Quote - handled by animation completion
+      'note': 2000,     // Note - needs time to read
+      'reveal': 2500,   // Reveal - needs time to compare answers
+      'image': 500,     // Image - quick, user controls gallery
+      'game': 0,        // Game - controlled by game completion
+      'question': 0     // Question - controlled by answer selection
+    };
+
+    const delay = timings[stepName] || this.minViewingTimeMs;
+
+    if (delay > 0) {
+      setTimeout(() => {
+        this.canAdvance = true;
+        this.showReadyToAdvance(stepName);
+      }, delay);
+    } else if (stepName !== 'quote') {
+      // For game and question, canAdvance is set by their completion handlers
+      this.canAdvance = true;
+    }
+  }
+
+  showReadyToAdvance(stepName) {
+    // Add visual hint that user can now continue
+    const stepElement = this.getStepElement(stepName);
+    if (stepElement && !stepElement.querySelector('.tap-hint')) {
+      const hint = document.createElement('div');
+      hint.className = 'tap-hint';
+      hint.innerHTML = '<span class="tap-hint-text">Chạm để tiếp tục</span>';
+      stepElement.appendChild(hint);
+
+      gsap.fromTo(hint,
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+      );
+    }
+  }
+
+  showWaitIndicator() {
+    // Visual feedback when user tries to skip too early
+    const quoteText = document.querySelector('.quote-text');
+    if (quoteText) {
+      gsap.to(quoteText, {
+        scale: 1.02,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut'
+      });
     }
   }
 
@@ -630,13 +739,26 @@ class TwelveMonthsApp {
       char === ' ' ? ' ' : `<span class="quote-char">${char}</span>`
     ).join('');
 
-    // Optimized character animation - faster stagger for smoother reveal
+    // Calculate animation duration based on text length
+    const charCount = text.replace(/\s/g, '').length;
+    const animDuration = charCount * 0.025; // 25ms per character
+    const minReadTime = Math.max(2000, charCount * 40); // At least 2s, or 40ms per char for reading
+
+    // Optimized character animation - smoother reveal
     gsap.to('.quote-char', {
       opacity: 1,
-      duration: 0.02,
-      stagger: 0.018,
+      duration: 0.03,
+      stagger: 0.025,
       ease: 'none',
-      force3D: true
+      force3D: true,
+      onComplete: () => {
+        // After animation completes, wait for reading time then allow advance
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.quoteAnimationComplete = true;
+          this.showReadyToAdvance('quote');
+        }, minReadTime);
+      }
     });
   }
 
@@ -655,10 +777,18 @@ class TwelveMonthsApp {
     if (this.isAdvancing) return;
     if (this.currentStep >= this.stepSequence.length - 1) return;
 
+    // Check if we can advance (prevents skipping before content is viewed)
+    const currentStepName = this.stepSequence[this.currentStep];
+    if (!this.canAdvance && currentStepName === 'quote') {
+      // Show visual feedback that user needs to wait
+      this.showWaitIndicator();
+      return;
+    }
+
     this.isAdvancing = true;
+    this.canAdvance = false; // Reset for next step
 
     // Cleanup GSAP tweens in game area before advancing
-    const currentStepName = this.stepSequence[this.currentStep];
     if (currentStepName === 'game') {
       this.cleanupGameArea();
     }
@@ -876,7 +1006,11 @@ class TwelveMonthsApp {
             ease: 'power2.out'
           });
 
-          setTimeout(() => this.advanceStep(), 500); // Reduced from 800ms
+          // Longer delay to appreciate the win (increased from 500ms to 1200ms)
+          setTimeout(() => {
+            this.canAdvance = true;
+            this.advanceStep();
+          }, 1200);
         }
       } else {
         // No match - flip back
@@ -932,14 +1066,18 @@ class TwelveMonthsApp {
         force3D: true
       });
 
-      // Progress animation - auto advance after completion
+      // Progress animation - slower auto advance after completion
       gsap.to(progressBar, {
         width: '100%',
-        duration: 2.5,
+        duration: 4, // Increased from 2.5s to 4s for better viewing
         ease: 'power1.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
-          setTimeout(() => this.advanceStep(), 400);
+          // Longer delay before auto-advance (increased from 400ms to 1200ms)
+          setTimeout(() => {
+            this.canAdvance = true;
+            this.advanceStep();
+          }, 1200);
         }
       });
     }, 400);
@@ -1068,7 +1206,11 @@ class TwelveMonthsApp {
           ease: 'power2.out'
         });
 
-        setTimeout(() => this.advanceStep(), 400);
+        // Longer delay for user to see completion (increased from 400ms to 1000ms)
+          setTimeout(() => {
+            this.canAdvance = true;
+            this.advanceStep();
+          }, 1000);
       }
     };
 
