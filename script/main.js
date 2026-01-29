@@ -957,15 +957,14 @@ class TwelveMonthsApp {
     this.memoryCards = [];
     this.flippedCards = [];
     this.matchedPairs = 0;
-    this.totalPairs = 4; // 4 pairs = 8 cards
+    this.totalPairs = 3; // 3 pairs = 6 cards
     this.isChecking = false;
 
-    // Use images from the project
+    // Use 3 images from the project
     const cardImages = [
       'image/1.jpg',
       'image/2.jpg',
-      'image/6.jpg',
-      'image/10.jpg'
+      'image/6.jpg'
     ];
 
     // Create pairs and shuffle
@@ -980,13 +979,13 @@ class TwelveMonthsApp {
         this.memoryCards.push(card);
       });
 
-      // Animate cards entrance
+      // Smooth entrance animation for cards
       gsap.from('.memory-card', {
         scale: 0,
-        duration: 0.3,
-        stagger: 0.06,
-        ease: 'back.out(1.4)',
-        force3D: true
+        opacity: 0,
+        duration: 0.4,
+        stagger: 0.08,
+        ease: 'back.out(1.2)'
       });
     }, 400);
   }
@@ -1044,7 +1043,7 @@ class TwelveMonthsApp {
     const [card1, card2] = this.flippedCards;
     const isMatch = card1.dataset.image === card2.dataset.image;
 
-    // Reduced delay from 800ms to 500ms for faster gameplay
+    // Delay matches flip animation duration (550ms) + viewing time
     setTimeout(() => {
       if (isMatch) {
         // Match found!
@@ -1056,14 +1055,13 @@ class TwelveMonthsApp {
         const progress = (this.matchedPairs / this.totalPairs) * 100;
         progressBar.style.width = `${progress}%`;
 
-        // Optimized celebration animation - faster, snappier
+        // Smooth celebration animation
         gsap.to([card1, card2], {
-          scale: 1.08,
-          duration: 0.15,
+          scale: 1.06,
+          duration: 0.25,
           yoyo: true,
           repeat: 1,
-          ease: 'power2.out',
-          force3D: true
+          ease: 'power1.inOut'
         });
 
         // Check win condition
@@ -1073,10 +1071,10 @@ class TwelveMonthsApp {
 
           gsap.to(progressBar, {
             scale: 1.05,
-            duration: 0.15,
+            duration: 0.2,
             yoyo: true,
             repeat: 1,
-            ease: 'power2.out'
+            ease: 'power1.inOut'
           });
 
           // Wait for user tap after game completion
@@ -1093,7 +1091,7 @@ class TwelveMonthsApp {
 
       this.flippedCards = [];
       this.isChecking = false;
-    }, 500); // Reduced from 800ms
+    }, 750);
   }
 
   // ===== Greeting Animation =====
