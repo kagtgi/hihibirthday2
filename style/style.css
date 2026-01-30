@@ -182,11 +182,16 @@ h1, h2, h3 {
   visibility: hidden;
   transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
   will-change: opacity, visibility;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .step.active {
   opacity: 1;
   visibility: visible;
+  cursor: pointer;
 }
 
 /* Step 1: Title Card */
@@ -403,6 +408,7 @@ h1, h2, h3 {
 .question-step {
   text-align: center;
   padding: 1.5rem;
+  cursor: pointer;
 }
 
 .question-text {
@@ -433,6 +439,9 @@ h1, h2, h3 {
   backdrop-filter: blur(5px);
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .answer-btn:hover {
@@ -1552,10 +1561,11 @@ h1, h2, h3 {
 /* ===== Tap Hint Indicator ===== */
 .tap-hint {
   position: absolute;
-  bottom: 30px;
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  pointer-events: none;
 }
 
 .tap-hint-text {
@@ -1568,6 +1578,7 @@ h1, h2, h3 {
   font-weight: 500;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   animation: tapHintPulse 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes tapHintPulse {
