@@ -932,15 +932,16 @@ class TwelveMonthsApp {
   cleanupGameArea() {
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
-    const gameElements = gameArea.querySelectorAll('.game-element, .floating-heart, .greeting-container');
+    const gameElements = gameArea.querySelectorAll('.game-element, .falling-heart, .greeting-container');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
     });
     // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
     gsap.killTweensOf(progressBar);
-    // Remove memory-match-grid class if present
-    gameArea.classList.remove('memory-match-grid');
+    progressBar.style.transition = ''; // Reset transition
+    // Remove game-specific classes
+    gameArea.classList.remove('memory-match-grid', 'falling-hearts-game', 'hearts-complete');
   }
 
   nextChapter() {
@@ -998,137 +999,60 @@ class TwelveMonthsApp {
     }, 400);
   }
 
-  // ===== Tap Hearts Game (Simple replacement for Memory Match) =====
+  // ===== Falling Hearts Animation Game (CSS-only, no tap required) =====
   startTapHeartsGame() {
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
     gameArea.classList.remove('memory-match-grid');
+    gameArea.classList.add('falling-hearts-game');
     this.gameCompleted = false;
-    this.gameCollected = 0;
-    this.gameTarget = 6; // Need to collect 6 hearts
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    // Heart emojis for this game
-    const heartEmojis = ['💕', '💗', '💖', '💝', '❤️', '💓'];
+    // Heart emojis
+    const heartEmojis = ['💕', '💗', '💖', '💝', '❤️', '💓', '🩷', '💘'];
+    const totalHearts = 12;
+    const gameDuration = 4000; // 4 seconds
 
-    // Wait for CSS transition to complete
+    // Wait for CSS transition
     setTimeout(() => {
-      // Spawn all hearts at once with stagger
-      for (let i = 0; i < this.gameTarget; i++) {
-        setTimeout(() => {
-          this.spawnFloatingHeart(gameArea, heartEmojis, progressBar, i);
-        }, i * 200);
+      // Create falling hearts with CSS animation
+      for (let i = 0; i < totalHearts; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'falling-heart';
+        heart.textContent = heartEmojis[i % heartEmojis.length];
+
+        // Random horizontal position
+        const leftPos = 10 + Math.random() * 80; // 10% to 90%
+        heart.style.left = `${leftPos}%`;
+
+        // Staggered animation delay
+        const delay = (i / totalHearts) * 2.5; // Spread over 2.5s
+        heart.style.animationDelay = `${delay}s`;
+
+        // Random size variation
+        const scale = 0.8 + Math.random() * 0.5;
+        heart.style.setProperty('--heart-scale', scale);
+
+        gameArea.appendChild(heart);
       }
-    }, 400);
-  }
 
-  spawnFloatingHeart(gameArea, emojis, progressBar, index) {
-    const element = document.createElement('div');
-    element.className = 'game-element floating-heart';
-    element.textContent = emojis[index % emojis.length];
+      // Animate progress bar with CSS
+      progressBar.style.transition = `width ${gameDuration}ms ease-out`;
+      progressBar.style.width = '100%';
 
-    // Get dimensions
-    const areaWidth = gameArea.offsetWidth || 500;
-    const areaHeight = gameArea.offsetHeight || 350;
-
-    // Grid-based positioning to avoid overlap
-    const cols = 3;
-    const rows = 2;
-    const cellWidth = (areaWidth - 80) / cols;
-    const cellHeight = (areaHeight - 80) / rows;
-
-    const col = index % cols;
-    const row = Math.floor(index / cols) % rows;
-
-    // Position with some randomness
-    const baseX = 40 + col * cellWidth + cellWidth / 2;
-    const baseY = 40 + row * cellHeight + cellHeight / 2;
-    const randomX = (Math.random() - 0.5) * cellWidth * 0.3;
-    const randomY = (Math.random() - 0.5) * cellHeight * 0.3;
-
-    element.style.left = `${baseX + randomX}px`;
-    element.style.top = `${baseY + randomY}px`;
-
-    // Click/Touch handler
-    let lastCollectTime = 0;
-    const handleCollect = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const now = Date.now();
-      if (now - lastCollectTime < 100) return;
-      lastCollectTime = now;
-
-      if (element.classList.contains('collected')) return;
-
-      // Kill animations and collect
-      gsap.killTweensOf(element);
-      element.classList.add('collected');
-      this.gameCollected++;
-
-      const progress = (this.gameCollected / this.gameTarget) * 100;
-      progressBar.style.width = `${progress}%`;
-
-      if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
+      // Complete game after animation
+      setTimeout(() => {
         this.gameCompleted = true;
         progressBar.classList.add('completed');
+        gameArea.classList.add('hearts-complete');
 
-        gsap.to(progressBar, {
-          scale: 1.05,
-          duration: 0.15,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power2.out'
-        });
-
-        setTimeout(() => {
-          this.canAdvance = true;
-          this.showReadyToAdvance('game');
-        }, 800);
-      }
-    };
-
-    element.addEventListener('click', handleCollect);
-    element.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      handleCollect(e);
-    }, { passive: false });
-
-    // Entry animation
-    gsap.from(element, {
-      scale: 0,
-      rotation: -30,
-      duration: 0.4,
-      ease: 'back.out(1.5)',
-      force3D: true
-    });
-
-    // Floating animation - gentle bobbing
-    gsap.to(element, {
-      y: '+=12',
-      duration: 1.2 + Math.random() * 0.4,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: Math.random() * 0.3,
-      force3D: true
-    });
-
-    // Subtle scale pulsing
-    gsap.to(element, {
-      scale: 1.1,
-      duration: 0.8 + Math.random() * 0.3,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: Math.random() * 0.5,
-      force3D: true
-    });
-
-    gameArea.appendChild(element);
+        this.canAdvance = true;
+        this.showReadyToAdvance('game');
+      }, gameDuration);
+    }, 400);
   }
 
   // ===== Greeting Animation =====
@@ -1223,7 +1147,7 @@ class TwelveMonthsApp {
 
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
-      return 'Chạm vào các trái tim để thu thập!';
+      return 'Ngắm nhìn những trái tim rơi...';
     }
     if (gameType === 'greeting') {
       return 'Chờ một chút nhé...';
