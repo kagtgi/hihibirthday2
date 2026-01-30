@@ -112,33 +112,60 @@ class TwelveMonthsApp {
   }
 
   setupEventListeners() {
+    // Helper function to add both click and touch handlers
+    const addClickAndTouch = (element, handler) => {
+      let lastEventTime = 0;
+      const wrappedHandler = (e) => {
+        // Prevent double-trigger from touch + click
+        const now = Date.now();
+        if (now - lastEventTime < 100) return;
+        lastEventTime = now;
+        handler(e);
+      };
+      element.addEventListener('click', wrappedHandler);
+      element.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        wrappedHandler(e);
+      }, { passive: false });
+    };
+
     // Start button
-    document.querySelector('.start-btn').addEventListener('click', () => this.startJourney());
+    addClickAndTouch(document.querySelector('.start-btn'), () => this.startJourney());
 
-    // Title card click
-    this.titleCard.addEventListener('click', () => this.advanceStep());
+    // Title card click/touch
+    addClickAndTouch(this.titleCard, () => this.advanceStep());
 
-    // Quote step click
-    this.quoteStep.addEventListener('click', () => this.advanceStep());
+    // Quote step click/touch
+    addClickAndTouch(this.quoteStep, () => this.advanceStep());
 
-    // Note step click
-    this.noteStep.addEventListener('click', () => this.advanceStep());
+    // Note step click/touch
+    addClickAndTouch(this.noteStep, () => this.advanceStep());
 
-    // Game step click (after game completion)
-    this.gameStep.addEventListener('click', () => this.advanceStep());
+    // Game step click/touch (after game completion)
+    addClickAndTouch(this.gameStep, (e) => {
+      // Only advance if game is complete AND not clicking on game elements
+      if (this.gameCompleted && !e.target.closest('.game-element') && !e.target.closest('.memory-card')) {
+        this.advanceStep();
+      }
+    });
 
-    // Question step click (after answer is selected and revealed)
-    this.questionStep.addEventListener('click', () => this.advanceStep());
+    // Question step click/touch (after answer is selected and revealed)
+    addClickAndTouch(this.questionStep, (e) => {
+      // Only advance if answer is selected AND not clicking on answer buttons
+      if (this.selectedAnswer && !e.target.closest('.answer-btn')) {
+        this.advanceStep();
+      }
+    });
 
-    // Reveal step click
-    this.revealStep.addEventListener('click', () => this.advanceStep());
+    // Reveal step click/touch
+    addClickAndTouch(this.revealStep, () => this.advanceStep());
 
     // Next chapter button
-    document.querySelector('.next-chapter-btn').addEventListener('click', () => this.nextChapter());
+    addClickAndTouch(document.querySelector('.next-chapter-btn'), () => this.nextChapter());
 
     // Gallery navigation
-    document.querySelector('.gallery-prev').addEventListener('click', () => this.galleryPrev());
-    document.querySelector('.gallery-next').addEventListener('click', () => this.galleryNext());
+    addClickAndTouch(document.querySelector('.gallery-prev'), () => this.galleryPrev());
+    addClickAndTouch(document.querySelector('.gallery-next'), () => this.galleryNext());
 
     // Mouse drag and touch swipe for gallery
     this.setupGalleryInteractions();
@@ -147,7 +174,7 @@ class TwelveMonthsApp {
     this.setupKeyboardNavigation();
 
     // Gift button
-    document.querySelector('.gift-btn').addEventListener('click', () => {
+    addClickAndTouch(document.querySelector('.gift-btn'), () => {
       alert('Quà của em đây! 💕');
     });
   }
@@ -445,7 +472,24 @@ class TwelveMonthsApp {
       btn.className = 'answer-btn';
       btn.textContent = value;
       btn.dataset.key = key;
-      btn.addEventListener('click', () => this.selectAnswer(btn, key, chapter.key, chapter));
+
+      // Add both click and touch handlers with debounce
+      let lastTapTime = 0;
+      const handleSelect = (e) => {
+        e.stopPropagation();
+        const now = Date.now();
+        if (now - lastTapTime < 100) return;
+        lastTapTime = now;
+        this.selectAnswer(btn, key, chapter.key, chapter);
+      };
+
+      btn.addEventListener('click', handleSelect);
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSelect(e);
+      }, { passive: false });
+
       grid.appendChild(btn);
     });
   }
@@ -787,10 +831,12 @@ class TwelveMonthsApp {
 
   showWaitIndicator() {
     // Visual feedback when user tries to skip too early
-    const quoteText = document.querySelector('.quote-text');
-    if (quoteText) {
-      gsap.to(quoteText, {
-        scale: 1.02,
+    const currentStepName = this.stepSequence[this.currentStep];
+    const stepElement = this.getStepElement(currentStepName);
+
+    if (stepElement) {
+      gsap.to(stepElement, {
+        scale: 1.01,
         duration: 0.1,
         yoyo: true,
         repeat: 1,
