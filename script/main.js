@@ -127,6 +127,9 @@ class TwelveMonthsApp {
     // Game step click (after game completion)
     this.gameStep.addEventListener('click', () => this.advanceStep());
 
+    // Question step click (after answer is selected and revealed)
+    this.questionStep.addEventListener('click', () => this.advanceStep());
+
     // Reveal step click
     this.revealStep.addEventListener('click', () => this.advanceStep());
 
@@ -224,9 +227,14 @@ class TwelveMonthsApp {
       if (chapterActive) {
         const currentStepName = this.stepSequence[this.currentStep];
 
-        // Space or Enter to advance step (except on game and question steps)
+        // Space or Enter to advance step (except on game step, and question step only after answer selected)
         if (e.key === 'Enter' || e.key === ' ') {
           if (['title', 'quote', 'note', 'reveal'].includes(currentStepName)) {
+            e.preventDefault();
+            this.advanceStep();
+          }
+          // Allow advancing question step only after answer is selected
+          if (currentStepName === 'question' && this.selectedAnswer && this.canAdvance) {
             e.preventDefault();
             this.advanceStep();
           }
