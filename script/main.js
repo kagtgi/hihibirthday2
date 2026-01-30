@@ -932,13 +932,15 @@ class TwelveMonthsApp {
   cleanupGameArea() {
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
-    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container');
+    const gameElements = gameArea.querySelectorAll('.game-element, .floating-heart, .greeting-container');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
     });
     // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
     gsap.killTweensOf(progressBar);
+    // Remove memory-match-grid class if present
+    gameArea.classList.remove('memory-match-grid');
   }
 
   nextChapter() {
@@ -958,9 +960,9 @@ class TwelveMonthsApp {
   startGame() {
     const chapter = this.chapters[this.currentChapter];
 
-    // Check if this is a Memory Match game
+    // Check if this is a Memory Match game - now use simple tap hearts instead
     if (chapter.minigameType === 'memory_match') {
-      this.startMemoryMatch();
+      this.startTapHeartsGame();
       return;
     }
 
@@ -985,167 +987,148 @@ class TwelveMonthsApp {
     const useCssHearts = chapter.minigameType === 'css_hearts';
 
     // Wait for CSS transition to complete before spawning elements
-    // Step transition is 0.3s (300ms), adding buffer for proper rendering
+    // Step transition is 0.35s (350ms), adding buffer for proper rendering
     setTimeout(() => {
       // Spawn elements with staggered timing
       for (let i = 0; i < this.gameTarget; i++) {
         setTimeout(() => {
-          this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
-        }, i * 120);
+          this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts, i);
+        }, i * 150);
       }
     }, 400);
   }
 
-  // ===== Memory Match Game =====
-  startMemoryMatch() {
+  // ===== Tap Hearts Game (Simple replacement for Memory Match) =====
+  startTapHeartsGame() {
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.add('memory-match-grid');
+    gameArea.classList.remove('memory-match-grid');
     this.gameCompleted = false;
+    this.gameCollected = 0;
+    this.gameTarget = 6; // Need to collect 6 hearts
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    // Memory match state
-    this.memoryCards = [];
-    this.flippedCards = [];
-    this.matchedPairs = 0;
-    this.totalPairs = 3; // 3 pairs = 6 cards
-    this.isChecking = false;
+    // Heart emojis for this game
+    const heartEmojis = ['💕', '💗', '💖', '💝', '❤️', '💓'];
 
-    // Use 3 images from the project
-    const cardImages = [
-      'image/1.jpg',
-      'image/2.jpg',
-      'image/6.jpg'
-    ];
-
-    // Create pairs and shuffle
-    const cards = [...cardImages, ...cardImages];
-    this.shuffleArray(cards);
-
-    // Wait for CSS transition to complete before rendering cards
+    // Wait for CSS transition to complete
     setTimeout(() => {
-      cards.forEach((imgSrc, index) => {
-        const card = this.createMemoryCard(imgSrc, index, progressBar);
-        gameArea.appendChild(card);
-        this.memoryCards.push(card);
-      });
-
-      // Smooth entrance animation for cards
-      gsap.from('.memory-card', {
-        scale: 0,
-        opacity: 0,
-        duration: 0.4,
-        stagger: 0.08,
-        ease: 'back.out(1.2)'
-      });
+      // Spawn all hearts at once with stagger
+      for (let i = 0; i < this.gameTarget; i++) {
+        setTimeout(() => {
+          this.spawnFloatingHeart(gameArea, heartEmojis, progressBar, i);
+        }, i * 200);
+      }
     }, 400);
   }
 
-  createMemoryCard(imgSrc, index, progressBar) {
-    const card = document.createElement('div');
-    card.className = 'memory-card';
-    card.dataset.index = index;
-    card.dataset.image = imgSrc;
+  spawnFloatingHeart(gameArea, emojis, progressBar, index) {
+    const element = document.createElement('div');
+    element.className = 'game-element floating-heart';
+    element.textContent = emojis[index % emojis.length];
 
-    card.innerHTML = `
-      <div class="memory-card-inner">
-        <div class="memory-card-front">
-          <span>💕</span>
-        </div>
-        <div class="memory-card-back">
-          <img src="${imgSrc}" alt="Memory card">
-        </div>
-      </div>
-    `;
+    // Get dimensions
+    const areaWidth = gameArea.offsetWidth || 500;
+    const areaHeight = gameArea.offsetHeight || 350;
 
-    let lastFlipTime = 0;
-    const handleFlip = (e) => {
-      // Prevent double trigger from touch and click events
+    // Grid-based positioning to avoid overlap
+    const cols = 3;
+    const rows = 2;
+    const cellWidth = (areaWidth - 80) / cols;
+    const cellHeight = (areaHeight - 80) / rows;
+
+    const col = index % cols;
+    const row = Math.floor(index / cols) % rows;
+
+    // Position with some randomness
+    const baseX = 40 + col * cellWidth + cellWidth / 2;
+    const baseY = 40 + row * cellHeight + cellHeight / 2;
+    const randomX = (Math.random() - 0.5) * cellWidth * 0.3;
+    const randomY = (Math.random() - 0.5) * cellHeight * 0.3;
+
+    element.style.left = `${baseX + randomX}px`;
+    element.style.top = `${baseY + randomY}px`;
+
+    // Click/Touch handler
+    let lastCollectTime = 0;
+    const handleCollect = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       const now = Date.now();
-      if (now - lastFlipTime < 100) return;
-      lastFlipTime = now;
+      if (now - lastCollectTime < 100) return;
+      lastCollectTime = now;
 
-      if (this.isChecking || card.classList.contains('flipped') || card.classList.contains('matched')) {
-        return;
-      }
+      if (element.classList.contains('collected')) return;
 
-      // Flip card
-      card.classList.add('flipped');
-      this.flippedCards.push(card);
+      // Kill animations and collect
+      gsap.killTweensOf(element);
+      element.classList.add('collected');
+      this.gameCollected++;
 
-      // Check for match when 2 cards are flipped
-      if (this.flippedCards.length === 2) {
-        this.isChecking = true;
-        this.checkMemoryMatch(progressBar);
+      const progress = (this.gameCollected / this.gameTarget) * 100;
+      progressBar.style.width = `${progress}%`;
+
+      if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
+        this.gameCompleted = true;
+        progressBar.classList.add('completed');
+
+        gsap.to(progressBar, {
+          scale: 1.05,
+          duration: 0.15,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power2.out'
+        });
+
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 800);
       }
     };
 
-    // Click and touch handlers - use debounce to prevent double trigger
-    card.addEventListener('click', handleFlip);
-    card.addEventListener('touchend', (e) => {
+    element.addEventListener('click', handleCollect);
+    element.addEventListener('touchend', (e) => {
       e.preventDefault();
-      handleFlip(e);
+      handleCollect(e);
     }, { passive: false });
 
-    return card;
-  }
+    // Entry animation
+    gsap.from(element, {
+      scale: 0,
+      rotation: -30,
+      duration: 0.4,
+      ease: 'back.out(1.5)',
+      force3D: true
+    });
 
-  checkMemoryMatch(progressBar) {
-    const [card1, card2] = this.flippedCards;
-    const isMatch = card1.dataset.image === card2.dataset.image;
+    // Floating animation - gentle bobbing
+    gsap.to(element, {
+      y: '+=12',
+      duration: 1.2 + Math.random() * 0.4,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: Math.random() * 0.3,
+      force3D: true
+    });
 
-    // Delay matches flip animation duration (550ms) + viewing time
-    setTimeout(() => {
-      if (isMatch) {
-        // Match found!
-        card1.classList.add('matched');
-        card2.classList.add('matched');
-        this.matchedPairs++;
+    // Subtle scale pulsing
+    gsap.to(element, {
+      scale: 1.1,
+      duration: 0.8 + Math.random() * 0.3,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+      delay: Math.random() * 0.5,
+      force3D: true
+    });
 
-        // Update progress
-        const progress = (this.matchedPairs / this.totalPairs) * 100;
-        progressBar.style.width = `${progress}%`;
-
-        // Smooth celebration animation
-        gsap.to([card1, card2], {
-          scale: 1.06,
-          duration: 0.25,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power1.inOut'
-        });
-
-        // Check win condition
-        if (this.matchedPairs >= this.totalPairs && !this.gameCompleted) {
-          this.gameCompleted = true;
-          progressBar.classList.add('completed');
-
-          gsap.to(progressBar, {
-            scale: 1.05,
-            duration: 0.2,
-            yoyo: true,
-            repeat: 1,
-            ease: 'power1.inOut'
-          });
-
-          // Wait for user tap after game completion
-          setTimeout(() => {
-            this.canAdvance = true;
-            this.showReadyToAdvance('game');
-          }, 1200);
-        }
-      } else {
-        // No match - flip back
-        card1.classList.remove('flipped');
-        card2.classList.remove('flipped');
-      }
-
-      this.flippedCards = [];
-      this.isChecking = false;
-    }, 750);
+    gameArea.appendChild(element);
   }
 
   // ===== Greeting Animation =====
@@ -1233,14 +1216,14 @@ class TwelveMonthsApp {
       'roses': 'Hái những đóa hồng',
       'sweets': 'Thu thập những viên kẹo ngọt',
       'kisses': 'Thu thập những nụ hôn',
-      'memory_match': 'Lật thẻ tìm cặp hình giống nhau'
+      'memory_match': 'Thu thập những trái tim yêu thương'
     };
     return gameTexts[gameType] || 'Thu thập các biểu tượng';
   }
 
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
-      return 'Chạm vào thẻ để lật và tìm các cặp hình giống nhau';
+      return 'Chạm vào các trái tim để thu thập!';
     }
     if (gameType === 'greeting') {
       return 'Chờ một chút nhé...';
@@ -1268,7 +1251,7 @@ class TwelveMonthsApp {
     return emojiSets[gameType] || emojiSets['hearts'];
   }
 
-  spawnGameElement(gameArea, emojis, progressBar, useCssHearts = false) {
+  spawnGameElement(gameArea, emojis, progressBar, useCssHearts = false, index = 0) {
     const element = document.createElement('div');
     element.className = 'game-element';
 
@@ -1282,17 +1265,29 @@ class TwelveMonthsApp {
 
     // Get dimensions with fallback values if not yet rendered
     const areaWidth = gameArea.offsetWidth || 500;
-    const areaHeight = gameArea.offsetHeight || 400;
+    const areaHeight = gameArea.offsetHeight || 350;
 
     // Calculate element size for proper positioning
-    const elementSize = 80;
-    const padding = 40;
-    const maxX = areaWidth - elementSize - padding;
-    const maxY = areaHeight - elementSize - padding;
+    const elementSize = 70;
+    const padding = 30;
+    const maxX = areaWidth - elementSize - padding * 2;
+    const maxY = areaHeight - elementSize - padding * 2;
 
-    // Better distribution across the game area
-    element.style.left = `${padding + Math.random() * maxX}px`;
-    element.style.top = `${padding + Math.random() * maxY}px`;
+    // Use grid-based positioning to avoid overlap
+    const cols = 3;
+    const rows = 2;
+    const cellWidth = maxX / cols;
+    const cellHeight = maxY / rows;
+
+    const col = index % cols;
+    const row = Math.floor(index / cols) % rows;
+
+    // Add some randomness within each cell
+    const randomOffsetX = (Math.random() - 0.5) * cellWidth * 0.4;
+    const randomOffsetY = (Math.random() - 0.5) * cellHeight * 0.4;
+
+    element.style.left = `${padding + col * cellWidth + cellWidth / 2 + randomOffsetX}px`;
+    element.style.top = `${padding + row * cellHeight + cellHeight / 2 + randomOffsetY}px`;
 
     // Click handler for web - with debounce to prevent touch/click double trigger
     let lastCollectTime = 0;

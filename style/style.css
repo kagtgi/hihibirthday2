@@ -61,8 +61,9 @@ h1, h2, h3 {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s ease-out, visibility 0.35s ease-out;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, visibility;
+  transform: translateZ(0);
 }
 
 .screen.active {
@@ -178,14 +179,16 @@ h1, h2, h3 {
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  padding-bottom: 5rem; /* Space for progress bar and tap hint */
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
-  will-change: opacity, visibility;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, visibility, transform;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
+  transform: translateZ(0);
 }
 
 .step.active {
@@ -327,7 +330,7 @@ h1, h2, h3 {
 .game-area {
   width: 100%;
   max-width: 500px;
-  height: 400px;
+  height: 350px;
   position: relative;
   border-radius: 25px;
   overflow: hidden;
@@ -337,28 +340,36 @@ h1, h2, h3 {
 
 .game-element {
   position: absolute;
-  font-size: 3.5rem;
+  font-size: 3rem;
   cursor: pointer;
-  transition: filter 0.15s ease-out, background 0.15s ease-out;
+  transition: filter 0.15s ease-out, background 0.15s ease-out, transform 0.15s ease-out;
   user-select: none;
-  padding: 12px;
+  padding: 10px;
   filter: drop-shadow(0 4px 8px rgba(255, 107, 122, 0.3));
   border-radius: 50%;
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
+  /* Minimum touch target size for mobile */
+  min-width: 60px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-element:hover {
   filter: drop-shadow(0 6px 16px rgba(255, 107, 122, 0.5));
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .game-element:active {
   filter: brightness(1.1);
+  transform: scale(1.1) !important;
 }
 
 .game-element.collected {
-  animation: collectPop 0.25s ease-out forwards;
+  animation: collectPop 0.3s ease-out forwards;
+  pointer-events: none;
 }
 
 /* Greeting Animation */
@@ -421,37 +432,47 @@ h1, h2, h3 {
 .answers-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  max-width: 450px;
+  gap: 0.8rem;
+  max-width: 420px;
   width: 100%;
+  padding: 0 0.5rem;
 }
 
 .answer-btn {
   font-family: 'Montserrat', sans-serif;
-  font-size: 1rem;
-  padding: 1.2rem 1rem;
+  font-size: 0.95rem;
+  padding: 1rem 0.8rem;
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
   color: var(--text-dark);
   cursor: pointer;
-  transition: transform 0.15s ease-out, background 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: transform 0.15s ease-out, background 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease-out;
   backdrop-filter: blur(5px);
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  /* Better touch target */
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.3;
 }
 
 .answer-btn:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.55);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.15);
+  box-shadow: 0 4px 15px rgba(255, 107, 122, 0.2);
+  border-color: rgba(255, 107, 122, 0.3);
 }
 
 .answer-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .answer-btn.selected {
@@ -736,19 +757,22 @@ h1, h2, h3 {
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   font-weight: 500;
-  padding: 0.8rem 2rem;
+  padding: 0.9rem 2rem;
   border: none;
   border-radius: 50px;
   background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
   color: white;
   cursor: pointer;
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-  margin-top: 0.25rem;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, opacity 0.2s ease-out;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   box-shadow: 0 4px 15px rgba(255, 107, 122, 0.3);
   position: relative;
   overflow: hidden;
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
+  /* Better touch target */
+  min-height: 48px;
 }
 
 .next-chapter-btn::before {
@@ -873,13 +897,17 @@ h1, h2, h3 {
 /* ===== Chapter Progress ===== */
 .chapter-progress {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   opacity: 0;
   transition: opacity 0.3s ease-out;
   text-align: center;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
 }
 
 .chapter-progress.visible {
@@ -933,8 +961,8 @@ h1, h2, h3 {
 
 @keyframes collectPop {
   0% { transform: scale(1) rotate(0deg); opacity: 1; }
-  40% { transform: scale(1.3) rotate(90deg); }
-  100% { transform: scale(0) rotate(180deg); opacity: 0; }
+  30% { transform: scale(1.4) rotate(45deg); opacity: 1; }
+  100% { transform: scale(0) rotate(90deg) translateY(-30px); opacity: 0; }
 }
 
 @keyframes typewriter {
@@ -970,12 +998,14 @@ h1, h2, h3 {
 
   .answers-grid {
     grid-template-columns: 1fr;
-    gap: 0.8rem;
+    gap: 0.7rem;
+    max-width: 320px;
   }
 
   .answer-btn {
-    padding: 1rem;
-    font-size: 0.95rem;
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+    min-height: 50px;
   }
 
   .hearts-reveal {
@@ -1026,7 +1056,14 @@ h1, h2, h3 {
   }
 
   .game-area {
-    height: 200px;
+    height: 220px;
+  }
+
+  .game-element {
+    font-size: 2.5rem;
+    min-width: 50px;
+    min-height: 50px;
+    padding: 8px;
   }
 
   .question-text {
@@ -1036,6 +1073,10 @@ h1, h2, h3 {
 
   .gallery-wrapper {
     height: 40vh;
+  }
+
+  .tap-hint {
+    bottom: 85px;
   }
 }
 
@@ -1275,111 +1316,37 @@ h1, h2, h3 {
   opacity: 1;
 }
 
-/* ===== Memory Match Game ===== */
-.game-area.memory-match-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 12px;
+/* ===== Floating Heart Game ===== */
+.game-element.floating-heart {
+  font-size: 3.2rem;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
   padding: 12px;
-  height: 280px;
-  max-width: 380px;
+  box-shadow: 0 4px 20px rgba(255, 107, 122, 0.3);
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
 }
 
-.memory-card {
-  perspective: 1200px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.2s ease;
+.game-element.floating-heart:hover {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 25px rgba(255, 107, 122, 0.5);
 }
 
-.memory-card:hover:not(.flipped):not(.matched) {
-  transform: scale(1.03);
+.game-element.floating-heart:active {
+  transform: scale(1.15) !important;
 }
 
-.memory-card:hover:not(.flipped):not(.matched) .memory-card-front {
-  box-shadow: 0 8px 25px rgba(255, 107, 122, 0.45);
-}
-
-.memory-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform-style: preserve-3d;
-}
-
-.memory-card.flipped .memory-card-inner,
-.memory-card.matched .memory-card-inner {
-  transform: rotateY(180deg);
-}
-
-.memory-card-front,
-.memory-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.memory-card-front {
-  background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
-  font-size: 1.8rem;
-  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.35);
-  transition: box-shadow 0.3s ease;
-}
-
-.memory-card-back {
-  background: white;
-  transform: rotateY(180deg);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.3s ease;
-}
-
-.memory-card-back img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.memory-card.matched .memory-card-front,
-.memory-card.matched .memory-card-back {
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
-  transition: box-shadow 0.4s ease;
-}
-
-/* Responsive adjustments for memory match */
+/* Responsive adjustments for floating hearts */
 @media screen and (max-width: 400px) {
-  .game-area.memory-match-grid {
-    gap: 8px;
-    padding: 8px;
-    height: 220px;
-    max-width: 300px;
-  }
-
-  .memory-card-front {
-    font-size: 1.2rem;
-  }
-
-  .game-text {
-    font-size: 1.1rem;
-  }
-
-  .game-hint {
-    font-size: 0.8rem;
+  .game-element.floating-heart {
+    font-size: 2.6rem;
+    padding: 10px;
   }
 }
 
 @media screen and (max-height: 700px) {
-  .game-area.memory-match-grid {
-    height: 200px;
-    max-width: 320px;
+  .game-element.floating-heart {
+    font-size: 2.4rem;
+    padding: 8px;
   }
 }
 
@@ -1429,13 +1396,15 @@ h1, h2, h3 {
   }
 
   .game-area {
-    max-width: 600px;
-    height: 450px;
+    max-width: 550px;
+    height: 380px;
   }
 
   .game-element {
-    font-size: 4rem;
-    padding: 15px;
+    font-size: 3.5rem;
+    padding: 12px;
+    min-width: 70px;
+    min-height: 70px;
   }
 
   .game-progress {
@@ -1504,14 +1473,9 @@ h1, h2, h3 {
     font-size: 6rem;
   }
 
-  .game-area.memory-match-grid {
-    height: 340px;
-    max-width: 460px;
-    gap: 14px;
-  }
-
-  .memory-card-front {
-    font-size: 2rem;
+  .game-element.floating-heart {
+    font-size: 3.5rem;
+    padding: 14px;
   }
 }
 
@@ -1526,12 +1490,14 @@ h1, h2, h3 {
   }
 
   .game-area {
-    max-width: 700px;
-    height: 500px;
+    max-width: 600px;
+    height: 420px;
   }
 
   .game-element {
-    font-size: 4.5rem;
+    font-size: 4rem;
+    min-width: 80px;
+    min-height: 80px;
   }
 
   .gallery-wrapper {
@@ -1542,10 +1508,9 @@ h1, h2, h3 {
     max-width: 900px;
   }
 
-  .game-area.memory-match-grid {
-    height: 380px;
-    max-width: 520px;
-    gap: 16px;
+  .game-element.floating-heart {
+    font-size: 4rem;
+    padding: 16px;
   }
 }
 
@@ -1561,7 +1526,7 @@ h1, h2, h3 {
 /* ===== Tap Hint Indicator ===== */
 .tap-hint {
   position: absolute;
-  bottom: 80px;
+  bottom: 100px; /* Above progress bar */
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -1570,15 +1535,16 @@ h1, h2, h3 {
 
 .tap-hint-text {
   display: inline-block;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 25px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 30px;
   font-size: 0.9rem;
   color: var(--primary);
   font-weight: 500;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(255, 107, 122, 0.25);
   animation: tapHintPulse 2s ease-in-out infinite;
   pointer-events: none;
+  backdrop-filter: blur(5px);
 }
 
 @keyframes tapHintPulse {
@@ -1587,7 +1553,7 @@ h1, h2, h3 {
     opacity: 0.9;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.03);
     opacity: 1;
   }
 }
