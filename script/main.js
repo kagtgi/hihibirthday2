@@ -930,18 +930,13 @@ class TwelveMonthsApp {
   }
 
   cleanupGameArea() {
-    // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
-    const gameElements = gameArea.querySelectorAll('.game-element, .falling-heart, .greeting-container');
+    const gameElements = gameArea.querySelectorAll('.tap-item, .greeting-container');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
     });
-    // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
     gsap.killTweensOf(progressBar);
-    progressBar.style.transition = ''; // Reset transition
-    // Remove game-specific classes
-    gameArea.classList.remove('memory-match-grid', 'falling-hearts-game', 'hearts-complete');
   }
 
   nextChapter() {
@@ -985,74 +980,92 @@ class TwelveMonthsApp {
     progressBar.classList.remove('completed');
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
-    const useCssHearts = chapter.minigameType === 'css_hearts';
 
-    // Wait for CSS transition to complete before spawning elements
-    // Step transition is 0.35s (350ms), adding buffer for proper rendering
+    // Wait for CSS transition then spawn elements
     setTimeout(() => {
-      // Spawn elements with staggered timing
       for (let i = 0; i < this.gameTarget; i++) {
         setTimeout(() => {
-          this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts, i);
-        }, i * 150);
+          this.createTapElement(gameArea, gameEmojis[i % gameEmojis.length], progressBar, i);
+        }, i * 180);
       }
     }, 400);
   }
 
-  // ===== Falling Hearts Animation Game (CSS-only, no tap required) =====
+  // ===== Simple Tap Hearts Game =====
   startTapHeartsGame() {
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid');
-    gameArea.classList.add('falling-hearts-game');
+    gameArea.classList.remove('memory-match-grid', 'falling-hearts-game', 'hearts-complete');
     this.gameCompleted = false;
+    this.gameCollected = 0;
+    this.gameTarget = 5;
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    // Heart emojis
-    const heartEmojis = ['💕', '💗', '💖', '💝', '❤️', '💓', '🩷', '💘'];
-    const totalHearts = 12;
-    const gameDuration = 4000; // 4 seconds
+    const heartEmojis = ['💕', '💗', '💖', '💝', '❤️'];
 
     // Wait for CSS transition
     setTimeout(() => {
-      // Create falling hearts with CSS animation
-      for (let i = 0; i < totalHearts; i++) {
-        const heart = document.createElement('div');
-        heart.className = 'falling-heart';
-        heart.textContent = heartEmojis[i % heartEmojis.length];
-
-        // Random horizontal position
-        const leftPos = 10 + Math.random() * 80; // 10% to 90%
-        heart.style.left = `${leftPos}%`;
-
-        // Staggered animation delay
-        const delay = (i / totalHearts) * 2.5; // Spread over 2.5s
-        heart.style.animationDelay = `${delay}s`;
-
-        // Random size variation
-        const scale = 0.8 + Math.random() * 0.5;
-        heart.style.setProperty('--heart-scale', scale);
-
-        gameArea.appendChild(heart);
+      for (let i = 0; i < this.gameTarget; i++) {
+        setTimeout(() => {
+          this.createTapElement(gameArea, heartEmojis[i], progressBar, i);
+        }, i * 180);
       }
+    }, 400);
+  }
 
-      // Animate progress bar with CSS
-      progressBar.style.transition = `width ${gameDuration}ms ease-out`;
-      progressBar.style.width = '100%';
+  // Simple tap element creator - used by all tap games
+  createTapElement(gameArea, emoji, progressBar, index) {
+    const element = document.createElement('div');
+    element.className = 'tap-item';
+    element.textContent = emoji;
 
-      // Complete game after animation
-      setTimeout(() => {
+    // Grid positioning to avoid overlap
+    const areaWidth = gameArea.offsetWidth || 500;
+    const areaHeight = gameArea.offsetHeight || 350;
+    const cols = 3;
+    const rows = 2;
+    const cellW = (areaWidth - 100) / cols;
+    const cellH = (areaHeight - 100) / rows;
+    const col = index % cols;
+    const row = Math.floor(index / cols) % rows;
+
+    const x = 50 + col * cellW + cellW / 2 + (Math.random() - 0.5) * 40;
+    const y = 50 + row * cellH + cellH / 2 + (Math.random() - 0.5) * 30;
+
+    element.style.left = `${x}px`;
+    element.style.top = `${y}px`;
+
+    // Tap handler
+    const handleTap = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (element.classList.contains('collected')) return;
+
+      element.classList.add('collected');
+      this.gameCollected++;
+
+      progressBar.style.width = `${(this.gameCollected / this.gameTarget) * 100}%`;
+
+      if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
         this.gameCompleted = true;
         progressBar.classList.add('completed');
-        gameArea.classList.add('hearts-complete');
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 600);
+      }
+    };
 
-        this.canAdvance = true;
-        this.showReadyToAdvance('game');
-      }, gameDuration);
-    }, 400);
+    element.addEventListener('click', handleTap);
+    element.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      handleTap(e);
+    }, { passive: false });
+
+    gameArea.appendChild(element);
   }
 
   // ===== Greeting Animation =====
@@ -1146,9 +1159,6 @@ class TwelveMonthsApp {
   }
 
   getGameHint(gameType) {
-    if (gameType === 'memory_match') {
-      return 'Ngắm nhìn những trái tim rơi...';
-    }
     if (gameType === 'greeting') {
       return 'Chờ một chút nhé...';
     }
@@ -1173,141 +1183,6 @@ class TwelveMonthsApp {
       'kisses': ['💋', '💕', '💗', '💖', '❤️']
     };
     return emojiSets[gameType] || emojiSets['hearts'];
-  }
-
-  spawnGameElement(gameArea, emojis, progressBar, useCssHearts = false, index = 0) {
-    const element = document.createElement('div');
-    element.className = 'game-element';
-
-    if (useCssHearts) {
-      // Create CSS heart instead of emoji
-      element.innerHTML = '<span class="css-heart-game"></span>';
-      element.classList.add('css-heart-element');
-    } else {
-      element.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    }
-
-    // Get dimensions with fallback values if not yet rendered
-    const areaWidth = gameArea.offsetWidth || 500;
-    const areaHeight = gameArea.offsetHeight || 350;
-
-    // Calculate element size for proper positioning
-    const elementSize = 70;
-    const padding = 30;
-    const maxX = areaWidth - elementSize - padding * 2;
-    const maxY = areaHeight - elementSize - padding * 2;
-
-    // Use grid-based positioning to avoid overlap
-    const cols = 3;
-    const rows = 2;
-    const cellWidth = maxX / cols;
-    const cellHeight = maxY / rows;
-
-    const col = index % cols;
-    const row = Math.floor(index / cols) % rows;
-
-    // Add some randomness within each cell
-    const randomOffsetX = (Math.random() - 0.5) * cellWidth * 0.4;
-    const randomOffsetY = (Math.random() - 0.5) * cellHeight * 0.4;
-
-    element.style.left = `${padding + col * cellWidth + cellWidth / 2 + randomOffsetX}px`;
-    element.style.top = `${padding + row * cellHeight + cellHeight / 2 + randomOffsetY}px`;
-
-    // Click handler for web - with debounce to prevent touch/click double trigger
-    let lastCollectTime = 0;
-    const handleCollect = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Prevent double trigger from touch and click events
-      const now = Date.now();
-      if (now - lastCollectTime < 100) return;
-      lastCollectTime = now;
-
-      if (element.classList.contains('collected')) return;
-
-      // Kill all GSAP animations and reset transform for clean CSS animation
-      gsap.killTweensOf(element);
-      gsap.set(element, { clearProps: 'transform' });
-
-      // Add collected class after clearing GSAP props
-      element.classList.add('collected');
-      this.gameCollected++;
-
-      const progress = (this.gameCollected / this.gameTarget) * 100;
-      progressBar.style.width = `${progress}%`;
-
-      if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
-        this.gameCompleted = true;
-        progressBar.classList.add('completed');
-
-        // Celebration animation
-        gsap.to(progressBar, {
-          scale: 1.05,
-          duration: 0.15,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power2.out'
-        });
-
-        // Wait for user tap after game completion
-          setTimeout(() => {
-            this.canAdvance = true;
-            this.showReadyToAdvance('game');
-          }, 1000);
-      }
-    };
-
-    // Click and touch handlers
-    element.addEventListener('click', handleCollect);
-    element.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      handleCollect(e);
-    }, { passive: false });
-
-    // Hover effect for desktop
-    element.addEventListener('mouseenter', () => {
-      if (!element.classList.contains('collected')) {
-        gsap.to(element, { scale: 1.3, duration: 0.15, ease: 'power2.out' });
-      }
-    });
-    element.addEventListener('mouseleave', () => {
-      if (!element.classList.contains('collected')) {
-        gsap.to(element, { scale: 1, duration: 0.15, ease: 'power2.out' });
-      }
-    });
-
-    // Entry animation
-    gsap.from(element, {
-      scale: 0,
-      rotation: -90,
-      duration: 0.35,
-      ease: 'back.out(1.4)',
-      force3D: true
-    });
-
-    // Floating animation
-    gsap.to(element, {
-      y: '+=10',
-      duration: 1.4 + Math.random() * 0.4,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: Math.random() * 0.3,
-      force3D: true
-    });
-
-    // Subtle rotation animation
-    gsap.to(element, {
-      rotation: '+=6',
-      duration: 2.2 + Math.random() * 0.6,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      force3D: true
-    });
-
-    gameArea.appendChild(element);
   }
 
   // ===== Ending Experience =====
