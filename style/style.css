@@ -1191,6 +1191,29 @@ h1, h2, h3 {
   transition: opacity 0.2s ease-out;
 }
 
+/* Image Error State */
+.image-skeleton.image-error {
+  background: rgba(0, 0, 0, 0.1);
+  animation: none;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.image-skeleton.image-error::before {
+  display: none;
+}
+
+.image-skeleton .error-icon {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+.image-skeleton .error-text {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  opacity: 0.6;
+}
+
 /* ===== Game Completion ===== */
 .game-progress .progress-bar.completed {
   background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
@@ -1735,6 +1758,31 @@ h1, h2, h3 {
     max-width: 520px;
     gap: 16px;
   }
+}
+
+/* ===== Accessibility - Focus Indicators ===== */
+.start-btn:focus-visible,
+.answer-btn:focus-visible,
+.gallery-prev:focus-visible,
+.gallery-next:focus-visible,
+.gift-btn:focus-visible,
+.next-chapter-btn:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 107, 122, 0.25);
+}
+
+/* Remove default outline but keep focus-visible for keyboard users */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Game elements focus */
+.game-element:focus-visible,
+.memory-card:focus-visible,
+.heart-burst-main:focus-visible {
+  outline: 3px solid var(--gold-choice);
+  outline-offset: 2px;
 }
 
 /* ===== Utility Classes ===== */

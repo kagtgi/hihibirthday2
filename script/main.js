@@ -29,6 +29,10 @@ class TwelveMonthsApp {
     this.gallerySwiping = false;   // Prevent rapid swiping
     this.gallerySwipeCooldown = 400; // ms between swipes
 
+    // Event handler references for cleanup (prevent memory leaks)
+    this.keydownHandler = null;
+    this.greetingHeartInterval = null;
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -83,11 +87,26 @@ class TwelveMonthsApp {
   showError(message) {
     const introContent = document.querySelector('.intro-content');
     if (introContent) {
-      introContent.innerHTML = `
-        <h1 class="intro-title">Oops!</h1>
-        <p class="intro-subtitle">${message}</p>
-        <button class="start-btn" onclick="location.reload()">Tải Lại</button>
-      `;
+      // Clear existing content safely
+      introContent.innerHTML = '';
+
+      // Create elements safely to prevent XSS
+      const title = document.createElement('h1');
+      title.className = 'intro-title';
+      title.textContent = 'Oops!';
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'intro-subtitle';
+      subtitle.textContent = message; // Safe: textContent doesn't execute HTML
+
+      const btn = document.createElement('button');
+      btn.className = 'start-btn';
+      btn.textContent = 'Tải Lại';
+      btn.addEventListener('click', () => location.reload());
+
+      introContent.appendChild(title);
+      introContent.appendChild(subtitle);
+      introContent.appendChild(btn);
     }
   }
 
@@ -114,14 +133,19 @@ class TwelveMonthsApp {
   setupEventListeners() {
     // Helper function to add both click and touch handlers
     const addClickAndTouch = (element, handler) => {
+      if (!element) return; // Safety check
+
       let lastEventTime = 0;
+      const debounceTime = 200; // Increased for slower devices
+
       const wrappedHandler = (e) => {
         // Prevent double-trigger from touch + click
         const now = Date.now();
-        if (now - lastEventTime < 100) return;
+        if (now - lastEventTime < debounceTime) return;
         lastEventTime = now;
         handler(e);
       };
+
       element.addEventListener('click', wrappedHandler);
       element.addEventListener('touchend', (e) => {
         e.preventDefault();
@@ -240,7 +264,8 @@ class TwelveMonthsApp {
   }
 
   setupKeyboardNavigation() {
-    document.addEventListener('keydown', (e) => {
+    // Store handler reference for cleanup (prevent memory leaks)
+    this.keydownHandler = (e) => {
       // Get current active screen
       const introActive = this.introScreen.classList.contains('active');
       const chapterActive = this.chapterScreen.classList.contains('active');
@@ -307,14 +332,17 @@ class TwelveMonthsApp {
       if (endingActive) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          document.querySelector('.gift-btn').click();
+          document.querySelector('.gift-btn')?.click();
         }
       }
-    });
+    };
+
+    document.addEventListener('keydown', this.keydownHandler);
   }
 
   updateTotalChapters() {
-    document.querySelector('.total-chapters').textContent = this.chapters.length;
+    const el = document.querySelector('.total-chapters');
+    if (el) el.textContent = this.chapters.length;
   }
 
   animateIntro() {
@@ -433,46 +461,57 @@ class TwelveMonthsApp {
 
   updateProgress() {
     const progress = ((this.currentChapter + 1) / this.chapters.length) * 100;
-    document.querySelector('.current-chapter').textContent = this.currentChapter + 1;
-    document.querySelector('.progress-fill').style.width = `${progress}%`;
+    const currentEl = document.querySelector('.current-chapter');
+    const progressEl = document.querySelector('.progress-fill');
+
+    if (currentEl) currentEl.textContent = this.currentChapter + 1;
+    if (progressEl) progressEl.style.width = `${progress}%`;
   }
 
   populateChapterData(chapter) {
+    // Helper for safe text content setting
+    const setText = (selector, text) => {
+      const el = document.querySelector(selector);
+      if (el) el.textContent = text;
+    };
+
     // Title Card
-    document.querySelector('.chapter-number').textContent = this.currentChapter + 1;
-    document.querySelector('.chapter-month').textContent = chapter.month;
+    setText('.chapter-number', this.currentChapter + 1);
+    setText('.chapter-month', chapter.month || '');
 
     // Quote
-    document.querySelector('.quote-text').textContent = chapter.text || '';
+    setText('.quote-text', chapter.text || '');
 
     // Note
-    document.querySelector('.note-text').textContent = chapter.myNote || '';
+    setText('.note-text', chapter.myNote || '');
 
     // Game text and hint - dynamic based on game type
-    document.querySelector('.game-text').textContent = chapter.text || this.getGameText(chapter.minigameType);
-    document.querySelector('.game-hint').textContent = this.getGameHint(chapter.minigameType);
+    setText('.game-text', chapter.text || this.getGameText(chapter.minigameType));
+    setText('.game-hint', this.getGameHint(chapter.minigameType));
 
     // Question
-    document.querySelector('.question-text').textContent = chapter.question || '';
+    setText('.question-text', chapter.question || '');
     this.populateAnswers(chapter);
 
     // Caption
-    document.querySelector('.image-caption').textContent = chapter.caption || '';
+    setText('.image-caption', chapter.caption || '');
 
     // Images
     this.populateGallery(chapter);
 
     // Update next button text for last chapter
     const nextBtn = document.querySelector('.next-chapter-btn');
-    if (this.currentChapter === this.chapters.length - 1) {
-      nextBtn.textContent = 'Xem Kết Thúc 💕';
-    } else {
-      nextBtn.textContent = 'Tiếp Theo →';
+    if (nextBtn) {
+      nextBtn.textContent = this.currentChapter === this.chapters.length - 1
+        ? 'Xem Kết Thúc 💕'
+        : 'Tiếp Theo →';
     }
   }
 
   populateAnswers(chapter) {
     const grid = document.querySelector('.answers-grid');
+    if (!grid) return;
+
     grid.innerHTML = '';
 
     if (!chapter.answers || typeof chapter.answers !== 'object') return;
@@ -536,17 +575,19 @@ class TwelveMonthsApp {
 
       const img = document.createElement('img');
       img.className = 'gallery-image';
-      img.alt = `Memory ${index + 1}`;
+      img.alt = `Kỷ niệm ${index + 1}`;
       img.style.opacity = '0';
 
-      // Set src after creating element for smoother loading
-      img.src = `image/${imgPath}`;
+      // Track if this image has already been handled
+      let imageHandled = false;
 
-      img.onload = () => {
-        skeleton.remove();
-        // Mark this image as loaded
+      const handleImageLoad = () => {
+        if (imageHandled) return;
+        imageHandled = true;
+
+        if (skeleton.parentNode) skeleton.remove();
         this.galleryImageLoaded[index] = true;
-        // Quick fade in - faster for better responsiveness
+        // Quick fade in
         gsap.to(img, {
           opacity: 1,
           duration: 0.2,
@@ -555,12 +596,31 @@ class TwelveMonthsApp {
         });
       };
 
-      img.onerror = () => {
-        wrapper.style.display = 'none';
-        // Mark as "loaded" so it doesn't block navigation
+      const handleImageError = () => {
+        if (imageHandled) return;
+        imageHandled = true;
+
+        // Show error placeholder instead of hiding
+        if (skeleton.parentNode) {
+          skeleton.classList.add('image-error');
+          skeleton.innerHTML = '<span class="error-icon">📷</span><span class="error-text">Không tải được</span>';
+        }
         this.galleryImageLoaded[index] = true;
-        console.warn(`Failed to load image: ${imgPath}`);
+        img.style.display = 'none';
       };
+
+      img.onload = handleImageLoad;
+      img.onerror = handleImageError;
+
+      // Timeout fallback - if image takes too long, show error
+      setTimeout(() => {
+        if (!imageHandled && !img.complete) {
+          handleImageError();
+        }
+      }, 15000); // 15 second timeout
+
+      // Set src after creating element
+      img.src = `image/${imgPath}`;
 
       wrapper.appendChild(img);
       container.appendChild(wrapper);
@@ -573,13 +633,29 @@ class TwelveMonthsApp {
   }
 
   preloadAllChapterImages(validImages) {
-    // Preload all images in current chapter immediately
-    validImages.forEach((imgPath, index) => {
+    // Preload first 4 images immediately, rest progressively
+    // This balances speed with memory usage on mobile devices
+    const immediatePreload = Math.min(4, validImages.length);
+
+    validImages.slice(0, immediatePreload).forEach((imgPath, index) => {
       if (!this.galleryImageLoaded[index]) {
         const preloadImg = new Image();
         preloadImg.src = `image/${imgPath}`;
       }
     });
+
+    // Preload remaining images with delay to reduce memory pressure
+    if (validImages.length > immediatePreload) {
+      validImages.slice(immediatePreload).forEach((imgPath, index) => {
+        setTimeout(() => {
+          const actualIndex = immediatePreload + index;
+          if (!this.galleryImageLoaded[actualIndex]) {
+            const preloadImg = new Image();
+            preloadImg.src = `image/${imgPath}`;
+          }
+        }, (index + 1) * 500); // Stagger by 500ms
+      });
+    }
   }
 
   preloadNextChapterImages() {
@@ -756,8 +832,16 @@ class TwelveMonthsApp {
     const herChoiceBox = document.querySelector('.her-choice .choice-box');
     const myChoiceBox = document.querySelector('.my-choice .choice-box');
 
-    herChoiceBox.textContent = chapter.answers[selectedKey] || '';
-    myChoiceBox.innerHTML = `${chapter.answers[correctKey] || ''}<span class="heart-icon">💛</span>`;
+    herChoiceBox.textContent = chapter.answers?.[selectedKey] || '';
+
+    // Safe DOM manipulation to prevent XSS
+    myChoiceBox.textContent = '';
+    const answerText = document.createTextNode(chapter.answers?.[correctKey] || '');
+    const heartSpan = document.createElement('span');
+    heartSpan.className = 'heart-icon';
+    heartSpan.textContent = '💛';
+    myChoiceBox.appendChild(answerText);
+    myChoiceBox.appendChild(heartSpan);
   }
 
   getStepElement(stepName) {
@@ -949,16 +1033,25 @@ class TwelveMonthsApp {
   }
 
   cleanupGameArea() {
+    // Clear any running intervals first
+    if (this.greetingHeartInterval) {
+      clearInterval(this.greetingHeartInterval);
+      this.greetingHeartInterval = null;
+    }
+
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
+    if (!gameArea) return;
+
     const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
       gsap.set(el, { clearProps: 'all' });
     });
+
     // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
-    gsap.killTweensOf(progressBar);
+    if (progressBar) gsap.killTweensOf(progressBar);
 
     // Clean up game area classes
     gameArea.classList.remove('memory-match-grid', 'heart-burst-grid');
@@ -1240,8 +1333,23 @@ class TwelveMonthsApp {
     const heartsContainer = document.querySelector('.greeting-hearts');
     if (!heartsContainer) return;
 
+    // Clear any existing interval first
+    if (this.greetingHeartInterval) {
+      clearInterval(this.greetingHeartInterval);
+      this.greetingHeartInterval = null;
+    }
+
     const hearts = ['💕', '💗', '💖', '💝', '❤️'];
     const spawnHeart = () => {
+      // Safety check - don't spawn if container is gone
+      if (!document.contains(heartsContainer)) {
+        if (this.greetingHeartInterval) {
+          clearInterval(this.greetingHeartInterval);
+          this.greetingHeartInterval = null;
+        }
+        return;
+      }
+
       const heart = document.createElement('span');
       heart.className = 'greeting-heart';
       heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
@@ -1258,10 +1366,15 @@ class TwelveMonthsApp {
     for (let i = 0; i < 3; i++) {
       setTimeout(spawnHeart, i * 400);
     }
-    const heartInterval = setInterval(spawnHeart, 600);
+    this.greetingHeartInterval = setInterval(spawnHeart, 600);
 
     // Stop spawning after animation completes
-    setTimeout(() => clearInterval(heartInterval), 3000);
+    setTimeout(() => {
+      if (this.greetingHeartInterval) {
+        clearInterval(this.greetingHeartInterval);
+        this.greetingHeartInterval = null;
+      }
+    }, 3000);
   }
 
   // ===== Simple Greeting (No Animation) =====
