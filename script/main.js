@@ -522,14 +522,17 @@ class TwelveMonthsApp {
     this.galleryImageLoaded = new Array(validImages.length).fill(false);
     this.gallerySwiping = false;
 
+    // OPTIMIZATION: Preload ALL images immediately in background
+    this.preloadAllChapterImages(validImages);
+
     validImages.forEach((imgPath, index) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'gallery-image-wrapper';
 
-      // Add loading spinner
-      const spinner = document.createElement('div');
-      spinner.className = 'image-loading-spinner';
-      wrapper.appendChild(spinner);
+      // Add skeleton placeholder for better UX
+      const skeleton = document.createElement('div');
+      skeleton.className = 'image-skeleton';
+      wrapper.appendChild(skeleton);
 
       const img = document.createElement('img');
       img.className = 'gallery-image';
@@ -540,20 +543,16 @@ class TwelveMonthsApp {
       img.src = `image/${imgPath}`;
 
       img.onload = () => {
-        spinner.remove();
+        skeleton.remove();
         // Mark this image as loaded
         this.galleryImageLoaded[index] = true;
-        // Optimized fade in - faster, GPU accelerated
+        // Quick fade in - faster for better responsiveness
         gsap.to(img, {
           opacity: 1,
-          duration: 0.3,
+          duration: 0.2,
           ease: 'power2.out',
           force3D: true
         });
-        // When first image loads, start preloading next images
-        if (index === 0) {
-          this.preloadAdjacentImages();
-        }
       };
 
       img.onerror = () => {
@@ -568,6 +567,38 @@ class TwelveMonthsApp {
     });
 
     this.updateGalleryNav(validImages.length);
+
+    // Preload next chapter images for smoother transitions
+    this.preloadNextChapterImages();
+  }
+
+  preloadAllChapterImages(validImages) {
+    // Preload all images in current chapter immediately
+    validImages.forEach((imgPath, index) => {
+      if (!this.galleryImageLoaded[index]) {
+        const preloadImg = new Image();
+        preloadImg.src = `image/${imgPath}`;
+      }
+    });
+  }
+
+  preloadNextChapterImages() {
+    // Preload first 2 images of next chapter for smooth transition
+    const nextChapterIndex = this.currentChapter + 1;
+    if (nextChapterIndex < this.chapters.length) {
+      const nextChapter = this.chapters[nextChapterIndex];
+      if (nextChapter.image && nextChapter.image.length > 0) {
+        const validImages = nextChapter.image.filter(img => {
+          const ext = img.toLowerCase().split('.').pop();
+          return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+        });
+        // Preload first 2 images of next chapter
+        validImages.slice(0, 2).forEach(imgPath => {
+          const preloadImg = new Image();
+          preloadImg.src = `image/${imgPath}`;
+        });
+      }
+    }
   }
 
   updateGalleryNav(total) {
@@ -629,7 +660,7 @@ class TwelveMonthsApp {
   }
 
   galleryPrev() {
-    // Prevent rapid swiping
+    // Prevent rapid swiping - reduced cooldown for responsiveness
     if (this.gallerySwiping) return;
 
     const chapter = this.chapters[this.currentChapter];
@@ -641,26 +672,20 @@ class TwelveMonthsApp {
     const targetIndex = this.currentGalleryIndex - 1;
     if (targetIndex < 0) return;
 
-    // Check if target image has loaded, or wait briefly
-    if (!this.galleryImageLoaded[targetIndex]) {
-      // Image not loaded yet, wait a bit and try again
-      setTimeout(() => this.galleryPrev(), 100);
-      return;
-    }
-
+    // Navigate immediately - skeleton handles loading UX
     this.gallerySwiping = true;
     this.currentGalleryIndex = targetIndex;
     this.slideGallery();
     this.updateGalleryNav(validImages.length);
 
-    // Reset swipe cooldown
+    // Shorter cooldown for faster navigation
     setTimeout(() => {
       this.gallerySwiping = false;
-    }, this.gallerySwipeCooldown);
+    }, 250);
   }
 
   galleryNext() {
-    // Prevent rapid swiping
+    // Prevent rapid swiping - reduced cooldown for responsiveness
     if (this.gallerySwiping) return;
 
     const chapter = this.chapters[this.currentChapter];
@@ -672,48 +697,22 @@ class TwelveMonthsApp {
     const targetIndex = this.currentGalleryIndex + 1;
     if (targetIndex >= validImages.length) return;
 
-    // Check if target image has loaded, or wait briefly
-    if (!this.galleryImageLoaded[targetIndex]) {
-      // Image not loaded yet, wait a bit and try again
-      setTimeout(() => this.galleryNext(), 100);
-      return;
-    }
-
+    // Navigate immediately - skeleton handles loading UX
     this.gallerySwiping = true;
     this.currentGalleryIndex = targetIndex;
     this.slideGallery();
     this.updateGalleryNav(validImages.length);
 
-    // Reset swipe cooldown
+    // Shorter cooldown for faster navigation
     setTimeout(() => {
       this.gallerySwiping = false;
-    }, this.gallerySwipeCooldown);
+    }, 250);
   }
 
   slideGallery() {
     const container = document.querySelector('.gallery-container');
     const offset = -this.currentGalleryIndex * 100;
     container.style.transform = `translateX(${offset}%)`;
-
-    // Preload adjacent images for smoother experience
-    this.preloadAdjacentImages();
-  }
-
-  preloadAdjacentImages() {
-    const chapter = this.chapters[this.currentChapter];
-    const validImages = (chapter.image || []).filter(img => {
-      const ext = img.toLowerCase().split('.').pop();
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-    });
-
-    // Preload next 2 images
-    for (let i = 1; i <= 2; i++) {
-      const nextIndex = this.currentGalleryIndex + i;
-      if (nextIndex < validImages.length && !this.galleryImageLoaded[nextIndex]) {
-        const preloadImg = new Image();
-        preloadImg.src = `image/${validImages[nextIndex]}`;
-      }
-    }
   }
 
   selectAnswer(btn, selectedKey, correctKey, chapter) {
