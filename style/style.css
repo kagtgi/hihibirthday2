@@ -61,7 +61,7 @@ h1, h2, h3 {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s ease-out, visibility 0.35s ease-out;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, visibility;
 }
 
@@ -180,7 +180,7 @@ h1, h2, h3 {
   padding: 2rem;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, visibility;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -246,9 +246,12 @@ h1, h2, h3 {
 .quote-text {
   font-family: 'Playfair Display', serif;
   font-size: 1.8rem;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--text-dark);
   position: relative;
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .quote-text::before {
@@ -300,6 +303,9 @@ h1, h2, h3 {
   line-height: 1.7;
   font-style: italic;
   color: var(--text-dark);
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 /* Step 4: Game Step */
@@ -313,7 +319,9 @@ h1, h2, h3 {
   font-size: 1.3rem;
   margin-bottom: 0.8rem;
   text-align: center;
-  white-space: nowrap;
+  line-height: 1.4;
+  max-width: 90%;
+  word-wrap: break-word;
 }
 
 .game-hint {
@@ -321,7 +329,9 @@ h1, h2, h3 {
   opacity: 0.7;
   margin-bottom: 1.2rem;
   text-align: center;
-  white-space: nowrap;
+  line-height: 1.3;
+  max-width: 85%;
+  word-wrap: break-word;
 }
 
 .game-area {
@@ -414,8 +424,11 @@ h1, h2, h3 {
 .question-text {
   font-size: 1.6rem;
   margin-bottom: 2rem;
-  line-height: 1.4;
+  line-height: 1.5;
   max-width: 500px;
+  word-wrap: break-word;
+  hyphens: auto;
+  padding: 0 0.5rem;
 }
 
 .answers-grid {
@@ -430,18 +443,22 @@ h1, h2, h3 {
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   padding: 1.2rem 1rem;
+  min-height: 52px;
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.3);
   color: var(--text-dark);
   cursor: pointer;
-  transition: transform 0.15s ease-out, background 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: transform 0.15s ease-out, background 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease-out;
   backdrop-filter: blur(5px);
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  line-height: 1.3;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .answer-btn:hover {
@@ -588,7 +605,7 @@ h1, h2, h3 {
 .gallery-container {
   display: flex;
   height: 100%;
-  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform;
 }
 
@@ -634,17 +651,20 @@ h1, h2, h3 {
 .gallery-next {
   width: 50px;
   height: 50px;
+  min-width: 50px;
+  min-height: 50px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.6);
   color: var(--primary);
   font-size: 0;
   cursor: pointer;
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
   position: relative;
   box-shadow: 0 4px 12px rgba(255, 107, 122, 0.25);
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* CSS Arrow Icons */
@@ -913,32 +933,34 @@ h1, h2, h3 {
 /* ===== Animations ===== */
 @keyframes titlePulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+  50% { transform: scale(1.015); }
 }
 
 @keyframes heartBeat {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1.15); }
+  75% { transform: scale(1.1); }
 }
 
 @keyframes fadeInOut {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
 }
 
 @keyframes slowZoom {
   0% { transform: scale(1); }
-  100% { transform: scale(1.1); }
+  100% { transform: scale(1.08); }
 }
 
 @keyframes collectPop {
   0% { transform: scale(1) rotate(0deg); opacity: 1; }
-  40% { transform: scale(1.3) rotate(90deg); }
-  100% { transform: scale(0) rotate(180deg); opacity: 0; }
+  30% { transform: scale(1.25) rotate(60deg); }
+  100% { transform: scale(0) rotate(150deg); opacity: 0; }
 }
 
 @keyframes typewriter {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -958,24 +980,34 @@ h1, h2, h3 {
 
   .chapter-month {
     font-size: 1.6rem;
+    padding: 0 1rem;
   }
 
   .quote-text {
     font-size: 1.4rem;
+    padding: 0 0.5rem;
+  }
+
+  .quote-container {
+    padding: 0 0.5rem;
   }
 
   .question-text {
     font-size: 1.3rem;
+    padding: 0 0.5rem;
   }
 
   .answers-grid {
     grid-template-columns: 1fr;
     gap: 0.8rem;
+    max-width: 100%;
+    padding: 0 0.5rem;
   }
 
   .answer-btn {
     padding: 1rem;
     font-size: 0.95rem;
+    min-height: 48px;
   }
 
   .hearts-reveal {
@@ -990,6 +1022,7 @@ h1, h2, h3 {
   .choice-box {
     width: 140px;
     height: 55px;
+    font-size: 0.85rem;
   }
 
   .gallery-wrapper {
@@ -999,15 +1032,49 @@ h1, h2, h3 {
   .image-caption {
     font-size: 1rem;
     padding: 0.8rem 1rem;
+    line-height: 1.4;
   }
 
   .ending-message {
     font-size: 1.3rem;
+    line-height: 1.5;
   }
 
   .collage-container {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(8, 1fr);
+  }
+
+  .note-container {
+    padding: 1.5rem;
+    margin: 0 0.5rem;
+  }
+
+  .note-text {
+    font-size: 1.15rem;
+  }
+
+  .game-text {
+    font-size: 1.15rem;
+    padding: 0 0.5rem;
+  }
+
+  .game-hint {
+    font-size: 0.85rem;
+    padding: 0 0.5rem;
+  }
+
+  .swipe-hint {
+    font-size: 0.8rem;
+    padding: 0 0.5rem;
+  }
+
+  .gallery-prev,
+  .gallery-next {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
@@ -1026,7 +1093,7 @@ h1, h2, h3 {
   }
 
   .game-area {
-    height: 200px;
+    height: 220px;
   }
 
   .question-text {
@@ -1036,6 +1103,27 @@ h1, h2, h3 {
 
   .gallery-wrapper {
     height: 40vh;
+  }
+
+  .step {
+    padding: 1.5rem;
+  }
+
+  .note-container {
+    padding: 1.25rem;
+  }
+
+  .quote-text {
+    font-size: 1.4rem;
+  }
+
+  .reveal-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .choice-box {
+    height: 55px;
   }
 }
 
@@ -1305,7 +1393,7 @@ h1, h2, h3 {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
   transform-style: preserve-3d;
 }
 

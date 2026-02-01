@@ -712,12 +712,24 @@ class TwelveMonthsApp {
     this.selectedAnswer = selectedKey;
     btn.classList.add('selected');
 
-    // Show correct answer after user selects (increased for better viewing)
+    // Animate selection feedback
+    gsap.to(btn, {
+      scale: 1.02,
+      duration: 0.2,
+      ease: 'power2.out'
+    });
+
+    // Show correct answer after user selects
     setTimeout(() => {
       const buttons = document.querySelectorAll('.answer-btn');
       buttons.forEach(b => {
         if (b.dataset.key === correctKey) {
           b.classList.add('key-answer');
+          // Highlight correct answer with animation
+          gsap.fromTo(b,
+            { boxShadow: '0 0 0 0 rgba(255, 215, 0, 0)' },
+            { boxShadow: '0 0 20px 5px rgba(255, 215, 0, 0.5)', duration: 0.4, ease: 'power2.out' }
+          );
         }
       });
 
@@ -727,8 +739,8 @@ class TwelveMonthsApp {
       setTimeout(() => {
         this.canAdvance = true;
         this.showReadyToAdvance('question');
-      }, 1500);
-    }, 500); // Increased from 350ms to 500ms for selection feedback
+      }, 1800);
+    }, 600);
   }
 
   updateRevealStep(selectedKey, correctKey, chapter) {
@@ -792,11 +804,11 @@ class TwelveMonthsApp {
     this.canAdvance = false;
 
     const timings = {
-      'title': 800,     // Title card - quick
+      'title': 1000,    // Title card - allow time to see chapter info
       'quote': 0,       // Quote - handled by animation completion
-      'note': 2000,     // Note - needs time to read
-      'reveal': 2500,   // Reveal - needs time to compare answers
-      'image': 1500,    // Image - wait for images to load and display
+      'note': 2500,     // Note - needs time to read the message
+      'reveal': 3000,   // Reveal - needs time to compare answers
+      'image': 1200,    // Image - wait for images to load and display
       'game': 0,        // Game - controlled by game completion
       'question': 0     // Question - controlled by answer selection
     };
@@ -846,14 +858,15 @@ class TwelveMonthsApp {
   }
 
   animateStepEntrance(stepName, stepElement) {
-    // Optimized step entrance - faster, smoother with GPU-friendly transforms
+    // Smooth step entrance with GPU-friendly transforms
     gsap.from(stepElement.children, {
       opacity: 0,
-      y: 15,
-      duration: 0.4,
-      stagger: 0.06,
+      y: 20,
+      duration: 0.5,
+      stagger: 0.08,
       ease: 'power2.out',
-      force3D: true
+      force3D: true,
+      clearProps: 'transform'
     });
   }
 
@@ -868,15 +881,17 @@ class TwelveMonthsApp {
 
     // Calculate animation duration based on text length
     const charCount = text.replace(/\s/g, '').length;
-    const animDuration = charCount * 0.025; // 25ms per character
-    const minReadTime = Math.max(2000, charCount * 40); // At least 2s, or 40ms per char for reading
+    // Slower animation for better readability: 35ms per character
+    const charDelay = 0.035;
+    // Reading time: at least 2.5s, or 50ms per char for comfortable reading
+    const minReadTime = Math.max(2500, charCount * 50);
 
     // Optimized character animation - smoother reveal
     gsap.to('.quote-char', {
       opacity: 1,
-      duration: 0.03,
-      stagger: 0.025,
-      ease: 'none',
+      duration: 0.05,
+      stagger: charDelay,
+      ease: 'power1.out',
       force3D: true,
       onComplete: () => {
         // After animation completes, wait for reading time then allow advance
@@ -932,21 +947,28 @@ class TwelveMonthsApp {
   cleanupGameArea() {
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
-    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container');
+    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
+      // Clear any inline styles that might cause issues
+      gsap.set(el, { clearProps: 'all' });
     });
     // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
     gsap.killTweensOf(progressBar);
+
+    // Reset game state
+    this.memoryCards = [];
+    this.flippedCards = [];
+    this.matchedPairs = 0;
   }
 
   nextChapter() {
-    // Optimized chapter transition - faster, smoother
+    // Smooth chapter transition
     gsap.to(this.imageStep, {
       opacity: 0,
-      duration: 0.25,
-      ease: 'power2.inOut',
+      duration: 0.35,
+      ease: 'power2.out',
       onComplete: () => {
         this.imageStep.style.opacity = 1;
         this.loadChapter(this.currentChapter + 1);
@@ -1097,7 +1119,7 @@ class TwelveMonthsApp {
     const [card1, card2] = this.flippedCards;
     const isMatch = card1.dataset.image === card2.dataset.image;
 
-    // Delay matches flip animation duration (550ms) + viewing time
+    // Delay for flip animation (550ms) + viewing time
     setTimeout(() => {
       if (isMatch) {
         // Match found!
@@ -1105,9 +1127,13 @@ class TwelveMonthsApp {
         card2.classList.add('matched');
         this.matchedPairs++;
 
-        // Update progress
+        // Update progress smoothly
         const progress = (this.matchedPairs / this.totalPairs) * 100;
-        progressBar.style.width = `${progress}%`;
+        gsap.to(progressBar, {
+          width: `${progress}%`,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
 
         // Smooth celebration animation
         gsap.to([card1, card2], {
@@ -1115,7 +1141,8 @@ class TwelveMonthsApp {
           duration: 0.25,
           yoyo: true,
           repeat: 1,
-          ease: 'power1.inOut'
+          ease: 'power1.inOut',
+          force3D: true
         });
 
         // Check win condition
@@ -1138,14 +1165,16 @@ class TwelveMonthsApp {
           }, 1200);
         }
       } else {
-        // No match - flip back
-        card1.classList.remove('flipped');
-        card2.classList.remove('flipped');
+        // No match - flip back with slight delay for viewing
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+        }, 200);
       }
 
       this.flippedCards = [];
       this.isChecking = false;
-    }, 750);
+    }, 800);
   }
 
   // ===== Greeting Animation =====
