@@ -770,39 +770,53 @@ class TwelveMonthsApp {
   }
 
   showStep(stepIndex) {
-    // Hide all steps and clean up tap hints and GSAP inline styles
-    [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
-    this.questionStep, this.revealStep, this.imageStep].forEach(step => {
-      step.classList.remove('active');
-      // Clear any GSAP inline opacity to prevent conflicts with CSS transitions
-      gsap.set(step, { clearProps: 'opacity' });
-      // Remove any existing tap hints
-      const hint = step.querySelector('.tap-hint');
-      if (hint) hint.remove();
-    });
+    const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
+      this.questionStep, this.revealStep, this.imageStep];
+
+    // Get current active step for fade-out animation
+    const currentActiveStep = allSteps.find(step => step.classList.contains('active'));
 
     const stepName = this.stepSequence[stepIndex];
     const stepElement = this.getStepElement(stepName);
 
-    if (stepElement) {
-      stepElement.classList.add('active');
-      this.animateStepEntrance(stepName, stepElement);
-    }
+    // Function to show new step
+    const showNewStep = () => {
+      // Hide all steps and clean up
+      allSteps.forEach(step => {
+        step.classList.remove('active', 'fading-out');
+        gsap.set(step, { clearProps: 'opacity,transform' });
+        const hint = step.querySelector('.tap-hint');
+        if (hint) hint.remove();
+      });
 
-    // Set up advance timing based on step type
-    this.setupStepTiming(stepName);
+      if (stepElement) {
+        stepElement.classList.add('active');
+        this.animateStepEntrance(stepName, stepElement);
+      }
 
-    // Special handling
-    if (stepName === 'game') {
-      this.startGame();
-    }
+      // Set up advance timing based on step type
+      this.setupStepTiming(stepName);
 
-    if (stepName === 'quote') {
-      this.animateQuote();
-    }
+      // Special handling
+      if (stepName === 'game') {
+        this.startGame();
+      }
 
-    if (stepName === 'image') {
-      this.resetGalleryAnimation();
+      if (stepName === 'quote') {
+        this.animateQuote();
+      }
+
+      if (stepName === 'image') {
+        this.resetGalleryAnimation();
+      }
+    };
+
+    // If there's a current step, fade it out first
+    if (currentActiveStep && currentActiveStep !== stepElement) {
+      currentActiveStep.classList.add('fading-out');
+      setTimeout(showNewStep, 250); // Match CSS transition duration
+    } else {
+      showNewStep();
     }
   }
 
@@ -931,7 +945,7 @@ class TwelveMonthsApp {
     // Check if we can advance (prevents skipping before content is viewed)
     const currentStepName = this.stepSequence[this.currentStep];
     if (!this.canAdvance) {
-      // Show visual feedback that user needs to wait
+      // Subtle visual feedback that user needs to wait
       this.showWaitIndicator();
       return;
     }
@@ -947,29 +961,32 @@ class TwelveMonthsApp {
     this.currentStep++;
     this.showStep(this.currentStep);
 
-    // Reset debounce flag after delay
+    // Reset debounce flag after transition completes
     setTimeout(() => {
       this.isAdvancing = false;
-    }, this.advanceDebounceTime);
+    }, 450); // Slightly longer to ensure smooth transition
   }
 
   cleanupGameArea() {
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
-    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner');
+    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .love-tap-container, .love-tap-button, .love-tap-heart');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
-      // Clear any inline styles that might cause issues
       gsap.set(el, { clearProps: 'all' });
     });
     // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
     gsap.killTweensOf(progressBar);
 
+    // Clean up game area classes
+    gameArea.classList.remove('memory-match-grid', 'love-tap-grid');
+
     // Reset game state
     this.memoryCards = [];
     this.flippedCards = [];
     this.matchedPairs = 0;
+    this.loveTapCount = 0;
   }
 
   nextChapter() {
@@ -1034,163 +1051,134 @@ class TwelveMonthsApp {
     }, 400);
   }
 
-  // ===== Memory Match Game =====
+  // ===== Love Tap Game (Simple replacement for Memory Match) =====
   startMemoryMatch() {
+    // Redirect to simpler Love Tap game instead
+    this.startLoveTapGame();
+  }
+
+  startLoveTapGame() {
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.add('memory-match-grid');
+    gameArea.classList.remove('memory-match-grid');
+    gameArea.classList.add('love-tap-grid');
     this.gameCompleted = false;
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    // Memory match state
-    this.memoryCards = [];
-    this.flippedCards = [];
-    this.matchedPairs = 0;
-    this.totalPairs = 3; // 3 pairs = 6 cards
-    this.isChecking = false;
+    // Love tap state
+    this.loveTapCount = 0;
+    this.loveTapTarget = 5;
 
-    // Use 3 images from the project
-    const cardImages = [
-      'image/1.jpg',
-      'image/2.jpg',
-      'image/6.jpg'
-    ];
-
-    // Create pairs and shuffle
-    const cards = [...cardImages, ...cardImages];
-    this.shuffleArray(cards);
-
-    // Wait for CSS transition to complete before rendering cards
-    setTimeout(() => {
-      cards.forEach((imgSrc, index) => {
-        const card = this.createMemoryCard(imgSrc, index, progressBar);
-        gameArea.appendChild(card);
-        this.memoryCards.push(card);
-      });
-
-      // Smooth entrance animation for cards
-      gsap.from('.memory-card', {
-        scale: 0,
-        opacity: 0,
-        duration: 0.4,
-        stagger: 0.08,
-        ease: 'back.out(1.2)'
-      });
-    }, 400);
-  }
-
-  createMemoryCard(imgSrc, index, progressBar) {
-    const card = document.createElement('div');
-    card.className = 'memory-card';
-    card.dataset.index = index;
-    card.dataset.image = imgSrc;
-
-    card.innerHTML = `
-      <div class="memory-card-inner">
-        <div class="memory-card-front">
-          <span>💕</span>
-        </div>
-        <div class="memory-card-back">
-          <img src="${imgSrc}" alt="Memory card">
-        </div>
+    // Create love tap container
+    const container = document.createElement('div');
+    container.className = 'love-tap-container';
+    container.innerHTML = `
+      <div class="love-tap-hearts">
+        <span class="love-tap-heart" data-index="0">🤍</span>
+        <span class="love-tap-heart" data-index="1">🤍</span>
+        <span class="love-tap-heart" data-index="2">🤍</span>
+        <span class="love-tap-heart" data-index="3">🤍</span>
+        <span class="love-tap-heart" data-index="4">🤍</span>
       </div>
+      <div class="love-tap-button">
+        <span class="love-tap-icon">💗</span>
+      </div>
+      <p class="love-tap-text">Chạm để yêu thương!</p>
     `;
 
-    let lastFlipTime = 0;
-    const handleFlip = (e) => {
-      // Prevent double trigger from touch and click events
-      const now = Date.now();
-      if (now - lastFlipTime < 100) return;
-      lastFlipTime = now;
+    gameArea.appendChild(container);
 
-      if (this.isChecking || card.classList.contains('flipped') || card.classList.contains('matched')) {
-        return;
-      }
-
-      // Flip card
-      card.classList.add('flipped');
-      this.flippedCards.push(card);
-
-      // Check for match when 2 cards are flipped
-      if (this.flippedCards.length === 2) {
-        this.isChecking = true;
-        this.checkMemoryMatch(progressBar);
-      }
-    };
-
-    // Click and touch handlers - use debounce to prevent double trigger
-    card.addEventListener('click', handleFlip);
-    card.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      handleFlip(e);
-    }, { passive: false });
-
-    return card;
-  }
-
-  checkMemoryMatch(progressBar) {
-    const [card1, card2] = this.flippedCards;
-    const isMatch = card1.dataset.image === card2.dataset.image;
-
-    // Delay for flip animation (550ms) + viewing time
+    // Wait for CSS transition then setup handlers
     setTimeout(() => {
-      if (isMatch) {
-        // Match found!
-        card1.classList.add('matched');
-        card2.classList.add('matched');
-        this.matchedPairs++;
+      // Entrance animation
+      gsap.fromTo('.love-tap-hearts',
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+      );
 
-        // Update progress smoothly
-        const progress = (this.matchedPairs / this.totalPairs) * 100;
+      gsap.fromTo('.love-tap-button',
+        { opacity: 0, scale: 0.5 },
+        { opacity: 1, scale: 1, duration: 0.4, delay: 0.2, ease: 'back.out(1.5)' }
+      );
+
+      gsap.fromTo('.love-tap-text',
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, delay: 0.4 }
+      );
+
+      // Setup tap handler
+      const tapButton = document.querySelector('.love-tap-button');
+      let lastTapTime = 0;
+
+      const handleTap = (e) => {
+        e.preventDefault();
+        const now = Date.now();
+        if (now - lastTapTime < 150) return;
+        lastTapTime = now;
+
+        if (this.loveTapCount >= this.loveTapTarget) return;
+
+        // Fill next heart
+        const hearts = document.querySelectorAll('.love-tap-heart');
+        if (hearts[this.loveTapCount]) {
+          hearts[this.loveTapCount].textContent = '❤️';
+          hearts[this.loveTapCount].classList.add('filled');
+
+          // Heart fill animation
+          gsap.fromTo(hearts[this.loveTapCount],
+            { scale: 1.5 },
+            { scale: 1, duration: 0.3, ease: 'back.out(2)' }
+          );
+        }
+
+        // Button pulse
+        gsap.to(tapButton, {
+          scale: 0.9,
+          duration: 0.1,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power2.inOut'
+        });
+
+        this.loveTapCount++;
+
+        // Update progress
+        const progress = (this.loveTapCount / this.loveTapTarget) * 100;
         gsap.to(progressBar, {
           width: `${progress}%`,
           duration: 0.3,
           ease: 'power2.out'
         });
 
-        // Smooth celebration animation
-        gsap.to([card1, card2], {
-          scale: 1.06,
-          duration: 0.25,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power1.inOut',
-          force3D: true
-        });
-
-        // Check win condition
-        if (this.matchedPairs >= this.totalPairs && !this.gameCompleted) {
+        // Check completion
+        if (this.loveTapCount >= this.loveTapTarget && !this.gameCompleted) {
           this.gameCompleted = true;
           progressBar.classList.add('completed');
 
-          gsap.to(progressBar, {
-            scale: 1.05,
-            duration: 0.2,
+          // Celebration
+          gsap.to('.love-tap-hearts', {
+            scale: 1.1,
+            duration: 0.3,
             yoyo: true,
             repeat: 1,
-            ease: 'power1.inOut'
+            ease: 'power2.inOut'
           });
 
-          // Wait for user tap after game completion
+          document.querySelector('.love-tap-text').textContent = 'Tuyệt vời! 💕';
+
           setTimeout(() => {
             this.canAdvance = true;
             this.showReadyToAdvance('game');
-          }, 1200);
+          }, 800);
         }
-      } else {
-        // No match - flip back with slight delay for viewing
-        setTimeout(() => {
-          card1.classList.remove('flipped');
-          card2.classList.remove('flipped');
-        }, 200);
-      }
+      };
 
-      this.flippedCards = [];
-      this.isChecking = false;
-    }, 800);
+      tapButton.addEventListener('click', handleTap);
+      tapButton.addEventListener('touchend', handleTap, { passive: false });
+    }, 350);
   }
 
   // ===== Greeting Animation =====
@@ -1203,10 +1191,11 @@ class TwelveMonthsApp {
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    // Create greeting container
+    // Create greeting container with floating hearts
     const greetingContainer = document.createElement('div');
     greetingContainer.className = 'greeting-container';
     greetingContainer.innerHTML = `
+      <div class="greeting-hearts"></div>
       <div class="greeting-text">Xin chào!</div>
       <div class="greeting-emoji">👋</div>
     `;
@@ -1215,43 +1204,76 @@ class TwelveMonthsApp {
 
     // Wait for CSS transition then animate greeting
     setTimeout(() => {
+      // Smooth text entrance
       gsap.fromTo('.greeting-text',
-        { opacity: 0, y: 30, scale: 0.7 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.5)', force3D: true }
+        { opacity: 0, y: 25, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'power3.out', force3D: true }
       );
 
+      // Emoji entrance with bounce
       gsap.fromTo('.greeting-emoji',
-        { opacity: 0, scale: 0, rotation: -60 },
-        { opacity: 1, scale: 1, rotation: 0, duration: 0.5, delay: 0.3, ease: 'back.out(1.8)', force3D: true }
+        { opacity: 0, scale: 0.3, rotation: -30 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 0.6, delay: 0.4, ease: 'back.out(2)', force3D: true }
       );
 
-      // Waving animation
+      // Gentle waving animation
       gsap.to('.greeting-emoji', {
-        rotation: 20,
-        duration: 0.2,
-        delay: 0.9,
-        repeat: 4,
+        rotation: 15,
+        duration: 0.25,
+        delay: 1.1,
+        repeat: 5,
         yoyo: true,
-        ease: 'power2.inOut',
+        ease: 'sine.inOut',
         force3D: true
       });
 
-      // Progress animation - slower auto advance after completion
+      // Add floating hearts decoration
+      this.spawnFloatingHearts();
+
+      // Progress animation
       gsap.to(progressBar, {
         width: '100%',
-        duration: 4, // Increased from 2.5s to 4s for better viewing
-        ease: 'power1.inOut',
+        duration: 3.5,
+        ease: 'power2.inOut',
         onComplete: () => {
           progressBar.classList.add('completed');
-          // Wait for user tap after animation completion
+          // Allow advancement
           setTimeout(() => {
             this.gameCompleted = true;
             this.canAdvance = true;
             this.showReadyToAdvance('game');
-          }, 1200);
+          }, 800);
         }
       });
-    }, 400);
+    }, 350);
+  }
+
+  spawnFloatingHearts() {
+    const heartsContainer = document.querySelector('.greeting-hearts');
+    if (!heartsContainer) return;
+
+    const hearts = ['💕', '💗', '💖', '💝', '❤️'];
+    const spawnHeart = () => {
+      const heart = document.createElement('span');
+      heart.className = 'greeting-heart';
+      heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+      heart.style.left = `${10 + Math.random() * 80}%`;
+      heart.style.bottom = '10%';
+      heart.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+      heartsContainer.appendChild(heart);
+
+      // Remove heart after animation
+      setTimeout(() => heart.remove(), 3500);
+    };
+
+    // Spawn hearts periodically
+    for (let i = 0; i < 3; i++) {
+      setTimeout(spawnHeart, i * 400);
+    }
+    const heartInterval = setInterval(spawnHeart, 600);
+
+    // Stop spawning after animation completes
+    setTimeout(() => clearInterval(heartInterval), 3000);
   }
 
   // ===== Simple Greeting (No Animation) =====
@@ -1261,23 +1283,43 @@ class TwelveMonthsApp {
 
     gameArea.innerHTML = '';
     gameArea.classList.remove('memory-match-grid');
-    progressBar.style.width = '100%';
-    progressBar.classList.add('completed');
 
     // Create simple greeting container
     const greetingContainer = document.createElement('div');
     greetingContainer.className = 'greeting-container';
     greetingContainer.innerHTML = `
+      <div class="greeting-hearts"></div>
       <div class="greeting-text">Xin chào!</div>
       <div class="greeting-emoji">👋</div>
     `;
 
     gameArea.appendChild(greetingContainer);
 
-    // Immediately allow advancing - no animation delay
-    this.gameCompleted = true;
-    this.canAdvance = true;
-    this.showReadyToAdvance('game');
+    // Gentle fade in animation
+    setTimeout(() => {
+      gsap.fromTo('.greeting-text',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+      );
+
+      gsap.fromTo('.greeting-emoji',
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.4, delay: 0.2, ease: 'power2.out' }
+      );
+
+      // Quick progress fill
+      gsap.to(progressBar, {
+        width: '100%',
+        duration: 1,
+        ease: 'power2.out',
+        onComplete: () => {
+          progressBar.classList.add('completed');
+          this.gameCompleted = true;
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }
+      });
+    }, 200);
   }
 
   shuffleArray(array) {
@@ -1306,17 +1348,20 @@ class TwelveMonthsApp {
       'roses': 'Hái những đóa hồng',
       'sweets': 'Thu thập những viên kẹo ngọt',
       'kisses': 'Thu thập những nụ hôn',
-      'memory_match': 'Lật thẻ tìm cặp hình giống nhau'
+      'memory_match': 'Gửi yêu thương đến nhau'
     };
     return gameTexts[gameType] || 'Thu thập các biểu tượng';
   }
 
   getGameHint(gameType) {
     if (gameType === 'memory_match') {
-      return 'Chạm vào thẻ để lật và tìm các cặp hình giống nhau';
+      return 'Chạm vào trái tim để thể hiện tình yêu!';
     }
     if (gameType === 'greeting') {
       return 'Chờ một chút nhé...';
+    }
+    if (gameType === 'simple_greeting') {
+      return '';
     }
     return 'Chạm vào các biểu tượng để thu thập!';
   }
