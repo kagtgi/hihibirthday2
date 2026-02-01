@@ -1,20 +1,14 @@
 {
   "id": 15,
-  "month": "July 2025",
-  "minigameType": "flappy bird",
-  "text": "Hãy trả lời câu hỏi sau:",
-  "question": "Thi đại học xong mình làm gì",
-  "answers": {
-    "A": "ở nhà",
-    "B": "hết gặp nhau",
-    "C": "đi học bài tiếp",
-    "D": "đáp án khác"
-  },
-  "key": "D",
-  "myNote": "Có ai nhớ ngày mấy tháng bảy hôm",
-  "caption": "Anh yêu em",
+  "month": "June 2025",
+  "minigameType": "animate",
+  "text": "Hôm này là bữa cuối đi học bài trước khi thi đại học nè, giờ nghĩ lại còn lo á, trộm vía là bạn nhỏ thi quá ố kê",
+  "question": "",
+  "answers": "",
+  "key": "",
+  "myNote": "",
+  "caption": "",
   "image": [
-    "27.jpg",
-    "29.JPG"
+    "27.jpg"
   ]
 }

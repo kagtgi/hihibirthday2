@@ -1,15 +1,19 @@
 {
   "id": 29,
-  "month": "January 2026",
-  "minigameType": "animate",
-  "text": "qua năm mới luôn rùi, tháng một chill chill đi dạo đi shopping chuẩn bị quân sự",
-  "question": "",
-  "answers": "",
-  "key": "",
-  "myNote": "Coi xiếc quá đã mắt lun mèo ơi",
-  "caption": "",
+  "month": "December 2025",
+  "minigameType": "Bubble Pop",
+  "text": "Hãy trả lời câu hỏi sau:",
+  "question": "zanh thích cái gì nhất",
+  "answers": {
+    "A": "Hoa",
+    "B": "Gia khang",
+    "C": "Swarovski",
+    "D": "Gấu bông"
+  },
+  "key": "A",
+  "myNote": "Vân anh đẹp nhất là vân anh có đóa hoa đấyyyy",
+  "caption": "nên tui sẽ tặng nhìu nhìu hí hí",
   "image": [
-    "52.jpg",
-    "53.jpg"
+    "50.JPG"
   ]
 }

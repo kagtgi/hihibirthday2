@@ -1,19 +1,16 @@
 {
   "id": 2,
-  "month": "March 2025",
-  "minigameType": "blockblast",
-  "text": "Hãy trả lời câu hỏi sau:",
-  "question": "Tháng này Khang lần đầu làm gì",
-  "answers": {
-    "A": "Tặng hoa",
-    "B": "Chở đi chơi",
-    "C": "Bị phát hiện làm chiện xấu",
-    "D": "Đi ăn với em"
-  },
-  "key": "A",
-  "myNote": "Hehe (dù C cũng đúng ...) nhưng mà lần đầu ngta biết ẻm thích hoa đó nhớ",
-  "caption": "Hì hì spam hoa màu hồng quài luônnnn",
+  "month": "February 2025",
+  "minigameType": "animate",
+  "text": "Tháng này mình đi lựa cây đi dim sum và đi cả workshop, người ta thấy sắp yêu lại ồi",
+  "question": "",
+  "answers": "",
+  "key": "D",
+  "myNote": "Lẹ ghê bây giờ cũng tháng hai rùi ha",
+  "caption": "Vân Anh càng lớn càng xinh gái, còn tui càng ... già",
   "image": [
-    "6.jpg"
+    "2.jpg",
+    "3.jpg",
+    "3 (2).JPG"
   ]
 }

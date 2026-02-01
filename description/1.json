@@ -1,16 +1,11 @@
 {
-  "id": 1,
-  "month": "February 2025",
-  "minigameType": "animate",
-  "text": "Tháng này mình đi lựa cây đi dim sum và đi cả workshop, người ta thấy sắp yêu lại ồi",
-  "question": "",
-  "answers": "",
-  "key": "D",
-  "myNote": "Lẹ ghê bây giờ cũng tháng hai rùi ha",
-  "caption": "Vân Anh càng lớn càng xinh gái, còn tui càng ... già",
-  "image": [
-    "2.jpg",
-    "3.jpg",
-    "3 (2).JPG"
-  ]
+    "id": 1,
+    "month": "",
+    "minigameType": "simple_greeting",
+    "question": "",
+    "answers": "",
+    "key": "",
+    "myNote": "",
+    "caption": "",
+    "image": []
 }
