@@ -1,20 +1,20 @@
 {
-    "id": 16,
-    "month": "July 2025",
-    "minigameType": "flappy bird",
-    "text": "Hãy trả lời câu hỏi sau:",
-    "question": "Thi đại học xong mình làm gì",
-    "answers": {
-        "A": "ở nhà",
-        "B": "hết gặp nhau",
-        "C": "đi học bài tiếp",
-        "D": "đáp án khác"
-    },
-    "key": "D",
-    "myNote": "Có ai nhớ ngày mấy tháng bảy hôm",
-    "caption": "Anh yêu em",
-    "image": [
-        "27.jpg",
-        "29.JPG"
-    ]
+  "id": 16,
+  "month": "July 2025",
+  "minigameType": "flappy bird",
+  "text": "Hãy trả lời câu hỏi sau:",
+  "question": "Thi đại học xong mình làm gì",
+  "answers": {
+    "A": "ở nhà",
+    "B": "hết gặp nhau",
+    "C": "đi học bài tiếp",
+    "D": "đáp án khác"
+  },
+  "key": "D",
+  "myNote": "Có ai nhớ ngày mấy tháng bảy hôm",
+  "caption": "Anh yêu em",
+  "image": [
+    "27.jpg",
+    "29.JPG"
+  ]
 }

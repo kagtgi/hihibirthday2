@@ -1,14 +1,14 @@
 {
-    "id": 27,
-    "month": "December 2025",
-    "minigameType": "animate",
-    "text": "chuyến đi cuối năm",
-    "question": "",
-    "answers": "",
-    "key": "",
-    "myNote": "hì riết đi vũng tàu như cơm bữa luôn",
-    "caption": "chuyến này êm xui hơn, mờ cũng vui đó chớ hen",
-    "image": [
-        "48.JPG"
-    ]
+  "id": 27,
+  "month": "December 2025",
+  "minigameType": "animate",
+  "text": "chuyến đi cuối năm",
+  "question": "",
+  "answers": "",
+  "key": "",
+  "myNote": "hì riết đi vũng tàu như cơm bữa luôn",
+  "caption": "chuyến này êm xui hơn, mờ cũng vui đó chớ hen",
+  "image": [
+    "48.JPG"
+  ]
 }

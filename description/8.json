@@ -1,17 +1,17 @@
 {
-    "id": 8,
-    "month": "April 2025",
-    "minigameType": "animate",
-    "text": "Bắt đầu quấn nhau rùi mèo ơiii",
-    "question": "",
-    "answers": "",
-    "key": "",
-    "myNote": "",
-    "caption": "",
-    "image": [
-        "12.JPG",
-        "14.jpg",
-        "15.jpg",
-        "16.PNG"
-    ]
+  "id": 8,
+  "month": "April 2025",
+  "minigameType": "animate",
+  "text": "Bắt đầu quấn nhau rùi mèo ơiii",
+  "question": "",
+  "answers": "",
+  "key": "",
+  "myNote": "",
+  "caption": "",
+  "image": [
+    "12.JPG",
+    "14.jpg",
+    "15.jpg",
+    "16.PNG"
+  ]
 }

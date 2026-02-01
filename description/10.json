@@ -1,20 +1,20 @@
 {
-    "id": 10,
-    "month": "May 2025",
-    "minigameType": "memory_match",
-    "text": "Hãy trả lời câu hỏi sau:",
-    "question": "Điều gì đẹp nhất của tháng năm",
-    "answers": {
-        "A": "Hoa đính đá của Vân Anh",
-        "B": "Vân Anh mặc áo dài",
-        "C": "Hình polaroid hai đứa mình",
-        "D": "Tất cả luôn! ✨"
-    },
-    "key": "D",
-    "myNote": "Chài ai lâu rùi hỏng chụp tấm polaroid nào nhớ ghê chưa",
-    "caption": "Hì được làm thợ riêng cho ẻm nên thấy cũng zui zui",
-    "image": [
-        "20.jpg",
-        "21 (3).jpg"
-    ]
+  "id": 10,
+  "month": "May 2025",
+  "minigameType": "memory_match",
+  "text": "Hãy trả lời câu hỏi sau:",
+  "question": "Điều gì đẹp nhất của tháng năm",
+  "answers": {
+    "A": "Hoa đính đá của Vân Anh",
+    "B": "Vân Anh mặc áo dài",
+    "C": "Hình polaroid hai đứa mình",
+    "D": "Tất cả luôn! ✨"
+  },
+  "key": "D",
+  "myNote": "Chài ai lâu rùi hỏng chụp tấm polaroid nào nhớ ghê chưa",
+  "caption": "Hì được làm thợ riêng cho ẻm nên thấy cũng zui zui",
+  "image": [
+    "20.jpg",
+    "21 (3).jpg"
+  ]
 }

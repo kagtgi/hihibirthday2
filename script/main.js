@@ -1002,6 +1002,12 @@ class TwelveMonthsApp {
       return;
     }
 
+    // Check if this is a Simple Greeting (no animation)
+    if (chapter.minigameType === 'simple_greeting') {
+      this.startSimpleGreeting();
+      return;
+    }
+
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
@@ -1248,6 +1254,32 @@ class TwelveMonthsApp {
     }, 400);
   }
 
+  // ===== Simple Greeting (No Animation) =====
+  startSimpleGreeting() {
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.remove('memory-match-grid');
+    progressBar.style.width = '100%';
+    progressBar.classList.add('completed');
+
+    // Create simple greeting container
+    const greetingContainer = document.createElement('div');
+    greetingContainer.className = 'greeting-container';
+    greetingContainer.innerHTML = `
+      <div class="greeting-text">Xin chào!</div>
+      <div class="greeting-emoji">👋</div>
+    `;
+
+    gameArea.appendChild(greetingContainer);
+
+    // Immediately allow advancing - no animation delay
+    this.gameCompleted = true;
+    this.canAdvance = true;
+    this.showReadyToAdvance('game');
+  }
+
   shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -1259,6 +1291,7 @@ class TwelveMonthsApp {
   getGameText(gameType) {
     const gameTexts = {
       'greeting': 'Chào mừng bạn!',
+      'simple_greeting': 'Chào mừng bạn!',
       'hearts': 'Thu thập những trái tim yêu thương',
       'flowers': 'Hái những bông hoa xinh đẹp',
       'bubbles': 'Chạm vào những bong bóng lung linh',
