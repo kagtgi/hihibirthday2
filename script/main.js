@@ -254,9 +254,14 @@ class TwelveMonthsApp {
       if (chapterActive) {
         const currentStepName = this.stepSequence[this.currentStep];
 
-        // Space or Enter to advance step (except on game step, and question step only after answer selected)
+        // Space or Enter to advance step
         if (e.key === 'Enter' || e.key === ' ') {
           if (['title', 'quote', 'note', 'reveal'].includes(currentStepName)) {
+            e.preventDefault();
+            this.advanceStep();
+          }
+          // Allow advancing game step only after game is completed
+          if (currentStepName === 'game' && this.gameCompleted) {
             e.preventDefault();
             this.advanceStep();
           }
