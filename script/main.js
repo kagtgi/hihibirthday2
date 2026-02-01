@@ -1239,6 +1239,7 @@ class TwelveMonthsApp {
           progressBar.classList.add('completed');
           // Wait for user tap after animation completion
           setTimeout(() => {
+            this.gameCompleted = true;
             this.canAdvance = true;
             this.showReadyToAdvance('game');
           }, 1200);
