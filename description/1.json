@@ -1,11 +1,18 @@
 {
     "id": 1,
-    "month": "",
-    "minigameType": "simple_greeting",
-    "question": "",
-    "answers": "",
-    "key": "",
-    "myNote": "",
-    "caption": "",
-    "image": []
+    "month": "February 2025",
+    "minigameType": "greeting",
+    "question": "Tháng hai có gì vui nhất nè?",
+    "answers": {
+        "A": "Lựa cây",
+        "B": "Ăn dim sum",
+        "C": "Lần đầu chở dạo phố",
+        "D": "Tất cả luôn!"
+    },
+    "key": "D",
+    "myNote": "Tháng hai luôn đẹp, vì có sinh nhật cả hai đứa mình em ha!",
+    "caption": "Tháng này mình mới bắt đầu đi chung nhiều nè.",
+    "image": [
+        "1.jpg"
+    ]
 }
