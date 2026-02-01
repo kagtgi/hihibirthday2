@@ -831,7 +831,7 @@ class TwelveMonthsApp {
     if (stepElement && !stepElement.querySelector('.tap-hint')) {
       const hint = document.createElement('div');
       hint.className = 'tap-hint';
-      hint.innerHTML = '<span class="tap-hint-text">Chạm để tiếp tục</span>';
+      hint.innerHTML = '<span class="tap-hint-text">Enter để tiếp tục</span>';
       stepElement.appendChild(hint);
 
       gsap.fromTo(hint,
