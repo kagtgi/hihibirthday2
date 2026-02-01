@@ -160,8 +160,13 @@ class TwelveMonthsApp {
     // Reveal step click/touch
     addClickAndTouch(this.revealStep, () => this.advanceStep());
 
-    // Next chapter button
-    addClickAndTouch(document.querySelector('.next-chapter-btn'), () => this.nextChapter());
+    // Image step click to go to next chapter
+    addClickAndTouch(this.imageStep, (e) => {
+      // Don't trigger if clicking gallery navigation buttons
+      if (!e.target.closest('.gallery-prev') && !e.target.closest('.gallery-next')) {
+        this.nextChapter();
+      }
+    });
 
     // Gallery navigation
     addClickAndTouch(document.querySelector('.gallery-prev'), () => this.galleryPrev());
@@ -773,25 +778,21 @@ class TwelveMonthsApp {
     const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
       this.questionStep, this.revealStep, this.imageStep];
 
-    // Get current active step for fade-out animation
-    const currentActiveStep = allSteps.find(step => step.classList.contains('active'));
-
     const stepName = this.stepSequence[stepIndex];
     const stepElement = this.getStepElement(stepName);
 
-    // Function to show new step
-    const showNewStep = () => {
-      // Hide all steps and clean up
-      allSteps.forEach(step => {
-        step.classList.remove('active', 'fading-out');
-        gsap.set(step, { clearProps: 'opacity,transform' });
-        const hint = step.querySelector('.tap-hint');
-        if (hint) hint.remove();
-      });
+    // Simple transition: remove all active, add to new step
+    // Let CSS handle all animations smoothly
+    allSteps.forEach(step => {
+      step.classList.remove('active');
+      const hint = step.querySelector('.tap-hint');
+      if (hint) hint.remove();
+    });
 
+    // Small delay for CSS transition to complete on outgoing step
+    requestAnimationFrame(() => {
       if (stepElement) {
         stepElement.classList.add('active');
-        this.animateStepEntrance(stepName, stepElement);
       }
 
       // Set up advance timing based on step type
@@ -809,15 +810,7 @@ class TwelveMonthsApp {
       if (stepName === 'image') {
         this.resetGalleryAnimation();
       }
-    };
-
-    // If there's a current step, fade it out first
-    if (currentActiveStep && currentActiveStep !== stepElement) {
-      currentActiveStep.classList.add('fading-out');
-      setTimeout(showNewStep, 250); // Match CSS transition duration
-    } else {
-      showNewStep();
-    }
+    });
   }
 
   setupStepTiming(stepName) {
@@ -879,18 +872,8 @@ class TwelveMonthsApp {
   }
 
   animateStepEntrance(stepName, stepElement) {
-    // Smooth step entrance with GPU-friendly transforms
-    // Small delay to let CSS transition start before animating children
-    gsap.from(stepElement.children, {
-      opacity: 0,
-      y: 20,
-      duration: 0.5,
-      stagger: 0.08,
-      delay: 0.1,
-      ease: 'power2.out',
-      force3D: true,
-      clearProps: 'transform'
-    });
+    // Let CSS handle the main transition - only add subtle child stagger for non-essential steps
+    // This prevents jitter from conflicting CSS and GSAP animations
   }
 
   animateQuote() {
@@ -945,15 +928,14 @@ class TwelveMonthsApp {
     // Check if we can advance (prevents skipping before content is viewed)
     const currentStepName = this.stepSequence[this.currentStep];
     if (!this.canAdvance) {
-      // Subtle visual feedback that user needs to wait
       this.showWaitIndicator();
       return;
     }
 
     this.isAdvancing = true;
-    this.canAdvance = false; // Reset for next step
+    this.canAdvance = false;
 
-    // Cleanup GSAP tweens in game area before advancing
+    // Cleanup game area before advancing
     if (currentStepName === 'game') {
       this.cleanupGameArea();
     }
@@ -961,10 +943,10 @@ class TwelveMonthsApp {
     this.currentStep++;
     this.showStep(this.currentStep);
 
-    // Reset debounce flag after transition completes
+    // Reset debounce after CSS transition (300ms)
     setTimeout(() => {
       this.isAdvancing = false;
-    }, 450); // Slightly longer to ensure smooth transition
+    }, 300);
   }
 
   cleanupGameArea() {
