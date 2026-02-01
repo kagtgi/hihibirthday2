@@ -254,9 +254,14 @@ class TwelveMonthsApp {
       if (chapterActive) {
         const currentStepName = this.stepSequence[this.currentStep];
 
-        // Space or Enter to advance step (except on game step, and question step only after answer selected)
+        // Space or Enter to advance step
         if (e.key === 'Enter' || e.key === ' ') {
           if (['title', 'quote', 'note', 'reveal'].includes(currentStepName)) {
+            e.preventDefault();
+            this.advanceStep();
+          }
+          // Allow advancing game step only after game is completed
+          if (currentStepName === 'game' && this.gameCompleted) {
             e.preventDefault();
             this.advanceStep();
           }
@@ -765,10 +770,12 @@ class TwelveMonthsApp {
   }
 
   showStep(stepIndex) {
-    // Hide all steps and clean up tap hints
+    // Hide all steps and clean up tap hints and GSAP inline styles
     [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
     this.questionStep, this.revealStep, this.imageStep].forEach(step => {
       step.classList.remove('active');
+      // Clear any GSAP inline opacity to prevent conflicts with CSS transitions
+      gsap.set(step, { clearProps: 'opacity' });
       // Remove any existing tap hints
       const hint = step.querySelector('.tap-hint');
       if (hint) hint.remove();
@@ -831,7 +838,7 @@ class TwelveMonthsApp {
     if (stepElement && !stepElement.querySelector('.tap-hint')) {
       const hint = document.createElement('div');
       hint.className = 'tap-hint';
-      hint.innerHTML = '<span class="tap-hint-text">Chạm để tiếp tục</span>';
+      hint.innerHTML = '<span class="tap-hint-text">Enter để tiếp tục</span>';
       stepElement.appendChild(hint);
 
       gsap.fromTo(hint,
@@ -859,11 +866,13 @@ class TwelveMonthsApp {
 
   animateStepEntrance(stepName, stepElement) {
     // Smooth step entrance with GPU-friendly transforms
+    // Small delay to let CSS transition start before animating children
     gsap.from(stepElement.children, {
       opacity: 0,
       y: 20,
       duration: 0.5,
       stagger: 0.08,
+      delay: 0.1,
       ease: 'power2.out',
       force3D: true,
       clearProps: 'transform'
@@ -970,7 +979,8 @@ class TwelveMonthsApp {
       duration: 0.35,
       ease: 'power2.out',
       onComplete: () => {
-        this.imageStep.style.opacity = 1;
+        // Clear GSAP inline styles - let CSS handle visibility via classes
+        gsap.set(this.imageStep, { clearProps: 'opacity' });
         this.loadChapter(this.currentChapter + 1);
       }
     });
@@ -1422,11 +1432,19 @@ class TwelveMonthsApp {
 
   // ===== Ending Experience =====
   showEnding() {
-    this.chapterScreen.classList.remove('active');
-    this.progressContainer.classList.remove('visible');
-    this.endingScreen.classList.add('active');
-
-    this.createCollage();
+    // Smooth transition to ending screen
+    gsap.to(this.imageStep, {
+      opacity: 0,
+      duration: 0.4,
+      ease: 'power2.out',
+      onComplete: () => {
+        gsap.set(this.imageStep, { clearProps: 'opacity' });
+        this.chapterScreen.classList.remove('active');
+        this.progressContainer.classList.remove('visible');
+        this.endingScreen.classList.add('active');
+        this.createCollage();
+      }
+    });
   }
 
   createCollage() {
