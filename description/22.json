@@ -1,18 +1,14 @@
 {
-    "id": 22,
-    "month": "September 2025",
-    "minigameType": "Love Letter",
-    "text": "Hãy trả lời câu hỏi sau:",
-    "question": "Tháng 9  có suông sẻ hong",
-    "answers": {
-        "A": "có",
-        "B": "hong"
-    },
-    "key": "B",
-    "myNote": "Chài ai xui ghê bị mất bóp",
-    "caption": "Mờ nhờ ải này mình mới gắn bó với nhau nhiều hơn ha",
-    "image": [
-        "36.jpg",
-        "38.jpg"
-    ]
+  "id": 22,
+  "month": "October 2025",
+  "minigameType": "animate",
+  "text": "và đó là trung thu đầu tiên bên nhau với lồng đèn em thích nhứt",
+  "question": "",
+  "answers": "",
+  "key": "",
+  "myNote": "",
+  "caption": "",
+  "image": [
+    "38.jpg"
+  ]
 }

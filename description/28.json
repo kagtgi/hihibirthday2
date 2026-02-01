@@ -1,14 +1,19 @@
 {
-    "id": 28,
-    "month": "December 2025",
-    "minigameType": "animate",
-    "text": "giáng sinh đầu tiên với nhau",
-    "question": "",
-    "answers": "",
-    "key": "",
-    "myNote": "chụp hình cũng khổ đấy, mà đáng hong",
-    "caption": "",
-    "image": [
-        "49.JPG"
-    ]
+  "id": 28,
+  "month": "December 2025",
+  "minigameType": "Bubble Pop",
+  "text": "Hãy trả lời câu hỏi sau:",
+  "question": "zanh thích cái gì nhất",
+  "answers": {
+    "A": "Hoa",
+    "B": "Gia khang",
+    "C": "Swarovski",
+    "D": "Gấu bông"
+  },
+  "key": "A",
+  "myNote": "Vân anh đẹp nhất là vân anh có đóa hoa đấyyyy",
+  "caption": "nên tui sẽ tặng nhìu nhìu hí hí",
+  "image": [
+    "50.JPG"
+  ]
 }
