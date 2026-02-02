@@ -241,8 +241,9 @@ h1, h2, h3 {
 }
 
 .quote-container {
-  max-width: 90%;
+  max-width: 85%;
   text-align: center;
+  padding: 0 1rem;
 }
 
 .quote-text {
@@ -251,8 +252,11 @@ h1, h2, h3 {
   line-height: 1.65;
   color: var(--text-dark);
   position: relative;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: pre-wrap;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .quote-text::before {
@@ -277,10 +281,10 @@ h1, h2, h3 {
 }
 
 .note-container {
-  max-width: 85%;
+  max-width: 80%;
   text-align: center;
   background: rgba(255, 255, 255, 0.3);
-  padding: 2rem;
+  padding: 2rem 1.5rem;
   border-radius: 20px;
   backdrop-filter: blur(10px);
 }
@@ -304,8 +308,11 @@ h1, h2, h3 {
   line-height: 1.7;
   font-style: italic;
   color: var(--text-dark);
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: pre-wrap;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 /* Step 4: Game Step */
@@ -321,8 +328,10 @@ h1, h2, h3 {
   text-align: center;
   line-height: 1.4;
   max-width: 90%;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .game-hint {
@@ -332,8 +341,10 @@ h1, h2, h3 {
   text-align: center;
   line-height: 1.3;
   max-width: 90%;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .game-area {
@@ -461,8 +472,10 @@ h1, h2, h3 {
   margin-bottom: 2rem;
   line-height: 1.5;
   max-width: 90%;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
   padding: 0 0.5rem;
 }
 
@@ -492,8 +505,10 @@ h1, h2, h3 {
   user-select: none;
   -webkit-user-select: none;
   line-height: 1.3;
-  word-wrap: break-word;
-  hyphens: auto;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .answer-btn:hover {
@@ -602,14 +617,14 @@ h1, h2, h3 {
 
 /* Step 7: Image Step */
 .image-step {
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .image-gallery {
@@ -618,7 +633,7 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .gallery-wrapper {
@@ -763,10 +778,14 @@ h1, h2, h3 {
 .swipe-hint {
   font-size: 0.85rem;
   opacity: 0.6;
-  margin-top: 0.5rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.5rem;
   text-align: center;
   transition: opacity 0.3s ease, color 0.3s ease;
   color: var(--text-dark);
+  word-break: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 .swipe-hint.has-more {
@@ -791,8 +810,10 @@ h1, h2, h3 {
   max-width: 90%;
   line-height: 1.5;
   min-height: 2rem;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 /* Next chapter button - hidden, use Enter to continue */
@@ -1080,6 +1101,15 @@ h1, h2, h3 {
     height: 46px;
     min-width: 46px;
     min-height: 46px;
+  }
+
+  /* Tap hint positioning for mobile */
+  .tap-hint {
+    bottom: 90px;
+  }
+
+  .image-step .tap-hint {
+    top: 15px;
   }
 }
 
@@ -1958,11 +1988,17 @@ button:focus:not(:focus-visible) {
 /* ===== Tap Hint Indicator ===== */
 .tap-hint {
   position: absolute;
-  bottom: 80px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   pointer-events: none;
+}
+
+/* Specific positioning for image-step to avoid overlap */
+.image-step .tap-hint {
+  bottom: auto;
+  top: 20px;
 }
 
 .tap-hint-text {
