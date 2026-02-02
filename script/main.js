@@ -1090,11 +1090,17 @@ class TwelveMonthsApp {
       this.greetingHeartInterval = null;
     }
 
+    // Clear catch falling interval
+    if (this.catchFallingInterval) {
+      clearInterval(this.catchFallingInterval);
+      this.catchFallingInterval = null;
+    }
+
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
     if (!gameArea) return;
 
-    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart');
+    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart, .love-meter-container, .love-meter-heart, .catch-falling-container, .falling-heart');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
       gsap.set(el, { clearProps: 'all' });
@@ -1105,7 +1111,7 @@ class TwelveMonthsApp {
     if (progressBar) gsap.killTweensOf(progressBar);
 
     // Clean up game area classes
-    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid');
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid');
 
     // Reset game state
     this.memoryCards = [];
@@ -1561,9 +1567,9 @@ class TwelveMonthsApp {
       // Spawn hearts at intervals
       let spawnCount = 0;
       const maxSpawns = 15;
-      const spawnInterval = setInterval(() => {
+      this.catchFallingInterval = setInterval(() => {
         if (this.gameCompleted || spawnCount >= maxSpawns) {
-          clearInterval(spawnInterval);
+          clearInterval(this.catchFallingInterval);
           return;
         }
         spawnHeart();
