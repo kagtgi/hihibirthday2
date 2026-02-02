@@ -1,8 +1,8 @@
 {
   "id": 22,
   "month": "September 2025",
-  "minigameType": "Love Letter",
-  "text": "Hãy trả lời câu hỏi sau:",
+  "minigameType": "catch_falling",
+  "text": "Bắt những trái tim rơi!",
   "question": "Tháng 9  có suông sẻ hong",
   "answers": {
     "A": "có",
