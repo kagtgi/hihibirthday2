@@ -22,7 +22,7 @@ class TwelveMonthsApp {
     // Timing controls - prevent skipping before content is viewed
     this.canAdvance = true;
     this.quoteAnimationComplete = false;
-    this.minViewingTimeMs = 1500; // Minimum time to view any step
+    this.minViewingTimeMs = 1000; // Minimum time to view any step
 
     // Gallery swipe controls - prevent swiping before image displays
     this.galleryImageLoaded = [];  // Track which images have loaded
@@ -846,8 +846,8 @@ class TwelveMonthsApp {
       setTimeout(() => {
         this.canAdvance = true;
         this.showReadyToAdvance('question');
-      }, 1800);
-    }, 600);
+      }, 1200);
+    }, 500);
   }
 
   updateRevealStep(selectedKey, correctKey, chapter) {
@@ -927,11 +927,11 @@ class TwelveMonthsApp {
     this.canAdvance = false;
 
     const timings = {
-      'title': 1000,    // Title card - allow time to see chapter info
+      'title': 600,     // Title card - allow time to see chapter info
       'quote': 0,       // Quote - handled by animation completion
-      'note': 2500,     // Note - needs time to read the message
-      'reveal': 3000,   // Reveal - needs time to compare answers
-      'image': 1200,    // Image - wait for images to load and display
+      'note': 1500,     // Note - needs time to read the message
+      'reveal': 2000,   // Reveal - needs time to compare answers
+      'image': 800,     // Image - wait for images to load and display
       'game': 0,        // Game - controlled by game completion
       'question': 0     // Question - controlled by answer selection
     };
@@ -1154,6 +1154,18 @@ class TwelveMonthsApp {
       return;
     }
 
+    // Check if this is a Love Meter game
+    if (chapter.minigameType === 'love_meter') {
+      this.startLoveMeterGame();
+      return;
+    }
+
+    // Check if this is a Catch Falling game
+    if (chapter.minigameType === 'catch_falling') {
+      this.startCatchFallingGame();
+      return;
+    }
+
     const gameArea = document.querySelector('.game-area');
     const progressBar = document.querySelector('.game-step .progress-bar');
 
@@ -1316,6 +1328,251 @@ class TwelveMonthsApp {
         }
       );
     }
+  }
+
+  // ===== Love Meter Game (Tap to fill heart with love) =====
+  startLoveMeterGame() {
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid');
+    gameArea.classList.add('love-meter-grid');
+    this.gameCompleted = false;
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
+
+    const targetTaps = 10;
+    let currentTaps = 0;
+
+    const container = document.createElement('div');
+    container.className = 'love-meter-container';
+    container.innerHTML = `
+      <div class="love-meter-heart">
+        <div class="love-meter-fill"></div>
+        <span class="love-meter-emoji">🤍</span>
+      </div>
+      <p class="love-meter-text">Chạm để gửi yêu thương!</p>
+      <p class="love-meter-count">0 / ${targetTaps}</p>
+    `;
+
+    gameArea.appendChild(container);
+
+    setTimeout(() => {
+      const heart = document.querySelector('.love-meter-heart');
+      const fill = document.querySelector('.love-meter-fill');
+      const emoji = document.querySelector('.love-meter-emoji');
+      const textEl = document.querySelector('.love-meter-text');
+      const countEl = document.querySelector('.love-meter-count');
+
+      gsap.fromTo(heart,
+        { opacity: 0, scale: 0.5 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.7)' }
+      );
+
+      gsap.fromTo([textEl, countEl],
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.4, delay: 0.3, stagger: 0.1 }
+      );
+
+      const handleTap = (e) => {
+        e.preventDefault();
+        if (this.gameCompleted) return;
+
+        currentTaps++;
+        const progress = Math.min((currentTaps / targetTaps) * 100, 100);
+
+        // Update fill and progress
+        fill.style.height = `${progress}%`;
+        progressBar.style.width = `${progress}%`;
+        countEl.textContent = `${currentTaps} / ${targetTaps}`;
+
+        // Pulse animation on tap
+        gsap.fromTo(heart,
+          { scale: 1.1 },
+          { scale: 1, duration: 0.15, ease: 'power2.out' }
+        );
+
+        // Change emoji color as it fills
+        if (progress >= 100) {
+          emoji.textContent = '❤️';
+        } else if (progress >= 70) {
+          emoji.textContent = '💗';
+        } else if (progress >= 40) {
+          emoji.textContent = '💖';
+        } else if (progress >= 20) {
+          emoji.textContent = '🩷';
+        }
+
+        // Create small heart burst on each tap
+        this.createMiniHeartBurst(heart);
+
+        if (currentTaps >= targetTaps && !this.gameCompleted) {
+          this.gameCompleted = true;
+          progressBar.classList.add('completed');
+          textEl.textContent = 'Đầy yêu thương! 💕';
+
+          gsap.to(heart, {
+            scale: 1.2,
+            duration: 0.3,
+            ease: 'back.out(2)'
+          });
+
+          setTimeout(() => {
+            this.canAdvance = true;
+            this.showReadyToAdvance('game');
+          }, 800);
+        }
+      };
+
+      heart.addEventListener('click', handleTap);
+      heart.addEventListener('touchend', handleTap, { passive: false });
+    }, 350);
+  }
+
+  createMiniHeartBurst(parent) {
+    const hearts = ['💕', '💗', '💖'];
+    const burstCount = 3;
+
+    for (let i = 0; i < burstCount; i++) {
+      const heart = document.createElement('span');
+      heart.className = 'mini-burst-heart';
+      heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+      parent.appendChild(heart);
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 30 + Math.random() * 20;
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+
+      gsap.fromTo(heart,
+        { opacity: 1, scale: 0.3, x: 0, y: 0 },
+        {
+          opacity: 0,
+          scale: 0.8,
+          x: x,
+          y: y - 20,
+          duration: 0.5,
+          ease: 'power2.out',
+          onComplete: () => heart.remove()
+        }
+      );
+    }
+  }
+
+  // ===== Catch Falling Game =====
+  startCatchFallingGame() {
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid');
+    gameArea.classList.add('catch-falling-grid');
+    this.gameCompleted = false;
+    this.gameCollected = 0;
+    this.gameTarget = 8;
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
+
+    const container = document.createElement('div');
+    container.className = 'catch-falling-container';
+    container.innerHTML = `
+      <p class="catch-falling-text">Bắt những trái tim rơi!</p>
+      <div class="catch-falling-area"></div>
+    `;
+
+    gameArea.appendChild(container);
+
+    setTimeout(() => {
+      const textEl = document.querySelector('.catch-falling-text');
+      const fallingArea = document.querySelector('.catch-falling-area');
+
+      gsap.fromTo(textEl,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.4 }
+      );
+
+      // Spawn falling hearts
+      const spawnHeart = () => {
+        if (this.gameCompleted) return;
+
+        const heart = document.createElement('div');
+        heart.className = 'falling-heart';
+        heart.textContent = ['💖', '💗', '💕', '❤️', '🩷'][Math.floor(Math.random() * 5)];
+
+        const areaWidth = fallingArea.offsetWidth || 400;
+        heart.style.left = `${20 + Math.random() * (areaWidth - 60)}px`;
+        heart.style.top = '-40px';
+
+        fallingArea.appendChild(heart);
+
+        // Fall animation
+        const fallDuration = 2.5 + Math.random() * 1;
+        gsap.to(heart, {
+          top: '100%',
+          duration: fallDuration,
+          ease: 'none',
+          onComplete: () => {
+            if (!heart.classList.contains('caught')) {
+              heart.remove();
+            }
+          }
+        });
+
+        // Catch handler
+        const handleCatch = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (heart.classList.contains('caught') || this.gameCompleted) return;
+
+          heart.classList.add('caught');
+          this.gameCollected++;
+
+          const progress = (this.gameCollected / this.gameTarget) * 100;
+          progressBar.style.width = `${progress}%`;
+
+          // Catch animation
+          gsap.killTweensOf(heart);
+          gsap.to(heart, {
+            scale: 1.5,
+            opacity: 0,
+            y: -30,
+            duration: 0.3,
+            ease: 'power2.out',
+            onComplete: () => heart.remove()
+          });
+
+          if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
+            this.gameCompleted = true;
+            progressBar.classList.add('completed');
+            textEl.textContent = 'Tuyệt vời! 💕';
+
+            setTimeout(() => {
+              this.canAdvance = true;
+              this.showReadyToAdvance('game');
+            }, 800);
+          }
+        };
+
+        heart.addEventListener('click', handleCatch);
+        heart.addEventListener('touchstart', handleCatch, { passive: false });
+      };
+
+      // Spawn hearts at intervals
+      let spawnCount = 0;
+      const maxSpawns = 15;
+      const spawnInterval = setInterval(() => {
+        if (this.gameCompleted || spawnCount >= maxSpawns) {
+          clearInterval(spawnInterval);
+          return;
+        }
+        spawnHeart();
+        spawnCount++;
+      }, 600);
+
+      // Initial spawn
+      spawnHeart();
+    }, 350);
   }
 
   // ===== Greeting Animation =====
@@ -1491,6 +1748,8 @@ class TwelveMonthsApp {
     const gameTexts = {
       'greeting': 'Chào mừng bạn!',
       'simple_greeting': 'Chào mừng bạn!',
+      'love_meter': 'Đổ đầy trái tim yêu thương',
+      'catch_falling': 'Bắt những trái tim rơi',
       'hearts': 'Thu thập những trái tim yêu thương',
       'flowers': 'Hái những bông hoa xinh đẹp',
       'bubbles': 'Chạm vào những bong bóng lung linh',
@@ -1519,6 +1778,12 @@ class TwelveMonthsApp {
     }
     if (gameType === 'simple_greeting') {
       return '';
+    }
+    if (gameType === 'love_meter') {
+      return 'Chạm nhiều lần để đổ đầy!';
+    }
+    if (gameType === 'catch_falling') {
+      return 'Chạm vào trái tim khi chúng rơi xuống!';
     }
     return 'Chạm vào các biểu tượng để thu thập!';
   }

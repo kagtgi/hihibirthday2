@@ -1486,6 +1486,150 @@ h1, h2, h3 {
   }
 }
 
+/* ===== Love Meter Game ===== */
+.game-area.love-meter-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.love-meter-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.love-meter-heart {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 107, 122, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.love-meter-heart:hover {
+  transform: scale(1.05);
+}
+
+.love-meter-heart:active {
+  transform: scale(0.95);
+}
+
+.love-meter-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to top, var(--primary), var(--accent));
+  transition: height 0.15s ease-out;
+  z-index: 1;
+}
+
+.love-meter-emoji {
+  font-size: 4rem;
+  z-index: 2;
+  filter: drop-shadow(0 2px 8px rgba(255, 107, 122, 0.3));
+  transition: transform 0.15s ease;
+}
+
+.love-meter-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  opacity: 0.9;
+}
+
+.love-meter-count {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  opacity: 0.7;
+}
+
+.mini-burst-heart {
+  position: absolute;
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ===== Catch Falling Game ===== */
+.game-area.catch-falling-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+.catch-falling-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.catch-falling-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 0.8rem;
+}
+
+.catch-falling-area {
+  width: 100%;
+  height: calc(100% - 50px);
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.falling-heart {
+  position: absolute;
+  font-size: 2.5rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  filter: drop-shadow(0 2px 8px rgba(255, 107, 122, 0.3));
+  transition: transform 0.1s ease;
+  z-index: 5;
+}
+
+.falling-heart:hover {
+  transform: scale(1.2);
+}
+
+.falling-heart.caught {
+  pointer-events: none;
+}
+
+/* Responsive for new games */
+@media screen and (max-width: 400px) {
+  .love-meter-heart {
+    width: 100px;
+    height: 100px;
+  }
+
+  .love-meter-emoji {
+    font-size: 3rem;
+  }
+
+  .falling-heart {
+    font-size: 2rem;
+  }
+}
+
 /* ===== Memory Match Game (Legacy) ===== */
 .game-area.memory-match-grid {
   display: grid;
