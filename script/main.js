@@ -29,6 +29,13 @@ class TwelveMonthsApp {
     this.gallerySwiping = false;   // Prevent rapid swiping
     this.gallerySwipeCooldown = 400; // ms between swipes
 
+    // Event handler references for cleanup (prevent memory leaks)
+    this.keydownHandler = null;
+    this.greetingHeartInterval = null;
+
+    // Transition flag to prevent double-trigger
+    this.isTransitioningChapter = false;
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -83,11 +90,26 @@ class TwelveMonthsApp {
   showError(message) {
     const introContent = document.querySelector('.intro-content');
     if (introContent) {
-      introContent.innerHTML = `
-        <h1 class="intro-title">Oops!</h1>
-        <p class="intro-subtitle">${message}</p>
-        <button class="start-btn" onclick="location.reload()">Tải Lại</button>
-      `;
+      // Clear existing content safely
+      introContent.innerHTML = '';
+
+      // Create elements safely to prevent XSS
+      const title = document.createElement('h1');
+      title.className = 'intro-title';
+      title.textContent = 'Oops!';
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'intro-subtitle';
+      subtitle.textContent = message; // Safe: textContent doesn't execute HTML
+
+      const btn = document.createElement('button');
+      btn.className = 'start-btn';
+      btn.textContent = 'Tải Lại';
+      btn.addEventListener('click', () => location.reload());
+
+      introContent.appendChild(title);
+      introContent.appendChild(subtitle);
+      introContent.appendChild(btn);
     }
   }
 
@@ -114,14 +136,19 @@ class TwelveMonthsApp {
   setupEventListeners() {
     // Helper function to add both click and touch handlers
     const addClickAndTouch = (element, handler) => {
+      if (!element) return; // Safety check
+
       let lastEventTime = 0;
+      const debounceTime = 200; // Increased for slower devices
+
       const wrappedHandler = (e) => {
         // Prevent double-trigger from touch + click
         const now = Date.now();
-        if (now - lastEventTime < 100) return;
+        if (now - lastEventTime < debounceTime) return;
         lastEventTime = now;
         handler(e);
       };
+
       element.addEventListener('click', wrappedHandler);
       element.addEventListener('touchend', (e) => {
         e.preventDefault();
@@ -240,7 +267,8 @@ class TwelveMonthsApp {
   }
 
   setupKeyboardNavigation() {
-    document.addEventListener('keydown', (e) => {
+    // Store handler reference for cleanup (prevent memory leaks)
+    this.keydownHandler = (e) => {
       // Get current active screen
       const introActive = this.introScreen.classList.contains('active');
       const chapterActive = this.chapterScreen.classList.contains('active');
@@ -307,14 +335,17 @@ class TwelveMonthsApp {
       if (endingActive) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          document.querySelector('.gift-btn').click();
+          document.querySelector('.gift-btn')?.click();
         }
       }
-    });
+    };
+
+    document.addEventListener('keydown', this.keydownHandler);
   }
 
   updateTotalChapters() {
-    document.querySelector('.total-chapters').textContent = this.chapters.length;
+    const el = document.querySelector('.total-chapters');
+    if (el) el.textContent = this.chapters.length;
   }
 
   animateIntro() {
@@ -372,6 +403,12 @@ class TwelveMonthsApp {
     this.gameCollected = 0;
     this.gameCompleted = false;
     this.currentGalleryIndex = 0;
+
+    // Reset state flags for new chapter
+    this.canAdvance = false;
+    this.quoteAnimationComplete = false;
+    this.isAdvancing = false;
+    this.isTransitioningChapter = false;
 
     const chapter = this.chapters[chapterIndex];
 
@@ -433,46 +470,57 @@ class TwelveMonthsApp {
 
   updateProgress() {
     const progress = ((this.currentChapter + 1) / this.chapters.length) * 100;
-    document.querySelector('.current-chapter').textContent = this.currentChapter + 1;
-    document.querySelector('.progress-fill').style.width = `${progress}%`;
+    const currentEl = document.querySelector('.current-chapter');
+    const progressEl = document.querySelector('.progress-fill');
+
+    if (currentEl) currentEl.textContent = this.currentChapter + 1;
+    if (progressEl) progressEl.style.width = `${progress}%`;
   }
 
   populateChapterData(chapter) {
+    // Helper for safe text content setting
+    const setText = (selector, text) => {
+      const el = document.querySelector(selector);
+      if (el) el.textContent = text;
+    };
+
     // Title Card
-    document.querySelector('.chapter-number').textContent = this.currentChapter + 1;
-    document.querySelector('.chapter-month').textContent = chapter.month;
+    setText('.chapter-number', this.currentChapter + 1);
+    setText('.chapter-month', chapter.month || '');
 
     // Quote
-    document.querySelector('.quote-text').textContent = chapter.text || '';
+    setText('.quote-text', chapter.text || '');
 
     // Note
-    document.querySelector('.note-text').textContent = chapter.myNote || '';
+    setText('.note-text', chapter.myNote || '');
 
     // Game text and hint - dynamic based on game type
-    document.querySelector('.game-text').textContent = chapter.text || this.getGameText(chapter.minigameType);
-    document.querySelector('.game-hint').textContent = this.getGameHint(chapter.minigameType);
+    setText('.game-text', chapter.text || this.getGameText(chapter.minigameType));
+    setText('.game-hint', this.getGameHint(chapter.minigameType));
 
     // Question
-    document.querySelector('.question-text').textContent = chapter.question || '';
+    setText('.question-text', chapter.question || '');
     this.populateAnswers(chapter);
 
     // Caption
-    document.querySelector('.image-caption').textContent = chapter.caption || '';
+    setText('.image-caption', chapter.caption || '');
 
     // Images
     this.populateGallery(chapter);
 
     // Update next button text for last chapter
     const nextBtn = document.querySelector('.next-chapter-btn');
-    if (this.currentChapter === this.chapters.length - 1) {
-      nextBtn.textContent = 'Xem Kết Thúc 💕';
-    } else {
-      nextBtn.textContent = 'Tiếp Theo →';
+    if (nextBtn) {
+      nextBtn.textContent = this.currentChapter === this.chapters.length - 1
+        ? 'Xem Kết Thúc 💕'
+        : 'Tiếp Theo →';
     }
   }
 
   populateAnswers(chapter) {
     const grid = document.querySelector('.answers-grid');
+    if (!grid) return;
+
     grid.innerHTML = '';
 
     if (!chapter.answers || typeof chapter.answers !== 'object') return;
@@ -506,68 +554,147 @@ class TwelveMonthsApp {
 
   populateGallery(chapter) {
     const container = document.querySelector('.gallery-container');
+    if (!container) return;
+
     container.innerHTML = '';
     container.style.transform = 'translateX(0%)';
     this.currentGalleryIndex = 0;
 
-    if (!chapter.image || chapter.image.length === 0) return;
-
     // Filter out video and HEIC files (not supported in most browsers)
-    const validImages = chapter.image.filter(img => {
+    const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
+
+    // Handle case where no valid images exist
+    if (validImages.length === 0) {
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'gallery-image-wrapper';
+      emptyMessage.innerHTML = '<div class="image-skeleton image-error"><span class="error-icon">📷</span><span class="error-text">Không có ảnh</span></div>';
+      container.appendChild(emptyMessage);
+      this.galleryImageLoaded = [true];
+      this.updateGalleryNav(0);
+      return;
+    }
 
     // Reset image loaded tracking and swipe state
     this.galleryImageLoaded = new Array(validImages.length).fill(false);
     this.gallerySwiping = false;
 
+    // OPTIMIZATION: Preload ALL images immediately in background
+    this.preloadAllChapterImages(validImages);
+
     validImages.forEach((imgPath, index) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'gallery-image-wrapper';
 
-      // Add loading spinner
-      const spinner = document.createElement('div');
-      spinner.className = 'image-loading-spinner';
-      wrapper.appendChild(spinner);
+      // Add skeleton placeholder for better UX
+      const skeleton = document.createElement('div');
+      skeleton.className = 'image-skeleton';
+      wrapper.appendChild(skeleton);
 
       const img = document.createElement('img');
       img.className = 'gallery-image';
-      img.alt = `Memory ${index + 1}`;
+      img.alt = `Kỷ niệm ${index + 1}`;
       img.style.opacity = '0';
 
-      // Set src after creating element for smoother loading
-      img.src = `image/${imgPath}`;
+      // Track if this image has already been handled
+      let imageHandled = false;
 
-      img.onload = () => {
-        spinner.remove();
-        // Mark this image as loaded
+      const handleImageLoad = () => {
+        if (imageHandled) return;
+        imageHandled = true;
+
+        if (skeleton.parentNode) skeleton.remove();
         this.galleryImageLoaded[index] = true;
-        // Optimized fade in - faster, GPU accelerated
+        // Quick fade in
         gsap.to(img, {
           opacity: 1,
-          duration: 0.3,
+          duration: 0.2,
           ease: 'power2.out',
           force3D: true
         });
-        // When first image loads, start preloading next images
-        if (index === 0) {
-          this.preloadAdjacentImages();
-        }
       };
 
-      img.onerror = () => {
-        wrapper.style.display = 'none';
-        // Mark as "loaded" so it doesn't block navigation
+      const handleImageError = () => {
+        if (imageHandled) return;
+        imageHandled = true;
+
+        // Show error placeholder instead of hiding
+        if (skeleton.parentNode) {
+          skeleton.classList.add('image-error');
+          skeleton.innerHTML = '<span class="error-icon">📷</span><span class="error-text">Không tải được</span>';
+        }
         this.galleryImageLoaded[index] = true;
-        console.warn(`Failed to load image: ${imgPath}`);
+        img.style.display = 'none';
       };
+
+      img.onload = handleImageLoad;
+      img.onerror = handleImageError;
+
+      // Timeout fallback - if image takes too long, show error
+      setTimeout(() => {
+        if (!imageHandled && !img.complete) {
+          handleImageError();
+        }
+      }, 15000); // 15 second timeout
+
+      // Set src after creating element
+      img.src = `image/${imgPath}`;
 
       wrapper.appendChild(img);
       container.appendChild(wrapper);
     });
 
     this.updateGalleryNav(validImages.length);
+
+    // Preload next chapter images for smoother transitions
+    this.preloadNextChapterImages();
+  }
+
+  preloadAllChapterImages(validImages) {
+    // Preload first 4 images immediately, rest progressively
+    // This balances speed with memory usage on mobile devices
+    const immediatePreload = Math.min(4, validImages.length);
+
+    validImages.slice(0, immediatePreload).forEach((imgPath, index) => {
+      if (!this.galleryImageLoaded[index]) {
+        const preloadImg = new Image();
+        preloadImg.src = `image/${imgPath}`;
+      }
+    });
+
+    // Preload remaining images with delay to reduce memory pressure
+    if (validImages.length > immediatePreload) {
+      validImages.slice(immediatePreload).forEach((imgPath, index) => {
+        setTimeout(() => {
+          const actualIndex = immediatePreload + index;
+          if (!this.galleryImageLoaded[actualIndex]) {
+            const preloadImg = new Image();
+            preloadImg.src = `image/${imgPath}`;
+          }
+        }, (index + 1) * 500); // Stagger by 500ms
+      });
+    }
+  }
+
+  preloadNextChapterImages() {
+    // Preload first 2 images of next chapter for smooth transition
+    const nextChapterIndex = this.currentChapter + 1;
+    if (nextChapterIndex < this.chapters.length) {
+      const nextChapter = this.chapters[nextChapterIndex];
+      if (nextChapter.image && nextChapter.image.length > 0) {
+        const validImages = nextChapter.image.filter(img => {
+          const ext = img.toLowerCase().split('.').pop();
+          return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+        });
+        // Preload first 2 images of next chapter
+        validImages.slice(0, 2).forEach(imgPath => {
+          const preloadImg = new Image();
+          preloadImg.src = `image/${imgPath}`;
+        });
+      }
+    }
   }
 
   updateGalleryNav(total) {
@@ -579,8 +706,8 @@ class TwelveMonthsApp {
     const nextChapterBtn = document.querySelector('.next-chapter-btn');
 
     if (total <= 1) {
-      // Hide navigation and swipe hint when only 1 image
-      nav.style.display = 'none';
+      // Hide navigation and swipe hint when only 1 or 0 images
+      if (nav) nav.style.display = 'none';
       if (swipeHint) swipeHint.style.display = 'none';
       // Single image - show continue button immediately
       if (nextChapterBtn) {
@@ -589,11 +716,11 @@ class TwelveMonthsApp {
       }
     } else {
       // Show navigation and swipe hint when multiple images
-      nav.style.display = 'flex';
+      if (nav) nav.style.display = 'flex';
       if (swipeHint) swipeHint.style.display = 'block';
-      counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
-      prevBtn.disabled = this.currentGalleryIndex === 0;
-      nextBtn.disabled = this.currentGalleryIndex === total - 1;
+      if (counter) counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
+      if (prevBtn) prevBtn.disabled = this.currentGalleryIndex === 0;
+      if (nextBtn) nextBtn.disabled = this.currentGalleryIndex === total - 1;
 
       // Update swipe hint based on position
       if (swipeHint) {
@@ -629,7 +756,7 @@ class TwelveMonthsApp {
   }
 
   galleryPrev() {
-    // Prevent rapid swiping
+    // Prevent rapid swiping - reduced cooldown for responsiveness
     if (this.gallerySwiping) return;
 
     const chapter = this.chapters[this.currentChapter];
@@ -641,26 +768,20 @@ class TwelveMonthsApp {
     const targetIndex = this.currentGalleryIndex - 1;
     if (targetIndex < 0) return;
 
-    // Check if target image has loaded, or wait briefly
-    if (!this.galleryImageLoaded[targetIndex]) {
-      // Image not loaded yet, wait a bit and try again
-      setTimeout(() => this.galleryPrev(), 100);
-      return;
-    }
-
+    // Navigate immediately - skeleton handles loading UX
     this.gallerySwiping = true;
     this.currentGalleryIndex = targetIndex;
     this.slideGallery();
     this.updateGalleryNav(validImages.length);
 
-    // Reset swipe cooldown
+    // Shorter cooldown for faster navigation
     setTimeout(() => {
       this.gallerySwiping = false;
-    }, this.gallerySwipeCooldown);
+    }, 250);
   }
 
   galleryNext() {
-    // Prevent rapid swiping
+    // Prevent rapid swiping - reduced cooldown for responsiveness
     if (this.gallerySwiping) return;
 
     const chapter = this.chapters[this.currentChapter];
@@ -672,48 +793,24 @@ class TwelveMonthsApp {
     const targetIndex = this.currentGalleryIndex + 1;
     if (targetIndex >= validImages.length) return;
 
-    // Check if target image has loaded, or wait briefly
-    if (!this.galleryImageLoaded[targetIndex]) {
-      // Image not loaded yet, wait a bit and try again
-      setTimeout(() => this.galleryNext(), 100);
-      return;
-    }
-
+    // Navigate immediately - skeleton handles loading UX
     this.gallerySwiping = true;
     this.currentGalleryIndex = targetIndex;
     this.slideGallery();
     this.updateGalleryNav(validImages.length);
 
-    // Reset swipe cooldown
+    // Shorter cooldown for faster navigation
     setTimeout(() => {
       this.gallerySwiping = false;
-    }, this.gallerySwipeCooldown);
+    }, 250);
   }
 
   slideGallery() {
     const container = document.querySelector('.gallery-container');
+    if (!container) return;
+
     const offset = -this.currentGalleryIndex * 100;
     container.style.transform = `translateX(${offset}%)`;
-
-    // Preload adjacent images for smoother experience
-    this.preloadAdjacentImages();
-  }
-
-  preloadAdjacentImages() {
-    const chapter = this.chapters[this.currentChapter];
-    const validImages = (chapter.image || []).filter(img => {
-      const ext = img.toLowerCase().split('.').pop();
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-    });
-
-    // Preload next 2 images
-    for (let i = 1; i <= 2; i++) {
-      const nextIndex = this.currentGalleryIndex + i;
-      if (nextIndex < validImages.length && !this.galleryImageLoaded[nextIndex]) {
-        const preloadImg = new Image();
-        preloadImg.src = `image/${validImages[nextIndex]}`;
-      }
-    }
   }
 
   selectAnswer(btn, selectedKey, correctKey, chapter) {
@@ -757,8 +854,20 @@ class TwelveMonthsApp {
     const herChoiceBox = document.querySelector('.her-choice .choice-box');
     const myChoiceBox = document.querySelector('.my-choice .choice-box');
 
-    herChoiceBox.textContent = chapter.answers[selectedKey] || '';
-    myChoiceBox.innerHTML = `${chapter.answers[correctKey] || ''}<span class="heart-icon">💛</span>`;
+    if (herChoiceBox) {
+      herChoiceBox.textContent = chapter.answers?.[selectedKey] || '';
+    }
+
+    if (myChoiceBox) {
+      // Safe DOM manipulation to prevent XSS
+      myChoiceBox.textContent = '';
+      const answerText = document.createTextNode(chapter.answers?.[correctKey] || '');
+      const heartSpan = document.createElement('span');
+      heartSpan.className = 'heart-icon';
+      heartSpan.textContent = '💛';
+      myChoiceBox.appendChild(answerText);
+      myChoiceBox.appendChild(heartSpan);
+    }
   }
 
   getStepElement(stepName) {
@@ -845,7 +954,13 @@ class TwelveMonthsApp {
     if (stepElement && !stepElement.querySelector('.tap-hint')) {
       const hint = document.createElement('div');
       hint.className = 'tap-hint';
-      hint.innerHTML = '<span class="tap-hint-text">Enter để tiếp tục</span>';
+
+      // Safe DOM construction
+      const hintText = document.createElement('span');
+      hintText.className = 'tap-hint-text';
+      hintText.textContent = 'Enter để tiếp tục';
+      hint.appendChild(hintText);
+
       stepElement.appendChild(hint);
 
       gsap.fromTo(hint,
@@ -878,11 +993,30 @@ class TwelveMonthsApp {
 
   animateQuote() {
     const quoteText = document.querySelector('.quote-text');
-    const text = quoteText.textContent;
+    if (!quoteText) {
+      // If element not found, allow advancing immediately
+      this.canAdvance = true;
+      this.quoteAnimationComplete = true;
+      return;
+    }
 
-    // Split into characters
+    const text = quoteText.textContent || '';
+
+    // Handle empty text case
+    if (!text.trim()) {
+      this.canAdvance = true;
+      this.quoteAnimationComplete = true;
+      this.showReadyToAdvance('quote');
+      return;
+    }
+
+    // Split into characters - escape HTML entities for safety
+    const escapeHtml = (str) => str.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
     quoteText.innerHTML = text.split('').map(char =>
-      char === ' ' ? ' ' : `<span class="quote-char">${char}</span>`
+      char === ' ' ? ' ' : `<span class="quote-char">${escapeHtml(char)}</span>`
     ).join('');
 
     // Calculate animation duration based on text length
@@ -950,16 +1084,25 @@ class TwelveMonthsApp {
   }
 
   cleanupGameArea() {
+    // Clear any running intervals first
+    if (this.greetingHeartInterval) {
+      clearInterval(this.greetingHeartInterval);
+      this.greetingHeartInterval = null;
+    }
+
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
+    if (!gameArea) return;
+
     const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
       gsap.set(el, { clearProps: 'all' });
     });
+
     // Also kill progress bar animations
     const progressBar = document.querySelector('.game-step .progress-bar');
-    gsap.killTweensOf(progressBar);
+    if (progressBar) gsap.killTweensOf(progressBar);
 
     // Clean up game area classes
     gameArea.classList.remove('memory-match-grid', 'heart-burst-grid');
@@ -971,6 +1114,10 @@ class TwelveMonthsApp {
   }
 
   nextChapter() {
+    // Prevent double-trigger during transition
+    if (this.isTransitioningChapter) return;
+    this.isTransitioningChapter = true;
+
     // Smooth chapter transition
     gsap.to(this.imageStep, {
       opacity: 0,
@@ -980,6 +1127,7 @@ class TwelveMonthsApp {
         // Clear GSAP inline styles - let CSS handle visibility via classes
         gsap.set(this.imageStep, { clearProps: 'opacity' });
         this.loadChapter(this.currentChapter + 1);
+        this.isTransitioningChapter = false;
       }
     });
   }
@@ -1241,8 +1389,23 @@ class TwelveMonthsApp {
     const heartsContainer = document.querySelector('.greeting-hearts');
     if (!heartsContainer) return;
 
+    // Clear any existing interval first
+    if (this.greetingHeartInterval) {
+      clearInterval(this.greetingHeartInterval);
+      this.greetingHeartInterval = null;
+    }
+
     const hearts = ['💕', '💗', '💖', '💝', '❤️'];
     const spawnHeart = () => {
+      // Safety check - don't spawn if container is gone
+      if (!document.contains(heartsContainer)) {
+        if (this.greetingHeartInterval) {
+          clearInterval(this.greetingHeartInterval);
+          this.greetingHeartInterval = null;
+        }
+        return;
+      }
+
       const heart = document.createElement('span');
       heart.className = 'greeting-heart';
       heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
@@ -1259,10 +1422,15 @@ class TwelveMonthsApp {
     for (let i = 0; i < 3; i++) {
       setTimeout(spawnHeart, i * 400);
     }
-    const heartInterval = setInterval(spawnHeart, 600);
+    this.greetingHeartInterval = setInterval(spawnHeart, 600);
 
     // Stop spawning after animation completes
-    setTimeout(() => clearInterval(heartInterval), 3000);
+    setTimeout(() => {
+      if (this.greetingHeartInterval) {
+        clearInterval(this.greetingHeartInterval);
+        this.greetingHeartInterval = null;
+      }
+    }, 3000);
   }
 
   // ===== Simple Greeting (No Animation) =====

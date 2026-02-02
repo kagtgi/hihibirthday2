@@ -640,7 +640,7 @@ h1, h2, h3 {
 .gallery-container {
   display: flex;
   height: 100%;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform;
 }
 
@@ -684,19 +684,19 @@ h1, h2, h3 {
 
 .gallery-prev,
 .gallery-next {
-  width: 50px;
-  height: 50px;
-  min-width: 50px;
-  min-height: 50px;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--primary);
   font-size: 0;
   cursor: pointer;
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background 0.12s ease-out;
   position: relative;
-  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.25);
+  box-shadow: 0 4px 15px rgba(255, 107, 122, 0.3);
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -727,14 +727,20 @@ h1, h2, h3 {
 
 .gallery-prev:hover,
 .gallery-next:hover {
-  background: rgba(255, 255, 255, 0.6);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(255, 107, 122, 0.4);
 }
 
 .gallery-prev:hover::before,
 .gallery-next:hover::before {
   border-color: #FF4D6D;
+}
+
+.gallery-prev:active,
+.gallery-next:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(255, 107, 122, 0.3);
 }
 
 .gallery-prev:disabled,
@@ -1070,10 +1076,10 @@ h1, h2, h3 {
 
   .gallery-prev,
   .gallery-next {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
   }
 }
 
@@ -1145,8 +1151,67 @@ h1, h2, h3 {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+/* Skeleton Loading Placeholder - nicer than spinner */
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  background-size: 200% 200%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-skeleton::before {
+  content: '';
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 200%; }
+  100% { background-position: -200% -200%; }
+}
+
 .gallery-image {
-  transition: opacity 0.3s ease-out;
+  transition: opacity 0.2s ease-out;
+}
+
+/* Image Error State */
+.image-skeleton.image-error {
+  background: rgba(0, 0, 0, 0.1);
+  animation: none;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.image-skeleton.image-error::before {
+  display: none;
+}
+
+.image-skeleton .error-icon {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+.image-skeleton .error-text {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  opacity: 0.6;
 }
 
 /* ===== Game Completion ===== */
@@ -1693,6 +1758,31 @@ h1, h2, h3 {
     max-width: 520px;
     gap: 16px;
   }
+}
+
+/* ===== Accessibility - Focus Indicators ===== */
+.start-btn:focus-visible,
+.answer-btn:focus-visible,
+.gallery-prev:focus-visible,
+.gallery-next:focus-visible,
+.gift-btn:focus-visible,
+.next-chapter-btn:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 107, 122, 0.25);
+}
+
+/* Remove default outline but keep focus-visible for keyboard users */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Game elements focus */
+.game-element:focus-visible,
+.memory-card:focus-visible,
+.heart-burst-main:focus-visible {
+  outline: 3px solid var(--gold-choice);
+  outline-offset: 2px;
 }
 
 /* ===== Utility Classes ===== */
