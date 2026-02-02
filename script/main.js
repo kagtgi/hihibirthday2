@@ -33,6 +33,9 @@ class TwelveMonthsApp {
     this.keydownHandler = null;
     this.greetingHeartInterval = null;
 
+    // Transition flag to prevent double-trigger
+    this.isTransitioningChapter = false;
+
     // DOM Elements
     this.app = document.querySelector('.app');
     this.introScreen = document.querySelector('.intro-screen');
@@ -401,6 +404,12 @@ class TwelveMonthsApp {
     this.gameCompleted = false;
     this.currentGalleryIndex = 0;
 
+    // Reset state flags for new chapter
+    this.canAdvance = false;
+    this.quoteAnimationComplete = false;
+    this.isAdvancing = false;
+    this.isTransitioningChapter = false;
+
     const chapter = this.chapters[chapterIndex];
 
     // Update theme based on month
@@ -545,17 +554,28 @@ class TwelveMonthsApp {
 
   populateGallery(chapter) {
     const container = document.querySelector('.gallery-container');
+    if (!container) return;
+
     container.innerHTML = '';
     container.style.transform = 'translateX(0%)';
     this.currentGalleryIndex = 0;
 
-    if (!chapter.image || chapter.image.length === 0) return;
-
     // Filter out video and HEIC files (not supported in most browsers)
-    const validImages = chapter.image.filter(img => {
+    const validImages = (chapter.image || []).filter(img => {
       const ext = img.toLowerCase().split('.').pop();
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
+
+    // Handle case where no valid images exist
+    if (validImages.length === 0) {
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'gallery-image-wrapper';
+      emptyMessage.innerHTML = '<div class="image-skeleton image-error"><span class="error-icon">📷</span><span class="error-text">Không có ảnh</span></div>';
+      container.appendChild(emptyMessage);
+      this.galleryImageLoaded = [true];
+      this.updateGalleryNav(0);
+      return;
+    }
 
     // Reset image loaded tracking and swipe state
     this.galleryImageLoaded = new Array(validImages.length).fill(false);
@@ -686,8 +706,8 @@ class TwelveMonthsApp {
     const nextChapterBtn = document.querySelector('.next-chapter-btn');
 
     if (total <= 1) {
-      // Hide navigation and swipe hint when only 1 image
-      nav.style.display = 'none';
+      // Hide navigation and swipe hint when only 1 or 0 images
+      if (nav) nav.style.display = 'none';
       if (swipeHint) swipeHint.style.display = 'none';
       // Single image - show continue button immediately
       if (nextChapterBtn) {
@@ -696,11 +716,11 @@ class TwelveMonthsApp {
       }
     } else {
       // Show navigation and swipe hint when multiple images
-      nav.style.display = 'flex';
+      if (nav) nav.style.display = 'flex';
       if (swipeHint) swipeHint.style.display = 'block';
-      counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
-      prevBtn.disabled = this.currentGalleryIndex === 0;
-      nextBtn.disabled = this.currentGalleryIndex === total - 1;
+      if (counter) counter.textContent = `${this.currentGalleryIndex + 1} / ${total}`;
+      if (prevBtn) prevBtn.disabled = this.currentGalleryIndex === 0;
+      if (nextBtn) nextBtn.disabled = this.currentGalleryIndex === total - 1;
 
       // Update swipe hint based on position
       if (swipeHint) {
@@ -787,6 +807,8 @@ class TwelveMonthsApp {
 
   slideGallery() {
     const container = document.querySelector('.gallery-container');
+    if (!container) return;
+
     const offset = -this.currentGalleryIndex * 100;
     container.style.transform = `translateX(${offset}%)`;
   }
@@ -832,16 +854,20 @@ class TwelveMonthsApp {
     const herChoiceBox = document.querySelector('.her-choice .choice-box');
     const myChoiceBox = document.querySelector('.my-choice .choice-box');
 
-    herChoiceBox.textContent = chapter.answers?.[selectedKey] || '';
+    if (herChoiceBox) {
+      herChoiceBox.textContent = chapter.answers?.[selectedKey] || '';
+    }
 
-    // Safe DOM manipulation to prevent XSS
-    myChoiceBox.textContent = '';
-    const answerText = document.createTextNode(chapter.answers?.[correctKey] || '');
-    const heartSpan = document.createElement('span');
-    heartSpan.className = 'heart-icon';
-    heartSpan.textContent = '💛';
-    myChoiceBox.appendChild(answerText);
-    myChoiceBox.appendChild(heartSpan);
+    if (myChoiceBox) {
+      // Safe DOM manipulation to prevent XSS
+      myChoiceBox.textContent = '';
+      const answerText = document.createTextNode(chapter.answers?.[correctKey] || '');
+      const heartSpan = document.createElement('span');
+      heartSpan.className = 'heart-icon';
+      heartSpan.textContent = '💛';
+      myChoiceBox.appendChild(answerText);
+      myChoiceBox.appendChild(heartSpan);
+    }
   }
 
   getStepElement(stepName) {
@@ -928,7 +954,13 @@ class TwelveMonthsApp {
     if (stepElement && !stepElement.querySelector('.tap-hint')) {
       const hint = document.createElement('div');
       hint.className = 'tap-hint';
-      hint.innerHTML = '<span class="tap-hint-text">Enter để tiếp tục</span>';
+
+      // Safe DOM construction
+      const hintText = document.createElement('span');
+      hintText.className = 'tap-hint-text';
+      hintText.textContent = 'Enter để tiếp tục';
+      hint.appendChild(hintText);
+
       stepElement.appendChild(hint);
 
       gsap.fromTo(hint,
@@ -961,11 +993,30 @@ class TwelveMonthsApp {
 
   animateQuote() {
     const quoteText = document.querySelector('.quote-text');
-    const text = quoteText.textContent;
+    if (!quoteText) {
+      // If element not found, allow advancing immediately
+      this.canAdvance = true;
+      this.quoteAnimationComplete = true;
+      return;
+    }
 
-    // Split into characters
+    const text = quoteText.textContent || '';
+
+    // Handle empty text case
+    if (!text.trim()) {
+      this.canAdvance = true;
+      this.quoteAnimationComplete = true;
+      this.showReadyToAdvance('quote');
+      return;
+    }
+
+    // Split into characters - escape HTML entities for safety
+    const escapeHtml = (str) => str.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
     quoteText.innerHTML = text.split('').map(char =>
-      char === ' ' ? ' ' : `<span class="quote-char">${char}</span>`
+      char === ' ' ? ' ' : `<span class="quote-char">${escapeHtml(char)}</span>`
     ).join('');
 
     // Calculate animation duration based on text length
@@ -1063,6 +1114,10 @@ class TwelveMonthsApp {
   }
 
   nextChapter() {
+    // Prevent double-trigger during transition
+    if (this.isTransitioningChapter) return;
+    this.isTransitioningChapter = true;
+
     // Smooth chapter transition
     gsap.to(this.imageStep, {
       opacity: 0,
@@ -1072,6 +1127,7 @@ class TwelveMonthsApp {
         // Clear GSAP inline styles - let CSS handle visibility via classes
         gsap.set(this.imageStep, { clearProps: 'opacity' });
         this.loadChapter(this.currentChapter + 1);
+        this.isTransitioningChapter = false;
       }
     });
   }
