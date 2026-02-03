@@ -1182,11 +1182,17 @@ class TwelveMonthsApp {
       this.catchFallingInterval = null;
     }
 
+    // Clear bubble pop interval
+    if (this.bubblePopInterval) {
+      clearInterval(this.bubblePopInterval);
+      this.bubblePopInterval = null;
+    }
+
     // Kill all GSAP tweens in game area to prevent memory leaks
     const gameArea = document.querySelector('.game-area');
     if (!gameArea) return;
 
-    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart, .love-meter-container, .love-meter-heart, .catch-falling-container, .falling-heart');
+    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart, .love-meter-container, .love-meter-heart, .catch-falling-container, .falling-heart, .bubble-pop-container, .pop-bubble');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
       gsap.set(el, { clearProps: 'all' });
@@ -1197,7 +1203,7 @@ class TwelveMonthsApp {
     if (progressBar) gsap.killTweensOf(progressBar);
 
     // Clean up game area classes
-    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid');
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid', 'bubble-pop-grid');
 
     // Reset game state
     this.memoryCards = [];
@@ -1255,6 +1261,12 @@ class TwelveMonthsApp {
     // Check if this is a Catch Falling game
     if (chapter.minigameType === 'catch_falling') {
       this.startCatchFallingGame();
+      return;
+    }
+
+    // Check if this is a Bubble Pop game
+    if (chapter.minigameType === 'bubble_pop') {
+      this.startBubblePopGame();
       return;
     }
 
@@ -1897,6 +1909,217 @@ class TwelveMonthsApp {
     }, 350);
   }
 
+  // ===== Bubble Pop Game (Pop floating bubbles) =====
+  startBubblePopGame() {
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid');
+    gameArea.classList.add('bubble-pop-grid');
+    this.gameCompleted = false;
+    this.gameCollected = 0;
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
+
+    const gameDuration = 8000; // 8 seconds
+    const maxBubbles = 15;
+
+    const container = document.createElement('div');
+    container.className = 'bubble-pop-container';
+    container.innerHTML = `
+      <p class="bubble-pop-text">Bấm vỡ những bong bóng!</p>
+      <p class="bubble-pop-score">Đã bấm: <span class="bubble-score-count">0</span> 🫧</p>
+      <div class="bubble-pop-area"></div>
+    `;
+
+    gameArea.appendChild(container);
+
+    setTimeout(() => {
+      const textEl = document.querySelector('.bubble-pop-text');
+      const scoreEl = document.querySelector('.bubble-score-count');
+      const bubbleArea = document.querySelector('.bubble-pop-area');
+
+      gsap.fromTo(textEl,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.4 }
+      );
+
+      // Progress bar fills over game duration
+      gsap.to(progressBar, {
+        width: '100%',
+        duration: gameDuration / 1000,
+        ease: 'none'
+      });
+
+      // Spawn floating bubbles
+      const spawnBubble = () => {
+        if (this.gameCompleted) return;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'pop-bubble';
+
+        // Random bubble emoji/style
+        const bubbleTypes = ['🫧', '💭', '🔮', '💜', '💗'];
+        bubble.textContent = bubbleTypes[Math.floor(Math.random() * bubbleTypes.length)];
+
+        // Get area dimensions
+        const areaRect = bubbleArea.getBoundingClientRect();
+        const areaWidth = areaRect.width > 0 ? areaRect.width : (bubbleArea.offsetWidth || 300);
+        const areaHeight = areaRect.height > 0 ? areaRect.height : (bubbleArea.offsetHeight || 250);
+
+        // Random position within area
+        const padding = 40;
+        const maxLeft = Math.max(padding, areaWidth - padding - 50);
+        const maxTop = Math.max(padding, areaHeight - padding - 50);
+
+        bubble.style.left = `${padding + Math.random() * (maxLeft - padding)}px`;
+        bubble.style.top = `${padding + Math.random() * (maxTop - padding)}px`;
+
+        bubbleArea.appendChild(bubble);
+
+        // Random size variation
+        const scale = 0.8 + Math.random() * 0.6;
+
+        // Entrance animation
+        gsap.fromTo(bubble,
+          { opacity: 0, scale: 0 },
+          { opacity: 1, scale: scale, duration: 0.3, ease: 'back.out(1.5)' }
+        );
+
+        // Floating animation - gentle bobbing
+        gsap.to(bubble, {
+          y: '+=15',
+          x: '+=' + (Math.random() * 10 - 5),
+          duration: 1.5 + Math.random() * 1,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
+        });
+
+        // Pulsing animation
+        gsap.to(bubble, {
+          scale: scale * 1.15,
+          duration: 0.8 + Math.random() * 0.4,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
+        });
+
+        // Auto-remove after some time if not popped
+        const autoRemoveTimer = setTimeout(() => {
+          if (!bubble.classList.contains('popped')) {
+            gsap.to(bubble, {
+              opacity: 0,
+              scale: 0,
+              duration: 0.3,
+              onComplete: () => bubble.remove()
+            });
+          }
+        }, 4000 + Math.random() * 2000);
+
+        // Pop handler
+        const handlePop = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (bubble.classList.contains('popped') || this.gameCompleted) return;
+
+          bubble.classList.add('popped');
+          clearTimeout(autoRemoveTimer);
+          this.gameCollected++;
+
+          // Update score
+          if (scoreEl) scoreEl.textContent = this.gameCollected;
+
+          // Pop animation - burst effect
+          gsap.killTweensOf(bubble);
+
+          // Create mini burst particles
+          this.createBubbleBurst(bubble, bubbleArea);
+
+          gsap.to(bubble, {
+            scale: 1.8,
+            opacity: 0,
+            duration: 0.2,
+            ease: 'power2.out',
+            onComplete: () => bubble.remove()
+          });
+        };
+
+        bubble.addEventListener('click', handlePop);
+        bubble.addEventListener('touchstart', handlePop, { passive: false });
+      };
+
+      // Spawn bubbles at intervals
+      let spawnCount = 0;
+      this.bubblePopInterval = setInterval(() => {
+        if (this.gameCompleted || spawnCount >= maxBubbles) {
+          clearInterval(this.bubblePopInterval);
+          return;
+        }
+        spawnBubble();
+        spawnCount++;
+      }, 500);
+
+      // Initial spawns
+      spawnBubble();
+      setTimeout(spawnBubble, 200);
+
+      // End game after duration
+      setTimeout(() => {
+        if (this.gameCompleted) return;
+
+        this.gameCompleted = true;
+        clearInterval(this.bubblePopInterval);
+        progressBar.classList.add('completed');
+        textEl.textContent = `Bấm được ${this.gameCollected} bong bóng! 🫧`;
+
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 600);
+      }, gameDuration);
+    }, 350);
+  }
+
+  createBubbleBurst(bubble, container) {
+    const particles = ['✨', '💫', '🌟', '💗'];
+    const burstCount = 4;
+    const rect = bubble.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate position relative to container
+    const centerX = rect.left - containerRect.left + rect.width / 2;
+    const centerY = rect.top - containerRect.top + rect.height / 2;
+
+    for (let i = 0; i < burstCount; i++) {
+      const particle = document.createElement('span');
+      particle.className = 'bubble-burst-particle';
+      particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+      particle.style.left = `${centerX}px`;
+      particle.style.top = `${centerY}px`;
+      container.appendChild(particle);
+
+      const angle = (i / burstCount) * Math.PI * 2;
+      const distance = 25 + Math.random() * 20;
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+
+      gsap.fromTo(particle,
+        { opacity: 1, scale: 0.5, x: 0, y: 0 },
+        {
+          opacity: 0,
+          scale: 0.8,
+          x: x,
+          y: y,
+          duration: 0.4,
+          ease: 'power2.out',
+          onComplete: () => particle.remove()
+        }
+      );
+    }
+  }
+
   // ===== Greeting Animation =====
   startGreetingAnimation() {
     const gameArea = document.querySelector('.game-area');
@@ -2072,6 +2295,7 @@ class TwelveMonthsApp {
       'simple_greeting': 'Chào mừng bạn!',
       'love_meter': 'Đổ đầy trái tim yêu thương',
       'catch_falling': 'Bắt những trái tim rơi',
+      'bubble_pop': 'Bấm vỡ những bong bóng tình yêu',
       'hearts': 'Thu thập những trái tim yêu thương',
       'flowers': 'Hái những bông hoa xinh đẹp',
       'bubbles': 'Chạm vào những bong bóng lung linh',
@@ -2106,6 +2330,9 @@ class TwelveMonthsApp {
     }
     if (gameType === 'catch_falling') {
       return 'Chạm vào trái tim khi chúng rơi xuống!';
+    }
+    if (gameType === 'bubble_pop') {
+      return 'Chạm vào bong bóng để bấm vỡ!';
     }
     return 'Chạm vào các biểu tượng để thu thập!';
   }
