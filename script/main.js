@@ -17,7 +17,7 @@ class TwelveMonthsApp {
 
     // Prevent double advance
     this.isAdvancing = false;
-    this.advanceDebounceTime = 300;
+    this.advanceDebounceTime = 150;
 
     // Timing controls - prevent skipping before content is viewed
     this.canAdvance = true;
@@ -27,7 +27,7 @@ class TwelveMonthsApp {
     // Gallery swipe controls - prevent swiping before image displays
     this.galleryImageLoaded = [];  // Track which images have loaded
     this.gallerySwiping = false;   // Prevent rapid swiping
-    this.gallerySwipeCooldown = 400; // ms between swipes
+    this.gallerySwipeCooldown = 150; // ms between swipes
 
     // Event handler references for cleanup (prevent memory leaks)
     this.keydownHandler = null;
@@ -333,8 +333,8 @@ class TwelveMonthsApp {
   }
 
   handleGalleryDrag(startX, endX) {
-    // Lowered threshold for more responsive swipes (from 50 to 30)
-    const threshold = 30;
+    // Lowered threshold for more responsive swipes
+    const threshold = 20;
     const diff = startX - endX;
 
     if (Math.abs(diff) > threshold) {
@@ -857,7 +857,7 @@ class TwelveMonthsApp {
     // Shorter cooldown for faster navigation
     setTimeout(() => {
       this.gallerySwiping = false;
-    }, 250);
+    }, 150);
   }
 
   galleryNext() {
@@ -882,7 +882,7 @@ class TwelveMonthsApp {
     // Shorter cooldown for faster navigation
     setTimeout(() => {
       this.gallerySwiping = false;
-    }, 250);
+    }, 150);
   }
 
   slideGallery() {
@@ -1007,11 +1007,11 @@ class TwelveMonthsApp {
     this.canAdvance = false;
 
     const timings = {
-      'title': 600,     // Title card - allow time to see chapter info
+      'title': 300,     // Title card - allow time to see chapter info
       'quote': 0,       // Quote - handled by animation completion
-      'note': 1500,     // Note - needs time to read the message
-      'reveal': 2000,   // Reveal - needs time to compare answers
-      'image': 800,     // Image - wait for images to load and display
+      'note': 800,      // Note - needs time to read the message
+      'reveal': 1000,   // Reveal - needs time to compare answers
+      'image': 400,     // Image - wait for images to load and display
       'game': 0,        // Game - controlled by game completion
       'question': 0     // Question - controlled by answer selection
     };
@@ -1163,10 +1163,10 @@ class TwelveMonthsApp {
     this.currentStep++;
     this.showStep(this.currentStep);
 
-    // Reset debounce after CSS transition (300ms)
+    // Reset debounce after CSS transition
     setTimeout(() => {
       this.isAdvancing = false;
-    }, 300);
+    }, 150);
   }
 
   cleanupGameArea() {
@@ -1213,7 +1213,7 @@ class TwelveMonthsApp {
     // Smooth chapter transition
     gsap.to(this.imageStep, {
       opacity: 0,
-      duration: 0.35,
+      duration: 0.15,
       ease: 'power2.out',
       onComplete: () => {
         // Clear GSAP inline styles - let CSS handle visibility via classes
@@ -1265,23 +1265,50 @@ class TwelveMonthsApp {
     gameArea.classList.remove('memory-match-grid'); // Clean up from memory match
     this.gameCollected = 0;
     this.gameCompleted = false;
-    this.gameTarget = 5; // Easy mode - only 5 items
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
     const gameEmojis = this.getGameEmojis(chapter.minigameType);
     const useCssHearts = chapter.minigameType === 'css_hearts';
+    const gameDuration = 6000; // 6 seconds
+    const totalElements = 8;
+
+    // Progress bar fills over time
+    gsap.to(progressBar, {
+      width: '100%',
+      duration: gameDuration / 1000,
+      ease: 'none'
+    });
 
     // Wait for CSS transition to complete before spawning elements
-    // Step transition is 0.3s (300ms), adding buffer for proper rendering
+    // Step transition is 0.15s (150ms), adding buffer for proper rendering
     setTimeout(() => {
       // Spawn elements with staggered timing
-      for (let i = 0; i < this.gameTarget; i++) {
+      for (let i = 0; i < totalElements; i++) {
         setTimeout(() => {
           this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
-        }, i * 120);
+        }, i * 150);
       }
-    }, 400);
+
+      // End game after duration
+      setTimeout(() => {
+        if (this.gameCompleted) return;
+
+        this.gameCompleted = true;
+        progressBar.classList.add('completed');
+
+        // Show final score
+        const gameText = document.querySelector('.game-text');
+        if (gameText) {
+          gameText.textContent = `Đã thu thập ${this.gameCollected}! 💕`;
+        }
+
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 600);
+      }, gameDuration);
+    }, 300);
   }
 
   // ===== Memory Match Game (Find matching pairs) =====
@@ -1433,18 +1460,18 @@ class TwelveMonthsApp {
       this.flippedCards = [];
       this.memoryLocked = false;
 
-      // Check win condition
+      // Check completion
       if (this.matchedPairs >= this.totalPairs) {
         progressBar.classList.add('completed');
 
         const textEl = document.querySelector('.memory-match-text');
-        if (textEl) textEl.textContent = 'Tuyệt vời! 💕';
+        if (textEl) textEl.textContent = 'Ghép xong rồi! 💕';
 
         setTimeout(() => {
           this.gameCompleted = true;
           this.canAdvance = true;
           this.showReadyToAdvance('game');
-        }, 800);
+        }, 600);
       }
     } else {
       // No match - flip back after delay
@@ -1604,7 +1631,7 @@ class TwelveMonthsApp {
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    const targetTaps = 10;
+    const gameDuration = 6000; // 6 seconds to tap
     let currentTaps = 0;
 
     const container = document.createElement('div');
@@ -1615,7 +1642,7 @@ class TwelveMonthsApp {
         <span class="love-meter-emoji">🤍</span>
       </div>
       <p class="love-meter-text">Chạm để gửi yêu thương!</p>
-      <p class="love-meter-count">0 / ${targetTaps}</p>
+      <p class="love-meter-count">💕 <span class="tap-count">0</span></p>
     `;
 
     gameArea.appendChild(container);
@@ -1625,70 +1652,83 @@ class TwelveMonthsApp {
       const fill = document.querySelector('.love-meter-fill');
       const emoji = document.querySelector('.love-meter-emoji');
       const textEl = document.querySelector('.love-meter-text');
-      const countEl = document.querySelector('.love-meter-count');
+      const countEl = document.querySelector('.tap-count');
 
       gsap.fromTo(heart,
         { opacity: 0, scale: 0.5 },
         { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.7)' }
       );
 
-      gsap.fromTo([textEl, countEl],
+      gsap.fromTo(textEl,
         { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.4, delay: 0.3, stagger: 0.1 }
+        { opacity: 1, y: 0, duration: 0.4, delay: 0.3 }
       );
+
+      // Progress bar fills over time
+      gsap.to(progressBar, {
+        width: '100%',
+        duration: gameDuration / 1000,
+        ease: 'none'
+      });
+
+      // Fill animation over time
+      gsap.to(fill, {
+        height: '100%',
+        duration: gameDuration / 1000,
+        ease: 'power1.in'
+      });
 
       const handleTap = (e) => {
         e.preventDefault();
         if (this.gameCompleted) return;
 
         currentTaps++;
-        const progress = Math.min((currentTaps / targetTaps) * 100, 100);
-
-        // Update fill and progress
-        fill.style.height = `${progress}%`;
-        progressBar.style.width = `${progress}%`;
-        countEl.textContent = `${currentTaps} / ${targetTaps}`;
+        if (countEl) countEl.textContent = currentTaps;
 
         // Pulse animation on tap
         gsap.fromTo(heart,
-          { scale: 1.1 },
-          { scale: 1, duration: 0.15, ease: 'power2.out' }
+          { scale: 1.15 },
+          { scale: 1, duration: 0.12, ease: 'power2.out' }
         );
 
-        // Change emoji color as it fills
-        if (progress >= 100) {
+        // Change emoji color based on taps
+        if (currentTaps >= 15) {
           emoji.textContent = '❤️';
-        } else if (progress >= 70) {
+        } else if (currentTaps >= 10) {
           emoji.textContent = '💗';
-        } else if (progress >= 40) {
+        } else if (currentTaps >= 5) {
           emoji.textContent = '💖';
-        } else if (progress >= 20) {
+        } else if (currentTaps >= 2) {
           emoji.textContent = '🩷';
         }
 
         // Create small heart burst on each tap
         this.createMiniHeartBurst(heart);
-
-        if (currentTaps >= targetTaps && !this.gameCompleted) {
-          this.gameCompleted = true;
-          progressBar.classList.add('completed');
-          textEl.textContent = 'Đầy yêu thương! 💕';
-
-          gsap.to(heart, {
-            scale: 1.2,
-            duration: 0.3,
-            ease: 'back.out(2)'
-          });
-
-          setTimeout(() => {
-            this.canAdvance = true;
-            this.showReadyToAdvance('game');
-          }, 800);
-        }
       };
 
       heart.addEventListener('click', handleTap);
       heart.addEventListener('touchend', handleTap, { passive: false });
+
+      // End game after duration
+      setTimeout(() => {
+        if (this.gameCompleted) return;
+
+        this.gameCompleted = true;
+        progressBar.classList.add('completed');
+        emoji.textContent = '❤️';
+        textEl.textContent = `Đã gửi ${currentTaps} yêu thương! 💕`;
+
+        gsap.to(heart, {
+          scale: 1.2,
+          duration: 0.3,
+          ease: 'back.out(2)'
+        });
+
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 600);
+      }, gameDuration);
     }, 350);
   }
 
@@ -1732,14 +1772,17 @@ class TwelveMonthsApp {
     gameArea.classList.add('catch-falling-grid');
     this.gameCompleted = false;
     this.gameCollected = 0;
-    this.gameTarget = 8;
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
+
+    const gameDuration = 8000; // 8 seconds game duration
+    const maxSpawns = 20;
 
     const container = document.createElement('div');
     container.className = 'catch-falling-container';
     container.innerHTML = `
       <p class="catch-falling-text">Bắt những trái tim rơi!</p>
+      <p class="catch-falling-score">Đã bắt: <span class="score-count">0</span> 💖</p>
       <div class="catch-falling-area"></div>
     `;
 
@@ -1747,12 +1790,20 @@ class TwelveMonthsApp {
 
     setTimeout(() => {
       const textEl = document.querySelector('.catch-falling-text');
+      const scoreEl = document.querySelector('.score-count');
       const fallingArea = document.querySelector('.catch-falling-area');
 
       gsap.fromTo(textEl,
         { opacity: 0, y: -10 },
         { opacity: 1, y: 0, duration: 0.4 }
       );
+
+      // Progress bar fills over game duration
+      gsap.to(progressBar, {
+        width: '100%',
+        duration: gameDuration / 1000,
+        ease: 'none'
+      });
 
       // Spawn falling hearts
       const spawnHeart = () => {
@@ -1796,8 +1847,8 @@ class TwelveMonthsApp {
           heart.classList.add('caught');
           this.gameCollected++;
 
-          const progress = (this.gameCollected / this.gameTarget) * 100;
-          progressBar.style.width = `${progress}%`;
+          // Update score display
+          if (scoreEl) scoreEl.textContent = this.gameCollected;
 
           // Catch animation
           gsap.killTweensOf(heart);
@@ -1809,17 +1860,6 @@ class TwelveMonthsApp {
             ease: 'power2.out',
             onComplete: () => heart.remove()
           });
-
-          if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
-            this.gameCompleted = true;
-            progressBar.classList.add('completed');
-            textEl.textContent = 'Tuyệt vời! 💕';
-
-            setTimeout(() => {
-              this.canAdvance = true;
-              this.showReadyToAdvance('game');
-            }, 800);
-          }
         };
 
         heart.addEventListener('click', handleCatch);
@@ -1828,7 +1868,6 @@ class TwelveMonthsApp {
 
       // Spawn hearts at intervals
       let spawnCount = 0;
-      const maxSpawns = 15;
       this.catchFallingInterval = setInterval(() => {
         if (this.gameCompleted || spawnCount >= maxSpawns) {
           clearInterval(this.catchFallingInterval);
@@ -1836,10 +1875,25 @@ class TwelveMonthsApp {
         }
         spawnHeart();
         spawnCount++;
-      }, 600);
+      }, 400);
 
       // Initial spawn
       spawnHeart();
+
+      // End game after duration - show final score
+      setTimeout(() => {
+        if (this.gameCompleted) return;
+
+        this.gameCompleted = true;
+        clearInterval(this.catchFallingInterval);
+        progressBar.classList.add('completed');
+        textEl.textContent = `Bắt được ${this.gameCollected} trái tim! 💕`;
+
+        setTimeout(() => {
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 600);
+      }, gameDuration);
     }, 350);
   }
 
@@ -2113,7 +2167,7 @@ class TwelveMonthsApp {
       if (now - lastCollectTime < 100) return;
       lastCollectTime = now;
 
-      if (element.classList.contains('collected')) return;
+      if (element.classList.contains('collected') || this.gameCompleted) return;
 
       // Kill all GSAP animations and reset transform for clean CSS animation
       gsap.killTweensOf(element);
@@ -2122,29 +2176,6 @@ class TwelveMonthsApp {
       // Add collected class after clearing GSAP props
       element.classList.add('collected');
       this.gameCollected++;
-
-      const progress = (this.gameCollected / this.gameTarget) * 100;
-      progressBar.style.width = `${progress}%`;
-
-      if (this.gameCollected >= this.gameTarget && !this.gameCompleted) {
-        this.gameCompleted = true;
-        progressBar.classList.add('completed');
-
-        // Celebration animation
-        gsap.to(progressBar, {
-          scale: 1.05,
-          duration: 0.15,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power2.out'
-        });
-
-        // Wait for user tap after game completion
-          setTimeout(() => {
-            this.canAdvance = true;
-            this.showReadyToAdvance('game');
-          }, 1000);
-      }
     };
 
     // Click and touch handlers
