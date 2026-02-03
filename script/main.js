@@ -2072,7 +2072,13 @@ class TwelveMonthsApp {
         this.gameCompleted = true;
         clearInterval(this.bubblePopInterval);
         progressBar.classList.add('completed');
-        textEl.textContent = `Bấm được ${this.gameCollected} bong bóng! 🫧`;
+
+        // Friendly message regardless of score
+        if (this.gameCollected > 0) {
+          textEl.textContent = `Tuyệt vời! Bấm được ${this.gameCollected} bong bóng! 🫧`;
+        } else {
+          textEl.textContent = `Xong rồi! 🫧`;
+        }
 
         setTimeout(() => {
           this.canAdvance = true;
