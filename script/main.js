@@ -72,18 +72,49 @@ class TwelveMonthsApp {
   }
 
   async init() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingProgress = document.querySelector('.loading-progress');
+
     try {
+      // Update loading progress
+      if (loadingProgress) loadingProgress.style.width = '30%';
+
       await this.loadAllChapters();
+
+      if (loadingProgress) loadingProgress.style.width = '70%';
+
       if (this.chapters.length === 0) {
+        this.hideLoadingScreen(loadingScreen);
         this.showError('Không thể tải dữ liệu. Vui lòng tải lại trang.');
         return;
       }
+
       this.setupEventListeners();
       this.updateTotalChapters();
-      this.animateIntro();
+
+      if (loadingProgress) loadingProgress.style.width = '100%';
+
+      // Hide loading screen and show intro
+      setTimeout(() => {
+        this.hideLoadingScreen(loadingScreen);
+        this.introScreen.classList.add('active');
+        this.animateIntro();
+      }, 500);
+
     } catch (error) {
       console.error('Error loading data:', error);
+      this.hideLoadingScreen(loadingScreen);
       this.showError('Đã xảy ra lỗi. Vui lòng tải lại trang.');
+    }
+  }
+
+  hideLoadingScreen(loadingScreen) {
+    if (loadingScreen) {
+      loadingScreen.classList.add('hidden');
+      // Remove from DOM after transition
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+      }, 500);
     }
   }
 
@@ -205,9 +236,58 @@ class TwelveMonthsApp {
     // Keyboard navigation
     this.setupKeyboardNavigation();
 
-    // Gift button
+    // Gift button - show special message
     addClickAndTouch(document.querySelector('.gift-btn'), () => {
-      alert('Quà của em đây! 💕');
+      this.showGiftMessage();
+    });
+  }
+
+  showGiftMessage() {
+    // Create gift message overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'gift-overlay';
+    overlay.innerHTML = `
+      <div class="gift-message-box">
+        <div class="gift-emoji">🎁</div>
+        <h2 class="gift-title">Quà Dành Cho Em</h2>
+        <p class="gift-text">Món quà lớn nhất là tình yêu anh dành cho em mỗi ngày. Cảm ơn em đã bên anh suốt hành trình này!</p>
+        <div class="gift-hearts">💕 💗 💖 💝 ❤️</div>
+        <button class="gift-close-btn">Anh cũng yêu em! 💕</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animate entrance
+    gsap.fromTo(overlay,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3 }
+    );
+
+    gsap.fromTo('.gift-message-box',
+      { scale: 0.8, y: 20 },
+      { scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
+    );
+
+    // Close button
+    const closeBtn = overlay.querySelector('.gift-close-btn');
+    closeBtn.addEventListener('click', () => {
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => overlay.remove()
+      });
+    });
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        gsap.to(overlay, {
+          opacity: 0,
+          duration: 0.3,
+          onComplete: () => overlay.remove()
+        });
+      }
     });
   }
 
@@ -955,10 +1035,16 @@ class TwelveMonthsApp {
       const hint = document.createElement('div');
       hint.className = 'tap-hint';
 
-      // Safe DOM construction
+      // Safe DOM construction - responsive text for mobile vs desktop
       const hintText = document.createElement('span');
       hintText.className = 'tap-hint-text';
-      hintText.textContent = 'Enter để tiếp tục';
+
+      // Detect if touch device
+      const isTouchDevice = ('ontouchstart' in window) ||
+                            (navigator.maxTouchPoints > 0) ||
+                            (window.matchMedia('(pointer: coarse)').matches);
+
+      hintText.textContent = isTouchDevice ? 'Chạm để tiếp tục' : 'Nhấn Enter để tiếp tục';
       hint.appendChild(hintText);
 
       stepElement.appendChild(hint);
@@ -1198,10 +1284,180 @@ class TwelveMonthsApp {
     }, 400);
   }
 
-  // ===== Heart Burst Game (Simple one-tap game) =====
+  // ===== Memory Match Game (Find matching pairs) =====
   startMemoryMatch() {
-    this.startHeartBurstGame();
+    const gameArea = document.querySelector('.game-area');
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    gameArea.innerHTML = '';
+    gameArea.classList.remove('heart-burst-grid', 'love-meter-grid', 'catch-falling-grid');
+    gameArea.classList.add('memory-match-grid');
+    this.gameCompleted = false;
+    progressBar.style.width = '0%';
+    progressBar.classList.remove('completed');
+
+    // Memory match state
+    this.memoryCards = [];
+    this.flippedCards = [];
+    this.matchedPairs = 0;
+    this.totalPairs = 4;
+    this.memoryLocked = false;
+
+    // Create pairs of emojis
+    const emojis = ['💕', '💖', '💗', '❤️'];
+    const cardPairs = [...emojis, ...emojis];
+    this.shuffleArray(cardPairs);
+
+    // Create container
+    const container = document.createElement('div');
+    container.className = 'memory-match-container';
+
+    const title = document.createElement('p');
+    title.className = 'memory-match-text';
+    title.textContent = 'Tìm các cặp trái tim giống nhau!';
+    container.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'memory-grid';
+
+    cardPairs.forEach((emoji, index) => {
+      const card = document.createElement('div');
+      card.className = 'memory-card';
+      card.dataset.emoji = emoji;
+      card.dataset.index = index;
+
+      const inner = document.createElement('div');
+      inner.className = 'memory-card-inner';
+
+      const front = document.createElement('div');
+      front.className = 'memory-card-front';
+      front.textContent = '?';
+
+      const back = document.createElement('div');
+      back.className = 'memory-card-back';
+      back.textContent = emoji;
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+
+      // Click handler
+      const handleCardClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.flipMemoryCard(card);
+      };
+
+      card.addEventListener('click', handleCardClick);
+      card.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleCardClick(e);
+      }, { passive: false });
+
+      grid.appendChild(card);
+      this.memoryCards.push(card);
+    });
+
+    container.appendChild(grid);
+    gameArea.appendChild(container);
+
+    // Entrance animation
+    setTimeout(() => {
+      gsap.fromTo('.memory-card',
+        { opacity: 0, scale: 0.5, rotationY: 180 },
+        {
+          opacity: 1,
+          scale: 1,
+          rotationY: 0,
+          duration: 0.4,
+          stagger: 0.08,
+          ease: 'back.out(1.4)'
+        }
+      );
+    }, 350);
   }
+
+  flipMemoryCard(card) {
+    // Prevent flipping if locked, already flipped, or matched
+    if (this.memoryLocked ||
+        card.classList.contains('flipped') ||
+        card.classList.contains('matched') ||
+        this.gameCompleted) {
+      return;
+    }
+
+    // Flip the card
+    card.classList.add('flipped');
+    this.flippedCards.push(card);
+
+    // Flip animation
+    gsap.to(card, {
+      scale: 1.05,
+      duration: 0.15,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power2.out'
+    });
+
+    // Check for match when 2 cards are flipped
+    if (this.flippedCards.length === 2) {
+      this.memoryLocked = true;
+      this.checkMemoryMatch();
+    }
+  }
+
+  checkMemoryMatch() {
+    const [card1, card2] = this.flippedCards;
+    const match = card1.dataset.emoji === card2.dataset.emoji;
+    const progressBar = document.querySelector('.game-step .progress-bar');
+
+    if (match) {
+      // Match found!
+      this.matchedPairs++;
+      card1.classList.add('matched');
+      card2.classList.add('matched');
+
+      // Match animation
+      gsap.to([card1, card2], {
+        scale: 1.1,
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.out'
+      });
+
+      // Update progress
+      const progress = (this.matchedPairs / this.totalPairs) * 100;
+      progressBar.style.width = `${progress}%`;
+
+      this.flippedCards = [];
+      this.memoryLocked = false;
+
+      // Check win condition
+      if (this.matchedPairs >= this.totalPairs) {
+        progressBar.classList.add('completed');
+
+        const textEl = document.querySelector('.memory-match-text');
+        if (textEl) textEl.textContent = 'Tuyệt vời! 💕';
+
+        setTimeout(() => {
+          this.gameCompleted = true;
+          this.canAdvance = true;
+          this.showReadyToAdvance('game');
+        }, 800);
+      }
+    } else {
+      // No match - flip back after delay
+      setTimeout(() => {
+        card1.classList.remove('flipped');
+        card2.classList.remove('flipped');
+        this.flippedCards = [];
+        this.memoryLocked = false;
+      }, 800);
+    }
+  }
+
+  // ===== Heart Burst Game (Simple one-tap game) =====
 
   startHeartBurstGame() {
     const gameArea = document.querySelector('.game-area');
@@ -1506,8 +1762,14 @@ class TwelveMonthsApp {
         heart.className = 'falling-heart';
         heart.textContent = ['💖', '💗', '💕', '❤️', '🩷'][Math.floor(Math.random() * 5)];
 
-        const areaWidth = fallingArea.offsetWidth || 400;
-        heart.style.left = `${20 + Math.random() * (areaWidth - 60)}px`;
+        // Get actual width, with better fallback
+        const areaRect = fallingArea.getBoundingClientRect();
+        const areaWidth = areaRect.width > 0 ? areaRect.width : (fallingArea.offsetWidth || 300);
+
+        // Ensure hearts spawn within visible area with proper padding
+        const padding = 30;
+        const maxLeft = Math.max(padding, areaWidth - padding - 40);
+        heart.style.left = `${padding + Math.random() * (maxLeft - padding)}px`;
         heart.style.top = '-40px';
 
         fallingArea.appendChild(heart);
