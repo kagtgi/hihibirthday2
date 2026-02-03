@@ -165,12 +165,12 @@ class TwelveMonthsApp {
   }
 
   setupEventListeners() {
-    // Helper function to add both click and touch handlers
+    // Helper function to add both click and touch handlers with instant response
     const addClickAndTouch = (element, handler) => {
       if (!element) return; // Safety check
 
       let lastEventTime = 0;
-      const debounceTime = 200; // Increased for slower devices
+      const debounceTime = 150; // Balanced for responsiveness and preventing double-trigger
 
       const wrappedHandler = (e) => {
         // Prevent double-trigger from touch + click
@@ -181,7 +181,8 @@ class TwelveMonthsApp {
       };
 
       element.addEventListener('click', wrappedHandler);
-      element.addEventListener('touchend', (e) => {
+      // Use touchstart for instant response on mobile
+      element.addEventListener('touchstart', (e) => {
         e.preventDefault();
         wrappedHandler(e);
       }, { passive: false });
@@ -1380,18 +1381,17 @@ class TwelveMonthsApp {
       inner.appendChild(back);
       card.appendChild(inner);
 
-      // Click handler
+      // Click handler - instant response
       const handleCardClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.flipMemoryCard(card);
       };
 
+      // Multiple event types for best responsiveness
       card.addEventListener('click', handleCardClick);
-      card.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        handleCardClick(e);
-      }, { passive: false });
+      card.addEventListener('touchstart', handleCardClick, { passive: false });
+      card.addEventListener('pointerdown', handleCardClick);
 
       grid.appendChild(card);
       this.memoryCards.push(card);
@@ -1690,17 +1690,19 @@ class TwelveMonthsApp {
         ease: 'power1.in'
       });
 
+      // Tap handler - instant response
       const handleTap = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         if (this.gameCompleted) return;
 
         currentTaps++;
         if (countEl) countEl.textContent = currentTaps;
 
-        // Pulse animation on tap
+        // Instant pulse animation on tap
         gsap.fromTo(heart,
-          { scale: 1.15 },
-          { scale: 1, duration: 0.12, ease: 'power2.out' }
+          { scale: 1.2 },
+          { scale: 1, duration: 0.1, ease: 'power2.out' }
         );
 
         // Change emoji color based on taps
@@ -1718,8 +1720,10 @@ class TwelveMonthsApp {
         this.createMiniHeartBurst(heart);
       };
 
+      // Multiple event types for best responsiveness
       heart.addEventListener('click', handleTap);
-      heart.addEventListener('touchend', handleTap, { passive: false });
+      heart.addEventListener('touchstart', handleTap, { passive: false });
+      heart.addEventListener('pointerdown', handleTap);
 
       // End game after duration
       setTimeout(() => {
@@ -1728,7 +1732,13 @@ class TwelveMonthsApp {
         this.gameCompleted = true;
         progressBar.classList.add('completed');
         emoji.textContent = '❤️';
-        textEl.textContent = `Đã gửi ${currentTaps} yêu thương! 💕`;
+
+        // Friendly message regardless of score
+        if (currentTaps > 0) {
+          textEl.textContent = `Tuyệt vời! Đã gửi ${currentTaps} yêu thương! 💕`;
+        } else {
+          textEl.textContent = `Xong rồi! 💕`;
+        }
 
         gsap.to(heart, {
           scale: 1.2,
@@ -1837,8 +1847,8 @@ class TwelveMonthsApp {
 
         fallingArea.appendChild(heart);
 
-        // Fall animation
-        const fallDuration = 2.5 + Math.random() * 1;
+        // Fall animation - slightly slower for easier catching
+        const fallDuration = 3 + Math.random() * 1.5;
         gsap.to(heart, {
           top: '100%',
           duration: fallDuration,
@@ -1850,7 +1860,7 @@ class TwelveMonthsApp {
           }
         });
 
-        // Catch handler
+        // Catch handler - instant response
         const handleCatch = (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -1859,23 +1869,25 @@ class TwelveMonthsApp {
           heart.classList.add('caught');
           this.gameCollected++;
 
-          // Update score display
+          // Update score display immediately
           if (scoreEl) scoreEl.textContent = this.gameCollected;
 
-          // Catch animation
+          // Instant visual feedback + catch animation
           gsap.killTweensOf(heart);
           gsap.to(heart, {
-            scale: 1.5,
+            scale: 1.6,
             opacity: 0,
-            y: -30,
-            duration: 0.3,
+            y: -40,
+            duration: 0.25,
             ease: 'power2.out',
             onComplete: () => heart.remove()
           });
         };
 
+        // Multiple event types for best mobile responsiveness
         heart.addEventListener('click', handleCatch);
         heart.addEventListener('touchstart', handleCatch, { passive: false });
+        heart.addEventListener('pointerdown', handleCatch);
       };
 
       // Spawn hearts at intervals
@@ -1899,7 +1911,13 @@ class TwelveMonthsApp {
         this.gameCompleted = true;
         clearInterval(this.catchFallingInterval);
         progressBar.classList.add('completed');
-        textEl.textContent = `Bắt được ${this.gameCollected} trái tim! 💕`;
+
+        // Friendly message regardless of score
+        if (this.gameCollected > 0) {
+          textEl.textContent = `Tuyệt vời! Bắt được ${this.gameCollected} trái tim! 💕`;
+        } else {
+          textEl.textContent = `Xong rồi! 💕`;
+        }
 
         setTimeout(() => {
           this.canAdvance = true;
@@ -2018,7 +2036,7 @@ class TwelveMonthsApp {
           }
         }, 4000 + Math.random() * 2000);
 
-        // Pop handler
+        // Pop handler - instant response
         const handlePop = (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -2028,17 +2046,17 @@ class TwelveMonthsApp {
           clearTimeout(autoRemoveTimer);
           this.gameCollected++;
 
-          // Update score
+          // Update score immediately
           if (scoreEl) scoreEl.textContent = this.gameCollected;
 
-          // Pop animation - burst effect
+          // Instant visual feedback + pop animation
           gsap.killTweensOf(bubble);
 
           // Create mini burst particles
           this.createBubbleBurst(bubble, bubbleArea);
 
           gsap.to(bubble, {
-            scale: 1.8,
+            scale: 2,
             opacity: 0,
             duration: 0.2,
             ease: 'power2.out',
@@ -2046,8 +2064,10 @@ class TwelveMonthsApp {
           });
         };
 
+        // Multiple event types for best mobile responsiveness
         bubble.addEventListener('click', handlePop);
         bubble.addEventListener('touchstart', handlePop, { passive: false });
+        bubble.addEventListener('pointerdown', handlePop);
       };
 
       // Spawn bubbles at intervals
@@ -2389,34 +2409,32 @@ class TwelveMonthsApp {
     element.style.left = `${padding + Math.random() * maxX}px`;
     element.style.top = `${padding + Math.random() * maxY}px`;
 
-    // Click handler for web - with debounce to prevent touch/click double trigger
+    // Click handler - instant response with debounce
     let lastCollectTime = 0;
     const handleCollect = (e) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Prevent double trigger from touch and click events
+      // Prevent double trigger from multiple event types
       const now = Date.now();
-      if (now - lastCollectTime < 100) return;
+      if (now - lastCollectTime < 50) return;
       lastCollectTime = now;
 
       if (element.classList.contains('collected') || this.gameCompleted) return;
 
-      // Kill all GSAP animations and reset transform for clean CSS animation
+      // Kill all GSAP animations for instant response
       gsap.killTweensOf(element);
       gsap.set(element, { clearProps: 'transform' });
 
-      // Add collected class after clearing GSAP props
+      // Add collected class and update score
       element.classList.add('collected');
       this.gameCollected++;
     };
 
-    // Click and touch handlers
+    // Multiple event types for best responsiveness
     element.addEventListener('click', handleCollect);
-    element.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      handleCollect(e);
-    }, { passive: false });
+    element.addEventListener('touchstart', handleCollect, { passive: false });
+    element.addEventListener('pointerdown', handleCollect);
 
     // Hover effect for desktop
     element.addEventListener('mouseenter', () => {
