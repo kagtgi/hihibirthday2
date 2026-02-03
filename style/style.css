@@ -423,22 +423,21 @@ h1, h2, h3 {
   position: absolute;
   font-size: 3.5rem;
   cursor: pointer;
-  transition: filter 0.15s ease-out, background 0.15s ease-out;
   user-select: none;
-  padding: 12px;
+  padding: 15px;
+  margin: -5px;
   filter: drop-shadow(0 4px 8px rgba(255, 107, 122, 0.3));
   border-radius: 50%;
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
+  /* Instant response */
+  touch-action: manipulation;
 }
 
-.game-element:hover {
+.game-element:hover,
+.game-element:active {
   filter: drop-shadow(0 6px 16px rgba(255, 107, 122, 0.5));
   background: rgba(255, 255, 255, 0.3);
-}
-
-.game-element:active {
-  filter: brightness(1.1);
 }
 
 .game-element.collected {
@@ -1629,9 +1628,10 @@ h1, h2, h3 {
   border-radius: 50%;
   overflow: hidden;
   border: 3px solid rgba(255, 107, 122, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 4px 20px rgba(255, 107, 122, 0.25);
   animation: loveMeterPulse 2s ease-in-out infinite;
+  /* Instant response */
+  touch-action: manipulation;
 }
 
 @keyframes loveMeterPulse {
@@ -1734,14 +1734,18 @@ h1, h2, h3 {
 
 .falling-heart {
   position: absolute;
-  font-size: 2.5rem;
+  font-size: 2.8rem;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   filter: drop-shadow(0 4px 12px rgba(255, 107, 122, 0.4));
-  transition: transform 0.1s ease, filter 0.1s ease;
   z-index: 5;
   animation: fallingHeartGlow 1.5s ease-in-out infinite;
+  /* Larger touch target */
+  padding: 10px;
+  margin: -10px;
+  /* Instant response - no transition delay */
+  touch-action: manipulation;
 }
 
 @keyframes fallingHeartGlow {
@@ -1749,14 +1753,101 @@ h1, h2, h3 {
   50% { filter: drop-shadow(0 4px 18px rgba(255, 107, 122, 0.6)); }
 }
 
-.falling-heart:hover {
-  transform: scale(1.25);
+.falling-heart:hover,
+.falling-heart:active {
+  transform: scale(1.3);
   filter: drop-shadow(0 6px 20px rgba(255, 107, 122, 0.7));
 }
 
 .falling-heart.caught {
   pointer-events: none;
   animation: none;
+}
+
+/* ===== Bubble Pop Game ===== */
+.game-area.bubble-pop-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+.bubble-pop-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.bubble-pop-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.bubble-pop-score {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.bubble-pop-score .bubble-score-count {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.bubble-pop-area {
+  width: 100%;
+  height: calc(100% - 70px);
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background: linear-gradient(to bottom, rgba(200, 180, 255, 0.1), rgba(180, 160, 255, 0.2));
+  border: 2px solid rgba(200, 180, 255, 0.3);
+  box-shadow: inset 0 0 30px rgba(147, 112, 219, 0.15);
+}
+
+.pop-bubble {
+  position: absolute;
+  font-size: 3rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  filter: drop-shadow(0 4px 12px rgba(147, 112, 219, 0.4));
+  z-index: 5;
+  animation: bubbleGlow 2s ease-in-out infinite;
+  /* Larger touch target for mobile */
+  padding: 12px;
+  margin: -12px;
+  /* Instant response */
+  touch-action: manipulation;
+}
+
+@keyframes bubbleGlow {
+  0%, 100% { filter: drop-shadow(0 4px 12px rgba(147, 112, 219, 0.4)); }
+  50% { filter: drop-shadow(0 6px 20px rgba(147, 112, 219, 0.7)); }
+}
+
+.pop-bubble:hover,
+.pop-bubble:active {
+  transform: scale(1.35);
+  filter: drop-shadow(0 8px 25px rgba(147, 112, 219, 0.8));
+}
+
+.pop-bubble.popped {
+  pointer-events: none;
+  animation: none;
+}
+
+.bubble-burst-particle {
+  position: absolute;
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* Responsive for new games */
@@ -1772,6 +1863,10 @@ h1, h2, h3 {
 
   .falling-heart {
     font-size: 2rem;
+  }
+
+  .pop-bubble {
+    font-size: 2.2rem;
   }
 }
 
@@ -1812,14 +1907,18 @@ h1, h2, h3 {
   perspective: 1200px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.2s ease;
+  /* Instant response */
+  touch-action: manipulation;
+  user-select: none;
 }
 
-.memory-card:hover:not(.flipped):not(.matched) {
-  transform: scale(1.03);
+.memory-card:hover:not(.flipped):not(.matched),
+.memory-card:active:not(.flipped):not(.matched) {
+  transform: scale(1.05);
 }
 
-.memory-card:hover:not(.flipped):not(.matched) .memory-card-front {
+.memory-card:hover:not(.flipped):not(.matched) .memory-card-front,
+.memory-card:active:not(.flipped):not(.matched) .memory-card-front {
   box-shadow: 0 8px 25px rgba(255, 107, 122, 0.45);
 }
 
