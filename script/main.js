@@ -38,6 +38,7 @@ class TwelveMonthsApp {
 
     // DOM Elements
     this.app = document.querySelector('.app');
+    this.openingScreen = document.querySelector('.opening-screen');
     this.introScreen = document.querySelector('.intro-screen');
     this.chapterScreen = document.querySelector('.chapter-screen');
     this.endingScreen = document.querySelector('.ending-screen');
@@ -94,11 +95,10 @@ class TwelveMonthsApp {
 
       if (loadingProgress) loadingProgress.style.width = '100%';
 
-      // Hide loading screen and show intro
+      // Hide loading screen and show opening screen
       setTimeout(() => {
         this.hideLoadingScreen(loadingScreen);
-        this.introScreen.classList.add('active');
-        this.animateIntro();
+        this.openingScreen.classList.add('active');
       }, 500);
 
     } catch (error) {
@@ -187,6 +187,9 @@ class TwelveMonthsApp {
         wrappedHandler(e);
       }, { passive: false });
     };
+
+    // Opening button - triggers curtain animation
+    addClickAndTouch(document.querySelector('.opening-btn'), () => this.startCurtainAnimation());
 
     // Start button
     addClickAndTouch(document.querySelector('.start-btn'), () => this.startJourney());
@@ -351,9 +354,19 @@ class TwelveMonthsApp {
     // Store handler reference for cleanup (prevent memory leaks)
     this.keydownHandler = (e) => {
       // Get current active screen
+      const openingActive = this.openingScreen.classList.contains('active') && !this.openingScreen.classList.contains('hidden');
       const introActive = this.introScreen.classList.contains('active');
       const chapterActive = this.chapterScreen.classList.contains('active');
       const endingActive = this.endingScreen.classList.contains('active');
+
+      // Opening screen - Enter or Space to start curtain animation
+      if (openingActive) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.startCurtainAnimation();
+        }
+        return;
+      }
 
       // Intro screen - Enter or Space to start
       if (introActive) {
@@ -427,6 +440,36 @@ class TwelveMonthsApp {
   updateTotalChapters() {
     const el = document.querySelector('.total-chapters');
     if (el) el.textContent = this.chapters.length;
+  }
+
+  startCurtainAnimation() {
+    // Show curtain and prepare for animation
+    this.openingScreen.classList.add('curtain-ready');
+
+    // Fade out opening content
+    gsap.to('.opening-content', {
+      opacity: 0,
+      scale: 0.95,
+      duration: 0.4,
+      ease: 'power2.out',
+      onComplete: () => {
+        // Trigger curtain open animation
+        const curtainContainer = document.querySelector('.curtain-container');
+        curtainContainer.classList.add('open');
+
+        // Show intro screen behind the curtains
+        setTimeout(() => {
+          this.introScreen.classList.add('active');
+          this.animateIntro();
+        }, 300);
+
+        // Hide opening screen after curtain animation completes
+        setTimeout(() => {
+          this.openingScreen.classList.remove('active');
+          this.openingScreen.classList.add('hidden');
+        }, 1500);
+      }
+    });
   }
 
   animateIntro() {
