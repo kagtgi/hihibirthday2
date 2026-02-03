@@ -33,8 +33,9 @@ class TwelveMonthsApp {
     this.keydownHandler = null;
     this.greetingHeartInterval = null;
 
-    // Transition flag to prevent double-trigger
+    // Transition flags to prevent double-trigger
     this.isTransitioningChapter = false;
+    this.isOpeningTransition = false;
 
     // DOM Elements
     this.app = document.querySelector('.app');
@@ -337,8 +338,8 @@ class TwelveMonthsApp {
   }
 
   handleGalleryDrag(startX, endX) {
-    // Lowered threshold for more responsive swipes
-    const threshold = 20;
+    // Balanced threshold - prevents accidental swipes while staying responsive
+    const threshold = 50;
     const diff = startX - endX;
 
     if (Math.abs(diff) > threshold) {
@@ -443,31 +444,38 @@ class TwelveMonthsApp {
   }
 
   startCurtainAnimation() {
-    // Show curtain and prepare for animation
-    this.openingScreen.classList.add('curtain-ready');
+    // Prevent multiple clicks during transition
+    if (this.isOpeningTransition) return;
+    this.isOpeningTransition = true;
 
-    // Fade out opening content
+    // Fade out opening content first
     gsap.to('.opening-content', {
       opacity: 0,
       scale: 0.95,
-      duration: 0.4,
+      duration: 0.5,
       ease: 'power2.out',
       onComplete: () => {
-        // Trigger curtain open animation
-        const curtainContainer = document.querySelector('.curtain-container');
-        curtainContainer.classList.add('open');
+        // Show curtain with fade-in (CSS transition handles this)
+        this.openingScreen.classList.add('curtain-ready');
 
-        // Show intro screen behind the curtains
+        // Wait for curtain to fade in, then open it
         setTimeout(() => {
-          this.introScreen.classList.add('active');
-          this.animateIntro();
-        }, 300);
+          const curtainContainer = document.querySelector('.curtain-container');
+          curtainContainer.classList.add('open');
 
-        // Hide opening screen after curtain animation completes
-        setTimeout(() => {
-          this.openingScreen.classList.remove('active');
-          this.openingScreen.classList.add('hidden');
-        }, 1500);
+          // Show intro screen as curtains start opening
+          setTimeout(() => {
+            this.introScreen.classList.add('active');
+            this.animateIntro();
+          }, 400);
+
+          // Hide opening screen after curtain fully opens
+          setTimeout(() => {
+            this.openingScreen.classList.remove('active');
+            this.openingScreen.classList.add('hidden');
+            this.isOpeningTransition = false;
+          }, 1400);
+        }, 350);
       }
     });
   }
