@@ -122,8 +122,8 @@ h1, h2, h3 {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.98);
-  transition: opacity 0.5s ease-out, visibility 0.5s ease-out, transform 0.5s ease-out;
+  transform: scale(0.99);
+  transition: opacity 0.25s ease-out, visibility 0.25s ease-out, transform 0.25s ease-out;
   will-change: opacity, visibility, transform;
 }
 
@@ -243,7 +243,7 @@ h1, h2, h3 {
   padding: 2rem;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
   will-change: opacity;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -716,7 +716,7 @@ h1, h2, h3 {
 .gallery-container {
   display: flex;
   height: 100%;
-  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform;
 }
 
@@ -1703,7 +1703,20 @@ h1, h2, h3 {
   font-family: 'Playfair Display', serif;
   font-size: 1.1rem;
   color: var(--text-dark);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.catch-falling-score {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.catch-falling-score .score-count {
+  font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .catch-falling-area {
