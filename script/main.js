@@ -448,71 +448,75 @@ class TwelveMonthsApp {
     if (this.isOpeningTransition) return;
     this.isOpeningTransition = true;
 
-    // Fade out opening content first
+    // Fade out opening content with elegant animation
     gsap.to('.opening-content', {
       opacity: 0,
-      scale: 0.95,
-      duration: 0.5,
-      ease: 'power2.out',
+      scale: 0.9,
+      y: -20,
+      duration: 0.6,
+      ease: 'power3.out',
       onComplete: () => {
         // Show curtain with fade-in (CSS transition handles this)
         this.openingScreen.classList.add('curtain-ready');
 
-        // Wait for curtain to fade in, then open it
+        // Wait for curtain to fully appear, then open it
         setTimeout(() => {
           const curtainContainer = document.querySelector('.curtain-container');
           curtainContainer.classList.add('open');
 
-          // Show intro screen as curtains start opening
+          // Show intro screen as curtains are opening (synced with curtain halfway point)
           setTimeout(() => {
             this.introScreen.classList.add('active');
             this.animateIntro();
-          }, 400);
+          }, 600);
 
-          // Hide opening screen after curtain fully opens
+          // Hide opening screen after curtain fully opens (1.5s CSS transition + buffer)
           setTimeout(() => {
             this.openingScreen.classList.remove('active');
             this.openingScreen.classList.add('hidden');
             this.isOpeningTransition = false;
-          }, 1400);
-        }, 350);
+          }, 1800);
+        }, 500);
       }
     });
   }
 
   animateIntro() {
-    // Optimized intro animations - faster durations, smoother easing
+    // Elegant intro animations synced with curtain reveal
     gsap.from('.intro-title', {
       opacity: 0,
-      y: 20,
-      duration: 0.6,
-      delay: 0.15,
-      ease: 'power2.out'
+      y: 30,
+      scale: 0.95,
+      duration: 0.8,
+      delay: 0.2,
+      ease: 'power3.out'
     });
 
     gsap.from('.intro-subtitle', {
       opacity: 0,
-      y: 15,
-      duration: 0.5,
-      delay: 0.35,
+      y: 20,
+      duration: 0.6,
+      delay: 0.5,
       ease: 'power2.out'
     });
 
     gsap.from('.intro-hearts .heart', {
       opacity: 0,
       scale: 0,
-      duration: 0.35,
-      stagger: 0.08,
-      delay: 0.55,
-      ease: 'back.out(1.5)'
+      rotation: -15,
+      duration: 0.4,
+      stagger: 0.1,
+      delay: 0.7,
+      ease: 'back.out(1.7)'
     });
 
     gsap.from('.start-btn', {
       opacity: 0,
-      y: 15,
-      duration: 0.5,
-      delay: 0.85,
-      ease: 'power2.out'
+      y: 20,
+      scale: 0.9,
+      duration: 0.6,
+      delay: 1.0,
+      ease: 'back.out(1.2)'
     });
   }
 
