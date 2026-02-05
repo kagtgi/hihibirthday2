@@ -33,11 +33,13 @@ class TwelveMonthsApp {
     this.keydownHandler = null;
     this.greetingHeartInterval = null;
 
-    // Transition flag to prevent double-trigger
+    // Transition flags to prevent double-trigger
     this.isTransitioningChapter = false;
+    this.isOpeningTransition = false;
 
     // DOM Elements
     this.app = document.querySelector('.app');
+    this.openingScreen = document.querySelector('.opening-screen');
     this.introScreen = document.querySelector('.intro-screen');
     this.chapterScreen = document.querySelector('.chapter-screen');
     this.endingScreen = document.querySelector('.ending-screen');
@@ -94,11 +96,10 @@ class TwelveMonthsApp {
 
       if (loadingProgress) loadingProgress.style.width = '100%';
 
-      // Hide loading screen and show intro
+      // Hide loading screen and show opening screen
       setTimeout(() => {
         this.hideLoadingScreen(loadingScreen);
-        this.introScreen.classList.add('active');
-        this.animateIntro();
+        this.openingScreen.classList.add('active');
       }, 500);
 
     } catch (error) {
@@ -187,6 +188,9 @@ class TwelveMonthsApp {
         wrappedHandler(e);
       }, { passive: false });
     };
+
+    // Opening button - triggers curtain animation
+    addClickAndTouch(document.querySelector('.opening-btn'), () => this.startCurtainAnimation());
 
     // Start button
     addClickAndTouch(document.querySelector('.start-btn'), () => this.startJourney());
@@ -334,8 +338,8 @@ class TwelveMonthsApp {
   }
 
   handleGalleryDrag(startX, endX) {
-    // Lowered threshold for more responsive swipes
-    const threshold = 20;
+    // Balanced threshold - prevents accidental swipes while staying responsive
+    const threshold = 50;
     const diff = startX - endX;
 
     if (Math.abs(diff) > threshold) {
@@ -351,9 +355,19 @@ class TwelveMonthsApp {
     // Store handler reference for cleanup (prevent memory leaks)
     this.keydownHandler = (e) => {
       // Get current active screen
+      const openingActive = this.openingScreen.classList.contains('active') && !this.openingScreen.classList.contains('hidden');
       const introActive = this.introScreen.classList.contains('active');
       const chapterActive = this.chapterScreen.classList.contains('active');
       const endingActive = this.endingScreen.classList.contains('active');
+
+      // Opening screen - Enter or Space to start curtain animation
+      if (openingActive) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.startCurtainAnimation();
+        }
+        return;
+      }
 
       // Intro screen - Enter or Space to start
       if (introActive) {
@@ -427,6 +441,43 @@ class TwelveMonthsApp {
   updateTotalChapters() {
     const el = document.querySelector('.total-chapters');
     if (el) el.textContent = this.chapters.length;
+  }
+
+  startCurtainAnimation() {
+    // Prevent multiple clicks during transition
+    if (this.isOpeningTransition) return;
+    this.isOpeningTransition = true;
+
+    // Fade out opening content first
+    gsap.to('.opening-content', {
+      opacity: 0,
+      scale: 0.95,
+      duration: 0.5,
+      ease: 'power2.out',
+      onComplete: () => {
+        // Show curtain with fade-in (CSS transition handles this)
+        this.openingScreen.classList.add('curtain-ready');
+
+        // Wait for curtain to fade in, then open it
+        setTimeout(() => {
+          const curtainContainer = document.querySelector('.curtain-container');
+          curtainContainer.classList.add('open');
+
+          // Show intro screen as curtains start opening
+          setTimeout(() => {
+            this.introScreen.classList.add('active');
+            this.animateIntro();
+          }, 400);
+
+          // Hide opening screen after curtain fully opens
+          setTimeout(() => {
+            this.openingScreen.classList.remove('active');
+            this.openingScreen.classList.add('hidden');
+            this.isOpeningTransition = false;
+          }, 1400);
+        }, 350);
+      }
+    });
   }
 
   animateIntro() {
@@ -1271,57 +1322,9 @@ class TwelveMonthsApp {
       return;
     }
 
-    const gameArea = document.querySelector('.game-area');
-    const progressBar = document.querySelector('.game-step .progress-bar');
-
-    gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid'); // Clean up from memory match
-    this.gameCollected = 0;
-    this.gameCompleted = false;
-    progressBar.style.width = '0%';
-    progressBar.classList.remove('completed');
-
-    const gameEmojis = this.getGameEmojis(chapter.minigameType);
-    const useCssHearts = chapter.minigameType === 'css_hearts';
-    const gameDuration = 6000; // 6 seconds
-    const totalElements = 8;
-
-    // Progress bar fills over time
-    gsap.to(progressBar, {
-      width: '100%',
-      duration: gameDuration / 1000,
-      ease: 'none'
-    });
-
-    // Wait for CSS transition to complete before spawning elements
-    // Step transition is 0.15s (150ms), adding buffer for proper rendering
-    setTimeout(() => {
-      // Spawn elements with staggered timing
-      for (let i = 0; i < totalElements; i++) {
-        setTimeout(() => {
-          this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
-        }, i * 150);
-      }
-
-      // End game after duration
-      setTimeout(() => {
-        if (this.gameCompleted) return;
-
-        this.gameCompleted = true;
-        progressBar.classList.add('completed');
-
-        // Show final score
-        const gameText = document.querySelector('.game-text');
-        if (gameText) {
-          gameText.textContent = `Đã thu thập ${this.gameCollected}! 💕`;
-        }
-
-        setTimeout(() => {
-          this.canAdvance = true;
-          this.showReadyToAdvance('game');
-        }, 600);
-      }, gameDuration);
-    }, 300);
+    // Fallback for unrecognized game types - use simple greeting
+    console.warn(`Unknown game type: ${chapter.minigameType}, using simple greeting`);
+    this.startSimpleGreeting();
   }
 
   // ===== Memory Match Game (Find matching pairs) =====
@@ -1690,6 +1693,15 @@ class TwelveMonthsApp {
         ease: 'power1.in'
       });
 
+      // Milestone messages for feedback
+      const milestones = {
+        5: 'Tiếp tục nào! 💖',
+        10: 'Tuyệt lắm! 💗',
+        15: 'Yêu quá! ❤️',
+        20: 'Siêu yêu! 💕',
+        25: 'Phi thường! ✨'
+      };
+
       // Tap handler - instant response
       const handleTap = (e) => {
         e.preventDefault();
@@ -1705,7 +1717,7 @@ class TwelveMonthsApp {
           { scale: 1, duration: 0.1, ease: 'power2.out' }
         );
 
-        // Change emoji color based on taps
+        // Change emoji color and show milestone feedback
         if (currentTaps >= 15) {
           emoji.textContent = '❤️';
         } else if (currentTaps >= 10) {
@@ -1714,6 +1726,15 @@ class TwelveMonthsApp {
           emoji.textContent = '💖';
         } else if (currentTaps >= 2) {
           emoji.textContent = '🩷';
+        }
+
+        // Show milestone message with animation
+        if (milestones[currentTaps]) {
+          textEl.textContent = milestones[currentTaps];
+          gsap.fromTo(textEl,
+            { scale: 1.1, opacity: 0.8 },
+            { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2)' }
+          );
         }
 
         // Create small heart burst on each tap

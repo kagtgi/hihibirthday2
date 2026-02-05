@@ -44,6 +44,7 @@ h1, h2, h3 {
 .app {
   width: 100%;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   position: relative;
   overflow: hidden;
 }
@@ -131,6 +132,262 @@ h1, h2, h3 {
   opacity: 1;
   visibility: visible;
   transform: scale(1);
+}
+
+/* ===== Opening Screen ===== */
+.opening-screen {
+  background: linear-gradient(135deg, #FFE5E8 0%, #FFD4D8 50%, #FFB5BA 100%);
+  z-index: 100;
+}
+
+.opening-content {
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 10;
+  max-width: 90%;
+}
+
+/* Floating hearts decoration for opening screen */
+.opening-content::before {
+  content: '💕';
+  position: absolute;
+  top: -20%;
+  left: 5%;
+  font-size: 1.8rem;
+  opacity: 0.2;
+  animation: floatHeart 5s ease-in-out infinite;
+}
+
+.opening-content::after {
+  content: '💗';
+  position: absolute;
+  bottom: -15%;
+  right: 5%;
+  font-size: 1.5rem;
+  opacity: 0.2;
+  animation: floatHeart 6s ease-in-out infinite reverse;
+}
+
+.opening-greeting {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  animation: openingFadeIn 1s ease-out forwards;
+  opacity: 0;
+}
+
+.opening-message {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  line-height: 1.8;
+  color: var(--text-dark);
+  margin-bottom: 2rem;
+  animation: openingFadeIn 1s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.opening-hearts {
+  font-size: 2.5rem;
+  margin-bottom: 2.5rem;
+  animation: openingFadeIn 1s ease-out 0.6s forwards, heartBeat 1.5s ease-in-out 1.6s infinite;
+  opacity: 0;
+}
+
+.opening-btn {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow: 0 4px 20px rgba(255, 107, 122, 0.4);
+  animation: openingFadeIn 1s ease-out 0.9s forwards;
+  opacity: 0;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.opening-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.opening-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(255, 107, 122, 0.5);
+}
+
+.opening-btn:hover::before {
+  left: 100%;
+}
+
+.opening-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes openingFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Curtain Effect ===== */
+.curtain-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.curtain {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(180deg,
+    #8B0000 0%,
+    #A52A2A 10%,
+    #DC143C 30%,
+    #B22222 70%,
+    #8B0000 100%
+  );
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.3);
+  transform: translateX(0);
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.curtain::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 20px,
+    rgba(0, 0, 0, 0.1) 20px,
+    rgba(0, 0, 0, 0.1) 25px
+  );
+  pointer-events: none;
+}
+
+.curtain::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 30px;
+  background: linear-gradient(180deg,
+    #5C0000 0%,
+    #8B0000 100%
+  );
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.curtain-left {
+  left: 0;
+  border-right: 3px solid #5C0000;
+}
+
+.curtain-right {
+  right: 0;
+  border-left: 3px solid #5C0000;
+}
+
+/* Curtain open animation */
+.curtain-container.open .curtain-left {
+  transform: translateX(-100%);
+}
+
+.curtain-container.open .curtain-right {
+  transform: translateX(100%);
+}
+
+/* Initially hide curtains */
+.opening-screen .curtain-container {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out;
+}
+
+.opening-screen.curtain-ready .curtain-container {
+  opacity: 1;
+}
+
+/* Hide opening screen after curtain animation */
+.opening-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+/* Responsive for opening screen */
+@media screen and (max-width: 600px) {
+  .opening-greeting {
+    font-size: 2.5rem;
+  }
+
+  .opening-message {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    padding: 0 0.5rem;
+  }
+
+  .opening-hearts {
+    font-size: 2rem;
+  }
+
+  .opening-btn {
+    font-size: 1.1rem;
+    padding: 0.9rem 2rem;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .opening-greeting {
+    font-size: 4.5rem;
+  }
+
+  .opening-message {
+    font-size: 1.8rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .opening-hearts {
+    font-size: 3rem;
+  }
+
+  .opening-btn {
+    font-size: 1.3rem;
+    padding: 1.2rem 3rem;
+  }
 }
 
 /* ===== Intro Screen ===== */
@@ -699,6 +956,7 @@ h1, h2, h3 {
 .gallery-wrapper {
   width: 100%;
   height: 60vh;
+  height: 60dvh; /* Dynamic viewport height for mobile */
   max-height: 600px;
   overflow: hidden;
   border-radius: 20px;
