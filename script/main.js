@@ -1322,57 +1322,9 @@ class TwelveMonthsApp {
       return;
     }
 
-    const gameArea = document.querySelector('.game-area');
-    const progressBar = document.querySelector('.game-step .progress-bar');
-
-    gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid'); // Clean up from memory match
-    this.gameCollected = 0;
-    this.gameCompleted = false;
-    progressBar.style.width = '0%';
-    progressBar.classList.remove('completed');
-
-    const gameEmojis = this.getGameEmojis(chapter.minigameType);
-    const useCssHearts = chapter.minigameType === 'css_hearts';
-    const gameDuration = 6000; // 6 seconds
-    const totalElements = 8;
-
-    // Progress bar fills over time
-    gsap.to(progressBar, {
-      width: '100%',
-      duration: gameDuration / 1000,
-      ease: 'none'
-    });
-
-    // Wait for CSS transition to complete before spawning elements
-    // Step transition is 0.15s (150ms), adding buffer for proper rendering
-    setTimeout(() => {
-      // Spawn elements with staggered timing
-      for (let i = 0; i < totalElements; i++) {
-        setTimeout(() => {
-          this.spawnGameElement(gameArea, gameEmojis, progressBar, useCssHearts);
-        }, i * 150);
-      }
-
-      // End game after duration
-      setTimeout(() => {
-        if (this.gameCompleted) return;
-
-        this.gameCompleted = true;
-        progressBar.classList.add('completed');
-
-        // Show final score
-        const gameText = document.querySelector('.game-text');
-        if (gameText) {
-          gameText.textContent = `Đã thu thập ${this.gameCollected}! 💕`;
-        }
-
-        setTimeout(() => {
-          this.canAdvance = true;
-          this.showReadyToAdvance('game');
-        }, 600);
-      }, gameDuration);
-    }, 300);
+    // Fallback for unrecognized game types - use simple greeting
+    console.warn(`Unknown game type: ${chapter.minigameType}, using simple greeting`);
+    this.startSimpleGreeting();
   }
 
   // ===== Memory Match Game (Find matching pairs) =====
@@ -1741,6 +1693,15 @@ class TwelveMonthsApp {
         ease: 'power1.in'
       });
 
+      // Milestone messages for feedback
+      const milestones = {
+        5: 'Tiếp tục nào! 💖',
+        10: 'Tuyệt lắm! 💗',
+        15: 'Yêu quá! ❤️',
+        20: 'Siêu yêu! 💕',
+        25: 'Phi thường! ✨'
+      };
+
       // Tap handler - instant response
       const handleTap = (e) => {
         e.preventDefault();
@@ -1756,7 +1717,7 @@ class TwelveMonthsApp {
           { scale: 1, duration: 0.1, ease: 'power2.out' }
         );
 
-        // Change emoji color based on taps
+        // Change emoji color and show milestone feedback
         if (currentTaps >= 15) {
           emoji.textContent = '❤️';
         } else if (currentTaps >= 10) {
@@ -1765,6 +1726,15 @@ class TwelveMonthsApp {
           emoji.textContent = '💖';
         } else if (currentTaps >= 2) {
           emoji.textContent = '🩷';
+        }
+
+        // Show milestone message with animation
+        if (milestones[currentTaps]) {
+          textEl.textContent = milestones[currentTaps];
+          gsap.fromTo(textEl,
+            { scale: 1.1, opacity: 0.8 },
+            { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2)' }
+          );
         }
 
         // Create small heart burst on each tap
