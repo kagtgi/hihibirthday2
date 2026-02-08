@@ -2388,8 +2388,8 @@ class TwelveMonthsApp {
 
   getGameText(gameType) {
     const gameTexts = {
-      'greeting': 'Chào mừng bạn!',
-      'simple_greeting': 'Chào mừng bạn!',
+      'greeting': 'hè lô em bé!',
+      'simple_greeting': 'hè lô em bé!',
       'love_meter': 'Đổ đầy trái tim yêu thương',
       'catch_falling': 'Bắt những trái tim rơi',
       'bubble_pop': 'Bấm vỡ những bong bóng tình yêu',
@@ -2417,7 +2417,7 @@ class TwelveMonthsApp {
       return 'Chạm vào trái tim nào!';
     }
     if (gameType === 'greeting') {
-      return 'Chờ một chút nhé...';
+      return 'chuẩn bị tinh thần đi nhìn lại một năm trước với tui chưa';
     }
     if (gameType === 'simple_greeting') {
       return '';
