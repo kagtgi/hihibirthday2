@@ -1706,7 +1706,7 @@ class TwelveMonthsApp {
         <div class="love-meter-fill"></div>
         <span class="love-meter-emoji">🤍</span>
       </div>
-      <p class="love-meter-text">Chạm để gửi yêu thương!</p>
+      <p class="love-meter-text">chạm để gửi tình iu tới ảnh</p>
       <p class="love-meter-count">💕 <span class="tap-count">0</span></p>
     `;
 
