@@ -268,25 +268,25 @@ h1, h2, h3 {
   width: 52%;
   height: 100%;
   background: linear-gradient(180deg,
-    #6B0F1A 0%,
-    #8B1E3F 5%,
-    #9C2442 15%,
-    #A52A4A 25%,
-    #B22255 40%,
-    #A52A4A 60%,
-    #8B1E3F 80%,
-    #6B0F1A 95%,
+    #5A0A15 0%,
+    #7A1A35 3%,
+    #8B1E3F 8%,
+    #9C2442 20%,
+    #A82D4E 35%,
+    #B22255 50%,
+    #A82D4E 65%,
+    #9C2442 78%,
+    #8B1E3F 88%,
+    #6B0F1A 96%,
     #4A0A12 100%
   );
   box-shadow:
-    inset 0 0 80px rgba(0, 0, 0, 0.4),
-    inset -20px 0 60px rgba(0, 0, 0, 0.2);
-  transform: translateX(0);
-  transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    inset 0 0 100px rgba(0, 0, 0, 0.35),
+    inset -15px 0 40px rgba(0, 0, 0, 0.15);
   will-change: transform;
 }
 
-/* Velvet fabric texture with vertical folds */
+/* Velvet fabric texture with soft organic folds */
 .curtain::before {
   content: '';
   position: absolute;
@@ -295,21 +295,37 @@ h1, h2, h3 {
   width: 100%;
   height: 100%;
   background:
+    /* Primary soft folds - wide, gentle waves */
     repeating-linear-gradient(
       90deg,
       transparent 0px,
-      rgba(255, 255, 255, 0.03) 2px,
-      transparent 4px,
-      rgba(0, 0, 0, 0.08) 15px,
-      rgba(0, 0, 0, 0.15) 18px,
-      rgba(0, 0, 0, 0.08) 21px,
-      transparent 35px
+      rgba(255, 255, 255, 0.04) 3px,
+      rgba(255, 255, 255, 0.02) 8px,
+      transparent 12px,
+      rgba(0, 0, 0, 0.06) 22px,
+      rgba(0, 0, 0, 0.12) 26px,
+      rgba(0, 0, 0, 0.06) 30px,
+      transparent 42px
     ),
+    /* Secondary subtle folds - finer detail */
     repeating-linear-gradient(
       90deg,
       transparent 0px,
-      rgba(255, 200, 200, 0.02) 50px,
-      transparent 100px
+      rgba(255, 220, 220, 0.03) 5px,
+      transparent 10px,
+      rgba(0, 0, 0, 0.04) 55px,
+      rgba(0, 0, 0, 0.08) 60px,
+      rgba(0, 0, 0, 0.04) 65px,
+      transparent 70px
+    ),
+    /* Velvet sheen - soft light catching */
+    linear-gradient(
+      180deg,
+      rgba(255, 200, 200, 0.06) 0%,
+      transparent 15%,
+      rgba(255, 200, 200, 0.03) 50%,
+      transparent 85%,
+      rgba(0, 0, 0, 0.1) 100%
     );
   pointer-events: none;
 }
@@ -321,39 +337,43 @@ h1, h2, h3 {
   top: 0;
   left: -5%;
   width: 110%;
-  height: 45px;
+  height: 48px;
   background: linear-gradient(180deg,
-    #D4A84B 0%,
-    #C9963C 15%,
-    #B8892F 30%,
-    #A67C28 50%,
-    #8B6914 70%,
+    #DEBC5E 0%,
+    #D4A84B 10%,
+    #C9963C 25%,
+    #B8892F 45%,
+    #A67C28 65%,
+    #8B6914 85%,
     #6B4F0E 100%
   );
   box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.5),
-    inset 0 2px 3px rgba(255, 215, 0, 0.3),
-    inset 0 -3px 5px rgba(0, 0, 0, 0.3);
-  border-bottom: 3px solid #4A3508;
+    0 6px 20px rgba(0, 0, 0, 0.45),
+    0 10px 35px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 225, 100, 0.35),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid #4A3508;
   z-index: 10;
 }
 
 .curtain-left {
   left: 0;
-  border-right: 2px solid rgba(75, 10, 20, 0.8);
+  transform-origin: left center;
+  border-right: 1px solid rgba(75, 10, 20, 0.5);
   box-shadow:
-    inset 0 0 80px rgba(0, 0, 0, 0.4),
-    inset -30px 0 50px rgba(0, 0, 0, 0.3),
-    5px 0 20px rgba(0, 0, 0, 0.4);
+    inset 0 0 100px rgba(0, 0, 0, 0.35),
+    inset -25px 0 40px rgba(0, 0, 0, 0.2),
+    4px 0 15px rgba(0, 0, 0, 0.35);
 }
 
 .curtain-right {
   right: 0;
-  border-left: 2px solid rgba(75, 10, 20, 0.8);
+  transform-origin: right center;
+  border-left: 1px solid rgba(75, 10, 20, 0.5);
   box-shadow:
-    inset 0 0 80px rgba(0, 0, 0, 0.4),
-    inset 30px 0 50px rgba(0, 0, 0, 0.3),
-    -5px 0 20px rgba(0, 0, 0, 0.4);
+    inset 0 0 100px rgba(0, 0, 0, 0.35),
+    inset 25px 0 40px rgba(0, 0, 0, 0.2),
+    -4px 0 15px rgba(0, 0, 0, 0.35);
 }
 
 /* Curtain tassel decorations */
@@ -366,21 +386,23 @@ h1, h2, h3 {
 .curtain-container::before {
   content: '';
   position: absolute;
-  top: 45px;
+  top: 48px;
   left: 50%;
   transform: translateX(-50%);
-  width: 6px;
-  height: calc(100% - 45px);
+  width: 4px;
+  height: calc(100% - 48px);
   background: linear-gradient(180deg,
     #D4A84B 0%,
-    #B8892F 20%,
+    #C9963C 15%,
+    #B8892F 30%,
     #8B6914 50%,
-    #B8892F 80%,
+    #B8892F 70%,
+    #C9963C 85%,
     #D4A84B 100%
   );
   z-index: 5;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
 .curtain-container.curtain-ready::before {
@@ -389,23 +411,14 @@ h1, h2, h3 {
 
 .curtain-container.open::before {
   opacity: 0;
-  transition: opacity 0.5s ease 0.3s;
-}
-
-/* Curtain open animation with elegant easing */
-.curtain-container.open .curtain-left {
-  transform: translateX(-102%);
-}
-
-.curtain-container.open .curtain-right {
-  transform: translateX(102%);
+  transition: opacity 0.4s ease 0.2s;
 }
 
 /* Initially hide curtains with smooth fade */
 .opening-screen .curtain-container {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.5s ease-out;
+  transition: opacity 0.6s ease-out;
 }
 
 .opening-screen.curtain-ready .curtain-container {
@@ -417,7 +430,7 @@ h1, h2, h3 {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+  transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
 }
 
 /* Spotlight effect behind curtains */
@@ -431,17 +444,17 @@ h1, h2, h3 {
   height: 120%;
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 200, 200, 0.1) 30%,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 200, 200, 0.08) 30%,
     transparent 70%
   );
   z-index: 999;
   pointer-events: none;
-  animation: spotlightPulse 2s ease-in-out infinite;
+  animation: spotlightPulse 2.5s ease-in-out infinite;
 }
 
 @keyframes spotlightPulse {
-  0%, 100% { opacity: 0.8; }
+  0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
 }
 
@@ -451,21 +464,21 @@ h1, h2, h3 {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60px;
+  height: 50px;
   background:
     repeating-linear-gradient(
       90deg,
       transparent 0px,
-      transparent 3px,
-      #D4A84B 3px,
-      #B8892F 5px,
-      #8B6914 7px,
-      #B8892F 9px,
-      #D4A84B 11px,
-      transparent 11px,
-      transparent 18px
+      transparent 4px,
+      #D4A84B 4px,
+      #C9963C 6px,
+      #8B6914 8px,
+      #C9963C 10px,
+      #D4A84B 12px,
+      transparent 12px,
+      transparent 20px
     );
-  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
   z-index: 2;
 }
 

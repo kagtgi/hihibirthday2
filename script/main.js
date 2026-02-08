@@ -451,32 +451,78 @@ class TwelveMonthsApp {
     // Fade out opening content with elegant animation
     gsap.to('.opening-content', {
       opacity: 0,
-      scale: 0.9,
-      y: -20,
-      duration: 0.6,
-      ease: 'power3.out',
+      scale: 0.95,
+      y: -15,
+      duration: 0.7,
+      ease: 'power2.inOut',
       onComplete: () => {
         // Show curtain with fade-in (CSS transition handles this)
         this.openingScreen.classList.add('curtain-ready');
 
-        // Wait for curtain to fully appear, then open it
+        // Wait for curtain to fully appear, then open with GSAP for smooth draping motion
         setTimeout(() => {
           const curtainContainer = document.querySelector('.curtain-container');
+          const curtainLeft = curtainContainer.querySelector('.curtain-left');
+          const curtainRight = curtainContainer.querySelector('.curtain-right');
+
           curtainContainer.classList.add('open');
 
-          // Show intro screen as curtains are opening (synced with curtain halfway point)
-          setTimeout(() => {
+          // Animate curtains with GSAP for silky-smooth draping motion
+          const curtainTl = gsap.timeline();
+
+          // Slight gather (fabric bunching) before opening
+          curtainTl.to(curtainLeft, {
+            scaleX: 1.04,
+            duration: 0.25,
+            ease: 'power1.in'
+          }, 0);
+          curtainTl.to(curtainRight, {
+            scaleX: 1.04,
+            duration: 0.25,
+            ease: 'power1.in'
+          }, 0);
+
+          // Main opening - smooth silk-like slide
+          curtainTl.to(curtainLeft, {
+            x: '-102%',
+            scaleX: 0.85,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          }, 0.2);
+          curtainTl.to(curtainRight, {
+            x: '102%',
+            scaleX: 0.85,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          }, 0.2);
+
+          // Subtle sway at the end - fabric settling
+          curtainTl.to(curtainLeft, {
+            x: '-100%',
+            scaleX: 0.9,
+            duration: 0.5,
+            ease: 'power1.out'
+          }, 1.9);
+          curtainTl.to(curtainRight, {
+            x: '100%',
+            scaleX: 0.9,
+            duration: 0.5,
+            ease: 'power1.out'
+          }, 1.9);
+
+          // Show intro screen as curtains pass the halfway point
+          curtainTl.call(() => {
             this.introScreen.classList.add('active');
             this.animateIntro();
-          }, 600);
+          }, null, 0.9);
 
-          // Hide opening screen after curtain fully opens (1.5s CSS transition + buffer)
-          setTimeout(() => {
+          // Hide opening screen after curtains fully open
+          curtainTl.call(() => {
             this.openingScreen.classList.remove('active');
             this.openingScreen.classList.add('hidden');
             this.isOpeningTransition = false;
-          }, 1800);
-        }, 500);
+          }, null, 2.2);
+        }, 600);
       }
     });
   }
@@ -1660,7 +1706,7 @@ class TwelveMonthsApp {
         <div class="love-meter-fill"></div>
         <span class="love-meter-emoji">🤍</span>
       </div>
-      <p class="love-meter-text">Chạm để gửi yêu thương!</p>
+      <p class="love-meter-text">chạm để gửi tình iu tới ảnh</p>
       <p class="love-meter-count">💕 <span class="tap-count">0</span></p>
     `;
 
@@ -2342,8 +2388,8 @@ class TwelveMonthsApp {
 
   getGameText(gameType) {
     const gameTexts = {
-      'greeting': 'Chào mừng bạn!',
-      'simple_greeting': 'Chào mừng bạn!',
+      'greeting': 'hè lô em bé!',
+      'simple_greeting': 'hè lô em bé!',
       'love_meter': 'Đổ đầy trái tim yêu thương',
       'catch_falling': 'Bắt những trái tim rơi',
       'bubble_pop': 'Bấm vỡ những bong bóng tình yêu',
@@ -2371,7 +2417,7 @@ class TwelveMonthsApp {
       return 'Chạm vào trái tim nào!';
     }
     if (gameType === 'greeting') {
-      return 'Chờ một chút nhé...';
+      return 'chuẩn bị tinh thần đi nhìn lại một năm trước với tui chưa';
     }
     if (gameType === 'simple_greeting') {
       return '';
