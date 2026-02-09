@@ -25,7 +25,7 @@ body {
   font-family: 'Montserrat', sans-serif;
   background: var(--bg);
   color: var(--text-dark);
-  transition: background 0.4s ease;
+  transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -61,7 +61,7 @@ h1, h2, h3 {
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .loading-screen.hidden {
@@ -123,15 +123,17 @@ h1, h2, h3 {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.99);
-  transition: opacity 0.25s ease-out, visibility 0.25s ease-out, transform 0.25s ease-out;
+  transform: scale(0.98) translateY(6px);
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, visibility, transform;
 }
 
 .screen.active {
   opacity: 1;
   visibility: visible;
-  transform: scale(1);
+  transform: scale(1) translateY(0);
 }
 
 /* ===== Opening Screen ===== */
@@ -206,7 +208,7 @@ h1, h2, h3 {
   background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
   color: white;
   cursor: pointer;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease-out;
   box-shadow: 0 4px 20px rgba(255, 107, 122, 0.4);
   animation: openingFadeIn 1s ease-out 0.9s forwards;
   opacity: 0;
@@ -600,7 +602,7 @@ h1, h2, h3 {
   background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
   color: white;
   cursor: pointer;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease-out;
   box-shadow: 0 4px 15px rgba(255, 107, 122, 0.4);
   position: relative;
   overflow: hidden;
@@ -650,8 +652,11 @@ h1, h2, h3 {
   padding: 2rem;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
-  will-change: opacity;
+  transform: translateY(8px) scale(0.995);
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -661,6 +666,7 @@ h1, h2, h3 {
 .step.active {
   opacity: 1;
   visibility: visible;
+  transform: translateY(0) scale(1);
   cursor: pointer;
 }
 
@@ -740,6 +746,8 @@ h1, h2, h3 {
 .quote-char {
   display: inline-block;
   opacity: 0;
+  transform: translateY(4px);
+  will-change: opacity, transform;
 }
 
 /* Step 3: Note Step */
@@ -964,7 +972,10 @@ h1, h2, h3 {
   background: rgba(255, 255, 255, 0.3);
   color: var(--text-dark);
   cursor: pointer;
-  transition: transform 0.15s ease-out, background 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease-out;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.25s ease-out,
+              box-shadow 0.25s ease-out,
+              border-color 0.25s ease-out;
   backdrop-filter: blur(5px);
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
@@ -980,12 +991,13 @@ h1, h2, h3 {
 
 .answer-btn:hover {
   background: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 122, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(255, 107, 122, 0.2);
 }
 
 .answer-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97) translateY(0);
+  transition-duration: 0.08s;
 }
 
 .answer-btn.selected {
@@ -993,6 +1005,7 @@ h1, h2, h3 {
   border-color: var(--pink-choice);
   color: white;
   transform: scale(1.02);
+  box-shadow: 0 4px 18px rgba(255, 105, 180, 0.35);
 }
 
 .answer-btn.key-answer {
@@ -1000,6 +1013,7 @@ h1, h2, h3 {
   border-color: var(--gold-choice);
   color: var(--text-dark);
   position: relative;
+  box-shadow: 0 4px 18px rgba(255, 215, 0, 0.35);
 }
 
 .answer-btn.key-answer::after {
@@ -1125,7 +1139,7 @@ h1, h2, h3 {
 .gallery-container {
   display: flex;
   height: 100%;
-  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform;
 }
 
@@ -1179,7 +1193,9 @@ h1, h2, h3 {
   color: var(--primary);
   font-size: 0;
   cursor: pointer;
-  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background 0.12s ease-out;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s ease-out,
+              background 0.2s ease-out;
   position: relative;
   box-shadow: 0 4px 15px rgba(255, 107, 122, 0.3);
   will-change: transform;
@@ -1297,7 +1313,9 @@ h1, h2, h3 {
   background: linear-gradient(135deg, var(--primary) 0%, #FF4D6D 100%);
   color: white;
   cursor: pointer;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease-out,
+              opacity 0.4s ease;
   box-shadow: 0 4px 15px rgba(255, 107, 122, 0.4);
   -webkit-tap-highlight-color: transparent;
   margin-top: 0.5rem;
@@ -1376,7 +1394,7 @@ h1, h2, h3 {
   background: linear-gradient(135deg, var(--gold-choice) 0%, #FFA500 100%);
   color: var(--text-dark);
   cursor: pointer;
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease-out;
   box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
   position: relative;
   overflow: hidden;
@@ -1416,7 +1434,7 @@ h1, h2, h3 {
   transform: translateX(-50%);
   z-index: 100;
   opacity: 0;
-  transition: opacity 0.3s ease-out;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
 }
 
@@ -1443,7 +1461,7 @@ h1, h2, h3 {
   width: 0%;
   background: linear-gradient(90deg, var(--primary), var(--gold-choice));
   border-radius: 2px;
-  transition: width 0.3s ease-out;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   will-change: width;
 }
@@ -1467,8 +1485,9 @@ h1, h2, h3 {
 }
 
 @keyframes slowZoom {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.08); }
+  0% { transform: scale(1); opacity: 0.95; }
+  15% { opacity: 1; }
+  100% { transform: scale(1.06); opacity: 1; }
 }
 
 @keyframes collectPop {
