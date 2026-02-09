@@ -17,7 +17,6 @@ class TwelveMonthsApp {
 
     // Prevent double advance
     this.isAdvancing = false;
-    this.advanceDebounceTime = 150;
 
     // Timing controls - prevent skipping before content is viewed
     this.canAdvance = true;
@@ -112,10 +111,10 @@ class TwelveMonthsApp {
   hideLoadingScreen(loadingScreen) {
     if (loadingScreen) {
       loadingScreen.classList.add('hidden');
-      // Remove from DOM after transition
+      // Remove from DOM after CSS transition completes (600ms)
       setTimeout(() => {
         loadingScreen.style.display = 'none';
-      }, 500);
+      }, 650);
     }
   }
 
@@ -567,10 +566,21 @@ class TwelveMonthsApp {
   }
 
   startJourney() {
-    this.introScreen.classList.remove('active');
-    this.chapterScreen.classList.add('active');
-    this.progressContainer.classList.add('visible');
-    this.loadChapter(0);
+    // Smooth exit from intro screen with GSAP then switch to chapter
+    gsap.to('.intro-content', {
+      opacity: 0,
+      y: -15,
+      scale: 0.97,
+      duration: 0.4,
+      ease: 'power2.inOut',
+      onComplete: () => {
+        gsap.set('.intro-content', { clearProps: 'opacity,y,scale' });
+        this.introScreen.classList.remove('active');
+        this.chapterScreen.classList.add('active');
+        this.progressContainer.classList.add('visible');
+        this.loadChapter(0);
+      }
+    });
   }
 
   loadChapter(chapterIndex) {
@@ -1084,6 +1094,8 @@ class TwelveMonthsApp {
     requestAnimationFrame(() => {
       if (stepElement) {
         stepElement.classList.add('active');
+        // Animate child elements after CSS transition starts
+        this.animateStepEntrance(stepName, stepElement);
       }
 
       // Set up advance timing based on step type
@@ -1169,14 +1181,104 @@ class TwelveMonthsApp {
         duration: 0.1,
         yoyo: true,
         repeat: 1,
-        ease: 'power2.inOut'
+        ease: 'power2.inOut',
+        clearProps: 'scale'
       });
     }
   }
 
   animateStepEntrance(stepName, stepElement) {
-    // Let CSS handle the main transition - only add subtle child stagger for non-essential steps
-    // This prevents jitter from conflicting CSS and GSAP animations
+    // Complement CSS transition with subtle GSAP child animations for polish
+    // All animations use clearProps to prevent stale inline styles
+    switch (stepName) {
+      case 'title': {
+        const num = stepElement.querySelector('.chapter-number');
+        const month = stepElement.querySelector('.chapter-month');
+        if (num) {
+          gsap.fromTo(num, { opacity: 0, scale: 0.8 },
+            { opacity: 0.1, scale: 1, duration: 0.6, ease: 'power2.out', force3D: true,
+              clearProps: 'scale,force3D' });
+        }
+        if (month) {
+          gsap.fromTo(month, { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5, delay: 0.15, ease: 'power3.out', force3D: true,
+              clearProps: 'y,force3D' });
+        }
+        break;
+      }
+      case 'note': {
+        const container = stepElement.querySelector('.note-container');
+        if (container) {
+          gsap.fromTo(container, { opacity: 0, y: 20, scale: 0.97 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D' });
+        }
+        const icon = stepElement.querySelector('.note-icon');
+        if (icon) {
+          gsap.fromTo(icon, { opacity: 0, scale: 0.5, rotation: -15 },
+            { opacity: 1, scale: 1, rotation: 0, duration: 0.4, delay: 0.2, ease: 'back.out(1.5)', force3D: true,
+              clearProps: 'transform,force3D' });
+        }
+        break;
+      }
+      case 'reveal': {
+        const title = stepElement.querySelector('.reveal-title');
+        const herChoice = stepElement.querySelector('.her-choice');
+        const heartsIcon = stepElement.querySelector('.hearts-icon');
+        const myChoice = stepElement.querySelector('.my-choice');
+        if (title) {
+          gsap.fromTo(title, { opacity: 0, y: 12 },
+            { opacity: 0.8, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
+              clearProps: 'y,force3D' });
+        }
+        if (herChoice) {
+          gsap.fromTo(herChoice, { opacity: 0, x: -20, scale: 0.95 },
+            { opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.15, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D' });
+        }
+        if (heartsIcon) {
+          gsap.fromTo(heartsIcon, { opacity: 0, scale: 0.3 },
+            { opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: 'back.out(1.7)', force3D: true,
+              clearProps: 'transform,force3D' });
+        }
+        if (myChoice) {
+          gsap.fromTo(myChoice, { opacity: 0, x: 20, scale: 0.95 },
+            { opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.25, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D' });
+        }
+        break;
+      }
+      case 'question': {
+        const qText = stepElement.querySelector('.question-text');
+        if (qText) {
+          gsap.fromTo(qText, { opacity: 0, y: 12 },
+            { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
+              clearProps: 'y,force3D' });
+        }
+        const buttons = stepElement.querySelectorAll('.answer-btn');
+        if (buttons.length > 0) {
+          gsap.fromTo(buttons, { opacity: 0, y: 15, scale: 0.95 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.35, stagger: 0.08, delay: 0.15, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D' });
+        }
+        break;
+      }
+      case 'image': {
+        const gallery = stepElement.querySelector('.image-gallery');
+        if (gallery) {
+          gsap.fromTo(gallery, { opacity: 0, y: 12 },
+            { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', force3D: true,
+              clearProps: 'y,force3D' });
+        }
+        const caption = stepElement.querySelector('.image-caption');
+        if (caption) {
+          gsap.fromTo(caption, { opacity: 0 },
+            { opacity: 1, duration: 0.4, delay: 0.2, ease: 'power2.out',
+              clearProps: 'opacity' });
+        }
+        break;
+      }
+    }
   }
 
   animateQuote() {
@@ -1214,22 +1316,26 @@ class TwelveMonthsApp {
     // Reading time: at least 2.5s, or 50ms per char for comfortable reading
     const minReadTime = Math.max(2500, charCount * 50);
 
-    // Optimized character animation - smoother reveal
-    gsap.to('.quote-char', {
-      opacity: 1,
-      duration: 0.05,
-      stagger: charDelay,
-      ease: 'power1.out',
-      force3D: true,
-      onComplete: () => {
-        // After animation completes, wait for reading time then allow advance
-        setTimeout(() => {
-          this.canAdvance = true;
-          this.quoteAnimationComplete = true;
-          this.showReadyToAdvance('quote');
-        }, minReadTime);
+    // Smoother character animation with subtle Y transform for each char
+    gsap.fromTo('.quote-char',
+      { opacity: 0, y: 4 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.08,
+        stagger: charDelay,
+        ease: 'power2.out',
+        force3D: true,
+        onComplete: () => {
+          // After animation completes, wait for reading time then allow advance
+          setTimeout(() => {
+            this.canAdvance = true;
+            this.quoteAnimationComplete = true;
+            this.showReadyToAdvance('quote');
+          }, minReadTime);
+        }
       }
-    });
+    );
   }
 
   resetGalleryAnimation() {
@@ -1265,10 +1371,10 @@ class TwelveMonthsApp {
     this.currentStep++;
     this.showStep(this.currentStep);
 
-    // Reset debounce after CSS transition
+    // Reset debounce after CSS transition completes (350ms CSS transition)
     setTimeout(() => {
       this.isAdvancing = false;
-    }, 150);
+    }, 380);
   }
 
   cleanupGameArea() {
@@ -1318,17 +1424,21 @@ class TwelveMonthsApp {
     if (this.isTransitioningChapter) return;
     this.isTransitioningChapter = true;
 
-    // Smooth chapter transition
-    gsap.to(this.imageStep, {
+    // Smooth chapter transition with gentle fade + scale
+    const tl = gsap.timeline();
+
+    tl.to(this.imageStep, {
       opacity: 0,
-      duration: 0.15,
-      ease: 'power2.out',
-      onComplete: () => {
-        // Clear GSAP inline styles - let CSS handle visibility via classes
-        gsap.set(this.imageStep, { clearProps: 'opacity' });
-        this.loadChapter(this.currentChapter + 1);
-        this.isTransitioningChapter = false;
-      }
+      scale: 0.97,
+      duration: 0.35,
+      ease: 'power2.inOut'
+    });
+
+    tl.call(() => {
+      // Clear GSAP inline styles - let CSS handle visibility via classes
+      gsap.set(this.imageStep, { clearProps: 'opacity,scale' });
+      this.loadChapter(this.currentChapter + 1);
+      this.isTransitioningChapter = false;
     });
   }
 
@@ -1466,7 +1576,7 @@ class TwelveMonthsApp {
           ease: 'back.out(1.4)'
         }
       );
-    }, 350);
+    }, 250);
   }
 
   flipMemoryCard(card) {
@@ -1645,7 +1755,7 @@ class TwelveMonthsApp {
 
       mainHeart.addEventListener('click', handleTap);
       mainHeart.addEventListener('touchend', handleTap, { passive: false });
-    }, 350);
+    }, 250);
   }
 
   createHeartBurst(container) {
@@ -1822,7 +1932,7 @@ class TwelveMonthsApp {
           this.showReadyToAdvance('game');
         }, 600);
       }, gameDuration);
-    }, 350);
+    }, 250);
   }
 
   createMiniHeartBurst(parent) {
@@ -1995,7 +2105,7 @@ class TwelveMonthsApp {
           this.showReadyToAdvance('game');
         }, 600);
       }, gameDuration);
-    }, 350);
+    }, 250);
   }
 
   // ===== Bubble Pop Game (Pop floating bubbles) =====
@@ -2176,7 +2286,7 @@ class TwelveMonthsApp {
           this.showReadyToAdvance('game');
         }, 600);
       }, gameDuration);
-    }, 350);
+    }, 250);
   }
 
   createBubbleBurst(bubble, container) {
@@ -2281,7 +2391,7 @@ class TwelveMonthsApp {
           }, 800);
         }
       });
-    }, 350);
+    }, 250);
   }
 
   spawnFloatingHearts() {
@@ -2554,18 +2664,31 @@ class TwelveMonthsApp {
 
   // ===== Ending Experience =====
   showEnding() {
-    // Smooth transition to ending screen
-    gsap.to(this.imageStep, {
+    // Dramatic transition to ending screen - fade + scale down current view
+    const tl = gsap.timeline();
+
+    // Fade out current image step
+    tl.to(this.imageStep, {
       opacity: 0,
-      duration: 0.4,
-      ease: 'power2.out',
-      onComplete: () => {
-        gsap.set(this.imageStep, { clearProps: 'opacity' });
-        this.chapterScreen.classList.remove('active');
-        this.progressContainer.classList.remove('visible');
-        this.endingScreen.classList.add('active');
-        this.createCollage();
-      }
+      scale: 0.95,
+      duration: 0.5,
+      ease: 'power2.inOut'
+    });
+
+    // Fade out progress indicator
+    tl.to(this.progressContainer, {
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power2.out'
+    }, '-=0.3');
+
+    tl.call(() => {
+      gsap.set(this.imageStep, { clearProps: 'opacity,scale' });
+      this.chapterScreen.classList.remove('active');
+      this.progressContainer.classList.remove('visible');
+      gsap.set(this.progressContainer, { clearProps: 'opacity' });
+      this.endingScreen.classList.add('active');
+      this.createCollage();
     });
   }
 
@@ -2600,29 +2723,45 @@ class TwelveMonthsApp {
       container.appendChild(img);
     });
 
-    // Optimized collage entrance - faster stagger
+    // Dramatic collage entrance with cascading reveal
     gsap.to('.collage-img', {
       opacity: 1,
       scale: 1,
-      duration: 0.3,
+      duration: 0.4,
       stagger: {
-        each: 0.04,
+        each: 0.05,
         from: 'random'
       },
-      delay: 0.2,
-      ease: 'back.out(1.1)',
+      delay: 0.3,
+      ease: 'back.out(1.2)',
       force3D: true
     });
 
-    // Optimized ending content animation
-    gsap.from('.ending-content', {
-      opacity: 0,
-      y: 20,
-      duration: 0.6,
-      delay: 1.5,
-      ease: 'power2.out',
-      force3D: true
-    });
+    // Elegant ending content entrance
+    const endingTl = gsap.timeline({ delay: 1.2 });
+
+    endingTl.fromTo('.ending-content',
+      { opacity: 0, y: 30, scale: 0.95 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'power3.out', force3D: true }
+    );
+
+    endingTl.fromTo('.ending-message',
+      { opacity: 0, y: 15 },
+      { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' },
+      '-=0.3'
+    );
+
+    endingTl.fromTo('.ending-note',
+      { opacity: 0, y: 10 },
+      { opacity: 0.8, y: 0, duration: 0.5, ease: 'power2.out' },
+      '-=0.2'
+    );
+
+    endingTl.fromTo('.gift-btn',
+      { opacity: 0, y: 15, scale: 0.9 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.5)' },
+      '-=0.1'
+    );
   }
 }
 
