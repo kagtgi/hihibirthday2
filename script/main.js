@@ -762,7 +762,7 @@ class TwelveMonthsApp {
     if (validImages.length === 0) {
       const emptyMessage = document.createElement('div');
       emptyMessage.className = 'gallery-image-wrapper';
-      emptyMessage.innerHTML = '<div class="image-skeleton image-error"><span class="error-icon">📷</span><span class="error-text">Không có ảnh</span></div>';
+      emptyMessage.innerHTML = '<div class="image-skeleton image-error"><span class="error-icon">😢</span><span class="error-text">Không có ảnh</span></div>';
       container.appendChild(emptyMessage);
       this.galleryImageLoaded = [true];
       this.updateGalleryNav(0);
@@ -815,7 +815,7 @@ class TwelveMonthsApp {
         // Show error placeholder instead of hiding
         if (skeleton.parentNode) {
           skeleton.classList.add('image-error');
-          skeleton.innerHTML = '<span class="error-icon">📷</span><span class="error-text">Không tải được</span>';
+          skeleton.innerHTML = '<span class="error-icon">😢</span><span class="error-text">Không tải được</span>';
         }
         this.galleryImageLoaded[index] = true;
         img.style.display = 'none';
