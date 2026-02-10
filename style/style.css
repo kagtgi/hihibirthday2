@@ -361,6 +361,7 @@ h1, h2, h3 {
 .curtain-left {
   left: 0;
   transform-origin: left center;
+  transform: translateZ(0);
   border-right: 1px solid rgba(75, 10, 20, 0.5);
   box-shadow:
     inset 0 0 100px rgba(0, 0, 0, 0.35),
@@ -371,6 +372,7 @@ h1, h2, h3 {
 .curtain-right {
   right: 0;
   transform-origin: right center;
+  transform: translateZ(0);
   border-left: 1px solid rgba(75, 10, 20, 0.5);
   box-shadow:
     inset 0 0 100px rgba(0, 0, 0, 0.35),
@@ -759,10 +761,12 @@ h1, h2, h3 {
 .note-container {
   max-width: 80%;
   text-align: center;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
   padding: 2rem 1.5rem;
   border-radius: 20px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  will-change: transform, opacity;
 }
 
 .note-icon {
@@ -832,6 +836,7 @@ h1, h2, h3 {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.25);
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+  contain: layout style;
 }
 
 .game-element {
@@ -901,6 +906,7 @@ h1, h2, h3 {
   font-size: 1.5rem;
   opacity: 0;
   animation: floatUp 3s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes floatUp {
@@ -976,7 +982,8 @@ h1, h2, h3 {
               background 0.25s ease-out,
               box-shadow 0.25s ease-out,
               border-color 0.25s ease-out;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
   touch-action: manipulation;
@@ -1139,8 +1146,9 @@ h1, h2, h3 {
 .gallery-container {
   display: flex;
   height: 100%;
-  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .gallery-image {
@@ -1358,6 +1366,7 @@ h1, h2, h3 {
   border-radius: 4px;
   opacity: 0;
   transform: scale(0.8);
+  will-change: transform, opacity;
 }
 
 .ending-content {
@@ -2010,6 +2019,7 @@ h1, h2, h3 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  will-change: transform, opacity;
 }
 
 /* Responsive for Heart Burst */
@@ -2057,13 +2067,14 @@ h1, h2, h3 {
   border: 3px solid rgba(255, 107, 122, 0.4);
   box-shadow: 0 4px 20px rgba(255, 107, 122, 0.25);
   animation: loveMeterPulse 2s ease-in-out infinite;
+  will-change: transform;
   /* Instant response */
   touch-action: manipulation;
 }
 
 @keyframes loveMeterPulse {
-  0%, 100% { box-shadow: 0 4px 20px rgba(255, 107, 122, 0.25); }
-  50% { box-shadow: 0 4px 30px rgba(255, 107, 122, 0.45); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
 }
 
 .love-meter-heart:hover {
@@ -2110,6 +2121,7 @@ h1, h2, h3 {
   font-size: 1rem;
   pointer-events: none;
   z-index: 10;
+  will-change: transform, opacity;
 }
 
 /* ===== Catch Falling Game ===== */
@@ -2157,6 +2169,7 @@ h1, h2, h3 {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.25));
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: inset 0 0 30px rgba(255, 107, 122, 0.1);
+  contain: layout style;
 }
 
 .falling-heart {
@@ -2168,6 +2181,7 @@ h1, h2, h3 {
   filter: drop-shadow(0 4px 12px rgba(255, 107, 122, 0.4));
   z-index: 5;
   animation: fallingHeartGlow 1.5s ease-in-out infinite;
+  will-change: transform, opacity;
   /* Larger touch target */
   padding: 10px;
   margin: -10px;
@@ -2176,8 +2190,8 @@ h1, h2, h3 {
 }
 
 @keyframes fallingHeartGlow {
-  0%, 100% { filter: drop-shadow(0 4px 12px rgba(255, 107, 122, 0.4)); }
-  50% { filter: drop-shadow(0 4px 18px rgba(255, 107, 122, 0.6)); }
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
 }
 
 .falling-heart:hover,
@@ -2236,6 +2250,7 @@ h1, h2, h3 {
   background: linear-gradient(to bottom, rgba(200, 180, 255, 0.1), rgba(180, 160, 255, 0.2));
   border: 2px solid rgba(200, 180, 255, 0.3);
   box-shadow: inset 0 0 30px rgba(147, 112, 219, 0.15);
+  contain: layout style;
 }
 
 .pop-bubble {
@@ -2247,6 +2262,7 @@ h1, h2, h3 {
   filter: drop-shadow(0 4px 12px rgba(147, 112, 219, 0.4));
   z-index: 5;
   animation: bubbleGlow 2s ease-in-out infinite;
+  will-change: transform, opacity;
   /* Larger touch target for mobile */
   padding: 12px;
   margin: -12px;
@@ -2255,8 +2271,8 @@ h1, h2, h3 {
 }
 
 @keyframes bubbleGlow {
-  0%, 100% { filter: drop-shadow(0 4px 12px rgba(147, 112, 219, 0.4)); }
-  50% { filter: drop-shadow(0 6px 20px rgba(147, 112, 219, 0.7)); }
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
 .pop-bubble:hover,
@@ -2275,6 +2291,7 @@ h1, h2, h3 {
   font-size: 1rem;
   pointer-events: none;
   z-index: 10;
+  will-change: transform, opacity;
 }
 
 /* Responsive for new games */
@@ -2355,6 +2372,7 @@ h1, h2, h3 {
   height: 100%;
   transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .memory-card.flipped .memory-card-inner,
