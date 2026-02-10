@@ -578,6 +578,17 @@ class TwelveMonthsApp {
       onComplete: () => {
         gsap.set('.intro-content', { clearProps: 'opacity,y,scale' });
         this.introScreen.classList.remove('active');
+
+        // Ensure all steps start hidden before chapter screen becomes active
+        const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
+          this.questionStep, this.revealStep, this.imageStep];
+        allSteps.forEach(step => {
+          step.style.opacity = '0';
+          step.style.visibility = 'hidden';
+          step.style.pointerEvents = 'none';
+          step.style.zIndex = '0';
+        });
+
         this.chapterScreen.classList.add('active');
         this.progressContainer.classList.add('visible');
         this.loadChapter(0);
@@ -603,6 +614,19 @@ class TwelveMonthsApp {
     this.quoteAnimationComplete = false;
     this.isAdvancing = false;
     this.isTransitioningChapter = false;
+
+    // Ensure all steps start hidden - prevent any flicker on chapter load
+    const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
+      this.questionStep, this.revealStep, this.imageStep];
+    allSteps.forEach(step => {
+      step.classList.remove('active');
+      step.style.opacity = '0';
+      step.style.visibility = 'hidden';
+      step.style.pointerEvents = 'none';
+      step.style.zIndex = '0';
+      step.style.transform = 'translateY(8px) scale(0.995)';
+      gsap.killTweensOf(step);
+    });
 
     const chapter = this.chapters[chapterIndex];
 
@@ -782,12 +806,28 @@ class TwelveMonthsApp {
       return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
     });
 
-    // Handle case where no valid images exist
+    // Conditionally show/hide the entire gallery frame
+    const imageGallery = document.querySelector('.image-gallery');
+    const imageCaption = document.querySelector('.image-caption');
+    const nextChapterBtn = document.querySelector('.next-chapter-btn');
+
+    // Handle case where no valid images exist - HIDE the entire gallery frame
     if (validImages.length === 0) {
       container.innerHTML = '';
       this.galleryImageLoaded = [];
+      if (imageGallery) imageGallery.style.display = 'none';
+      if (imageCaption) imageCaption.style.display = 'none';
+      // Still show next chapter button if image step is in sequence
+      if (nextChapterBtn) {
+        nextChapterBtn.style.opacity = '1';
+        nextChapterBtn.style.pointerEvents = 'auto';
+      }
       return;
     }
+
+    // Show gallery elements when images exist
+    if (imageGallery) imageGallery.style.display = '';
+    if (imageCaption) imageCaption.style.display = '';
 
     // Reset image loaded tracking and swipe state
     this.galleryImageLoaded = new Array(validImages.length).fill(false);
@@ -1031,10 +1071,12 @@ class TwelveMonthsApp {
     this.selectedAnswer = selectedKey;
     btn.classList.add('selected');
 
-    // Animate selection feedback
+    // Animate selection feedback - satisfying bounce
     gsap.to(btn, {
-      scale: 1.02,
-      duration: 0.2,
+      scale: 1.05,
+      duration: 0.15,
+      yoyo: true,
+      repeat: 1,
       ease: 'power2.out'
     });
 
@@ -1112,48 +1154,78 @@ class TwelveMonthsApp {
     const currentActive = allSteps.find(s => s.classList.contains('active'));
 
     const enterNewStep = () => {
-      // Ensure all steps are hidden and pushed behind
+      // Ensure ALL steps are fully hidden first - prevent any leaking
       allSteps.forEach(step => {
         step.classList.remove('active');
         step.style.zIndex = '0';
+        step.style.opacity = '0';
+        step.style.visibility = 'hidden';
+        step.style.pointerEvents = 'none';
+        step.style.transform = 'translateY(8px) scale(0.995)';
       });
 
-      requestAnimationFrame(() => {
-        if (stepElement) {
-          // Ensure new step is on top before making visible
-          stepElement.style.zIndex = '5';
-          stepElement.classList.add('active');
-          this.animateStepEntrance(stepName, stepElement);
-        }
+      // Force a reflow to ensure hidden state is painted before showing new step
+      void stepElement.offsetHeight;
 
-        // Set up advance timing based on step type
-        this.setupStepTiming(stepName);
+      if (stepElement) {
+        // Set new step to visible state via GSAP (no CSS transition involved)
+        stepElement.style.zIndex = '5';
+        stepElement.style.visibility = 'visible';
+        stepElement.style.pointerEvents = 'auto';
+        stepElement.classList.add('active');
 
-        // Special handling
-        if (stepName === 'game') {
-          this.startGame();
-        }
+        // Animate entrance from opacity 0
+        gsap.fromTo(stepElement,
+          { opacity: 0, y: 8, scale: 0.995 },
+          {
+            opacity: 1, y: 0, scale: 1,
+            duration: 0.35,
+            ease: 'power2.out',
+            force3D: true,
+            clearProps: 'transform',
+            onComplete: () => {
+              stepElement.style.opacity = '1';
+              stepElement.style.transform = 'translateY(0) scale(1)';
+            }
+          }
+        );
 
-        if (stepName === 'quote') {
-          this.animateQuote();
-        }
+        this.animateStepEntrance(stepName, stepElement);
+      }
 
-        if (stepName === 'image') {
-          this.resetGalleryAnimation();
-        }
-      });
+      // Set up advance timing based on step type
+      this.setupStepTiming(stepName);
+
+      // Special handling
+      if (stepName === 'game') {
+        this.startGame();
+      }
+
+      if (stepName === 'quote') {
+        this.animateQuote();
+      }
+
+      if (stepName === 'image') {
+        this.resetGalleryAnimation();
+      }
     };
 
     if (currentActive && currentActive !== stepElement) {
       // Fade out current step completely, THEN enter new step
       gsap.to(currentActive, {
         opacity: 0,
-        duration: 0.2,
+        y: -6,
+        scale: 0.98,
+        duration: 0.25,
         ease: 'power2.in',
+        force3D: true,
         onComplete: () => {
           currentActive.classList.remove('active');
           currentActive.style.zIndex = '0';
-          gsap.set(currentActive, { clearProps: 'opacity' });
+          currentActive.style.visibility = 'hidden';
+          currentActive.style.pointerEvents = 'none';
+          gsap.set(currentActive, { clearProps: 'opacity,y,scale,transform' });
+          currentActive.style.opacity = '0';
           enterNewStep();
         }
       });
@@ -1235,23 +1307,23 @@ class TwelveMonthsApp {
   }
 
   animateStepEntrance(stepName, stepElement) {
-    // Complement CSS transition with subtle GSAP child animations for polish
+    // Polished GSAP child animations for each step type
     // All animations use clearProps to prevent stale inline styles
     switch (stepName) {
       case 'title': {
         const num = stepElement.querySelector('.chapter-number');
         const month = stepElement.querySelector('.chapter-month');
         if (num) {
-          gsap.fromTo(num, { opacity: 0, scale: 0.8 },
+          gsap.fromTo(num, { opacity: 0, scale: 0.7, y: -10 },
             {
-              opacity: 0.1, scale: 1, duration: 0.6, ease: 'power2.out', force3D: true,
-              clearProps: 'scale,force3D'
+              opacity: 0.1, scale: 1, y: 0, duration: 0.7, ease: 'power3.out', force3D: true,
+              clearProps: 'scale,y,force3D'
             });
         }
         if (month) {
-          gsap.fromTo(month, { opacity: 0, y: 15 },
+          gsap.fromTo(month, { opacity: 0, y: 20 },
             {
-              opacity: 1, y: 0, duration: 0.5, delay: 0.15, ease: 'power3.out', force3D: true,
+              opacity: 1, y: 0, duration: 0.6, delay: 0.15, ease: 'back.out(1.2)', force3D: true,
               clearProps: 'y,force3D'
             });
         }
@@ -1260,17 +1332,17 @@ class TwelveMonthsApp {
       case 'note': {
         const container = stepElement.querySelector('.note-container');
         if (container) {
-          gsap.fromTo(container, { opacity: 0, y: 20, scale: 0.97 },
+          gsap.fromTo(container, { opacity: 0, y: 25, scale: 0.95 },
             {
-              opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out', force3D: true,
+              opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.2)', force3D: true,
               clearProps: 'transform,force3D'
             });
         }
         const icon = stepElement.querySelector('.note-icon');
         if (icon) {
-          gsap.fromTo(icon, { opacity: 0, scale: 0.5, rotation: -15 },
+          gsap.fromTo(icon, { opacity: 0, scale: 0.3, rotation: -20 },
             {
-              opacity: 1, scale: 1, rotation: 0, duration: 0.4, delay: 0.2, ease: 'back.out(1.5)', force3D: true,
+              opacity: 1, scale: 1, rotation: 0, duration: 0.5, delay: 0.25, ease: 'back.out(2)', force3D: true,
               clearProps: 'transform,force3D'
             });
         }
@@ -1282,30 +1354,30 @@ class TwelveMonthsApp {
         const heartsIcon = stepElement.querySelector('.hearts-icon');
         const myChoice = stepElement.querySelector('.my-choice');
         if (title) {
-          gsap.fromTo(title, { opacity: 0, y: 12 },
+          gsap.fromTo(title, { opacity: 0, y: 15, scale: 0.95 },
             {
-              opacity: 0.8, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
-              clearProps: 'y,force3D'
+              opacity: 0.8, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.1)', force3D: true,
+              clearProps: 'y,scale,force3D'
             });
         }
         if (herChoice) {
-          gsap.fromTo(herChoice, { opacity: 0, x: -20, scale: 0.95 },
+          gsap.fromTo(herChoice, { opacity: 0, x: -30, scale: 0.9 },
             {
-              opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.15, ease: 'power3.out', force3D: true,
+              opacity: 1, x: 0, scale: 1, duration: 0.55, delay: 0.15, ease: 'back.out(1.3)', force3D: true,
               clearProps: 'transform,force3D'
             });
         }
         if (heartsIcon) {
-          gsap.fromTo(heartsIcon, { opacity: 0, scale: 0.3 },
+          gsap.fromTo(heartsIcon, { opacity: 0, scale: 0.2 },
             {
-              opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: 'back.out(1.7)', force3D: true,
+              opacity: 1, scale: 1, duration: 0.5, delay: 0.35, ease: 'back.out(2)', force3D: true,
               clearProps: 'transform,force3D'
             });
         }
         if (myChoice) {
-          gsap.fromTo(myChoice, { opacity: 0, x: 20, scale: 0.95 },
+          gsap.fromTo(myChoice, { opacity: 0, x: 30, scale: 0.9 },
             {
-              opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.25, ease: 'power3.out', force3D: true,
+              opacity: 1, x: 0, scale: 1, duration: 0.55, delay: 0.25, ease: 'back.out(1.3)', force3D: true,
               clearProps: 'transform,force3D'
             });
         }
@@ -1314,17 +1386,17 @@ class TwelveMonthsApp {
       case 'question': {
         const qText = stepElement.querySelector('.question-text');
         if (qText) {
-          gsap.fromTo(qText, { opacity: 0, y: 12 },
+          gsap.fromTo(qText, { opacity: 0, y: 15, scale: 0.95 },
             {
-              opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
-              clearProps: 'y,force3D'
+              opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.1)', force3D: true,
+              clearProps: 'y,scale,force3D'
             });
         }
         const buttons = stepElement.querySelectorAll('.answer-btn');
         if (buttons.length > 0) {
-          gsap.fromTo(buttons, { opacity: 0, y: 15, scale: 0.95 },
+          gsap.fromTo(buttons, { opacity: 0, y: 20, scale: 0.9 },
             {
-              opacity: 1, y: 0, scale: 1, duration: 0.35, stagger: 0.08, delay: 0.15, ease: 'power3.out', force3D: true,
+              opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.1, delay: 0.2, ease: 'back.out(1.3)', force3D: true,
               clearProps: 'transform,force3D'
             });
         }
@@ -1332,20 +1404,42 @@ class TwelveMonthsApp {
       }
       case 'image': {
         const gallery = stepElement.querySelector('.image-gallery');
-        if (gallery) {
-          gsap.fromTo(gallery, { opacity: 0, y: 12 },
+        if (gallery && gallery.style.display !== 'none') {
+          gsap.fromTo(gallery, { opacity: 0, y: 15, scale: 0.98 },
             {
-              opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', force3D: true,
-              clearProps: 'y,force3D'
+              opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out', force3D: true,
+              clearProps: 'y,scale,force3D'
             });
         }
         const caption = stepElement.querySelector('.image-caption');
-        if (caption) {
-          gsap.fromTo(caption, { opacity: 0 },
+        if (caption && caption.style.display !== 'none') {
+          gsap.fromTo(caption, { opacity: 0, y: 8 },
             {
-              opacity: 1, duration: 0.4, delay: 0.2, ease: 'power2.out',
-              clearProps: 'opacity'
+              opacity: 1, y: 0, duration: 0.4, delay: 0.25, ease: 'power2.out',
+              clearProps: 'opacity,y'
             });
+        }
+        const nextBtn = stepElement.querySelector('.next-chapter-btn');
+        if (nextBtn) {
+          gsap.fromTo(nextBtn, { opacity: 0, y: 10 },
+            {
+              opacity: parseFloat(nextBtn.style.opacity) || 0.6, y: 0, duration: 0.4, delay: 0.35, ease: 'power2.out',
+              clearProps: 'y'
+            });
+        }
+        break;
+      }
+      case 'game': {
+        // Animate game text and hint
+        const gameText = stepElement.querySelector('.game-text');
+        const gameHint = stepElement.querySelector('.game-hint');
+        if (gameText) {
+          gsap.fromTo(gameText, { opacity: 0, y: -10 },
+            { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', force3D: true, clearProps: 'y,force3D' });
+        }
+        if (gameHint) {
+          gsap.fromTo(gameHint, { opacity: 0 },
+            { opacity: 0.7, duration: 0.4, delay: 0.15, ease: 'power2.out' });
         }
         break;
       }
@@ -1456,10 +1550,10 @@ class TwelveMonthsApp {
     this.currentStep++;
     this.showStep(this.currentStep);
 
-    // Reset debounce after CSS transition completes (350ms CSS transition)
+    // Reset debounce after GSAP transition completes (250ms out + 350ms in)
     setTimeout(() => {
       this.isAdvancing = false;
-    }, 380);
+    }, 620);
   }
 
   cleanupGameArea() {
@@ -1485,7 +1579,7 @@ class TwelveMonthsApp {
     const gameArea = document.querySelector('.game-area');
     if (!gameArea) return;
 
-    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart, .love-meter-container, .love-meter-heart, .catch-falling-container, .falling-heart, .bubble-pop-container, .pop-bubble');
+    const gameElements = gameArea.querySelectorAll('.game-element, .memory-card, .greeting-container, .memory-card-inner, .heart-burst-container, .heart-burst-main, .burst-heart, .love-meter-container, .love-meter-heart, .catch-falling-container, .falling-heart, .bubble-pop-container, .pop-bubble, .catch-glow-ring, .catch-burst-particle, .bubble-burst-particle');
     gameElements.forEach(el => {
       gsap.killTweensOf(el);
       gsap.set(el, { clearProps: 'all' });
@@ -1495,8 +1589,9 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
     if (progressBar) gsap.killTweensOf(progressBar);
 
-    // Clean up game area classes
+    // Clean up all game area grid classes
     gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid', 'bubble-pop-grid');
+    gameArea.innerHTML = '';
 
     // Reset game state
     this.memoryCards = [];
@@ -1513,19 +1608,37 @@ class TwelveMonthsApp {
     const currentStepName = this.stepSequence[this.currentStep];
     const currentStepEl = this.getStepElement(currentStepName);
 
+    // Hide ALL steps to prevent any leaking during chapter transition
+    const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
+      this.questionStep, this.revealStep, this.imageStep];
+
     const tl = gsap.timeline();
 
     tl.to(currentStepEl, {
       opacity: 0,
       scale: 0.97,
-      duration: 0.35,
-      ease: 'power2.inOut'
+      y: -8,
+      duration: 0.3,
+      ease: 'power2.inOut',
+      force3D: true
     });
 
     tl.call(() => {
-      // Remove active FIRST to prevent flash, then clear GSAP inline styles
-      currentStepEl.classList.remove('active');
-      gsap.set(currentStepEl, { clearProps: 'opacity,scale' });
+      // Force hide ALL steps - prevent any flash/leak
+      allSteps.forEach(step => {
+        step.classList.remove('active');
+        step.style.opacity = '0';
+        step.style.visibility = 'hidden';
+        step.style.pointerEvents = 'none';
+        step.style.zIndex = '0';
+        gsap.set(step, { clearProps: 'opacity,scale,y,transform' });
+        step.style.opacity = '0';
+        step.style.transform = 'translateY(8px) scale(0.995)';
+      });
+
+      // Force reflow before loading next chapter
+      void this.chapterScreen.offsetHeight;
+
       this.loadChapter(this.currentChapter + 1);
       this.isTransitioningChapter = false;
     });
@@ -1565,6 +1678,12 @@ class TwelveMonthsApp {
       return;
     }
 
+    // Check if this is a Heart Burst game
+    if (chapter.minigameType === 'heart_burst') {
+      this.startHeartBurstGame();
+      return;
+    }
+
     // Check if this is a Bubble Pop game
     if (chapter.minigameType === 'bubble_pop') {
       this.startBubblePopGame();
@@ -1582,7 +1701,7 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('heart-burst-grid', 'love-meter-grid', 'catch-falling-grid');
+    gameArea.classList.remove('heart-burst-grid', 'love-meter-grid', 'catch-falling-grid', 'bubble-pop-grid');
     gameArea.classList.add('memory-match-grid');
     this.gameCompleted = false;
     progressBar.style.width = '0%';
@@ -1652,22 +1771,31 @@ class TwelveMonthsApp {
     container.appendChild(grid);
     gameArea.appendChild(container);
 
-    // Entrance animation - staggered reveal with 3D perspective
+    // Entrance animation - smooth staggered reveal with 3D perspective
     setTimeout(() => {
       gsap.fromTo('.memory-card',
-        { opacity: 0, scale: 0.3, rotationY: 180, y: 20 },
+        { opacity: 0, scale: 0.2, rotationY: 180, y: 30 },
         {
           opacity: 1,
           scale: 1,
           rotationY: 0,
           y: 0,
-          duration: 0.5,
-          stagger: { each: 0.06, from: 'random' },
-          ease: 'back.out(1.7)',
+          duration: 0.6,
+          stagger: { each: 0.07, from: 'center' },
+          ease: 'back.out(1.5)',
           force3D: true,
           clearProps: 'y,rotation'
         }
       );
+
+      // Animate instruction text
+      const textEl = document.querySelector('.memory-match-text');
+      if (textEl) {
+        gsap.fromTo(textEl,
+          { opacity: 0, y: -10 },
+          { opacity: 1, y: 0, duration: 0.5, delay: 0.1, ease: 'power2.out' }
+        );
+      }
     }, 250);
   }
 
@@ -1713,20 +1841,29 @@ class TwelveMonthsApp {
       card1.classList.add('matched');
       card2.classList.add('matched');
 
-      // Match animation - satisfying bounce
-      gsap.to([card1, card2], {
-        scale: 1.15,
-        duration: 0.25,
-        yoyo: true,
-        repeat: 1,
-        ease: 'elastic.out(1, 0.3)',
+      // Match animation - satisfying bounce with glow
+      const matchTl = gsap.timeline();
+      matchTl.to([card1, card2], {
+        scale: 1.2,
+        duration: 0.2,
+        ease: 'power2.out',
+        force3D: true
+      });
+      matchTl.to([card1, card2], {
+        scale: 1,
+        duration: 0.4,
+        ease: 'elastic.out(1.2, 0.3)',
         force3D: true,
-        onComplete: () => gsap.set([card1, card2], { clearProps: 'scale' })
+        clearProps: 'scale'
       });
 
-      // Update progress
+      // Update progress with smooth animation
       const progress = (this.matchedPairs / this.totalPairs) * 100;
-      progressBar.style.width = `${progress}%`;
+      gsap.to(progressBar, {
+        width: `${progress}%`,
+        duration: 0.4,
+        ease: 'power2.out'
+      });
 
       this.flippedCards = [];
       this.memoryLocked = false;
@@ -1736,16 +1873,46 @@ class TwelveMonthsApp {
         progressBar.classList.add('completed');
 
         const textEl = document.querySelector('.memory-match-text');
-        if (textEl) textEl.textContent = 'Ghép xong rồi! 💕';
+        if (textEl) {
+          gsap.to(textEl, {
+            opacity: 0, duration: 0.15,
+            onComplete: () => {
+              textEl.textContent = 'Ghép xong rồi! 💕';
+              gsap.fromTo(textEl,
+                { opacity: 0, scale: 1.1 },
+                { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.5)' }
+              );
+            }
+          });
+        }
+
+        // Celebration: all matched cards do a little dance
+        setTimeout(() => {
+          const matchedCards = document.querySelectorAll('.memory-card.matched');
+          gsap.to(matchedCards, {
+            scale: 1.1,
+            duration: 0.2,
+            stagger: 0.05,
+            yoyo: true,
+            repeat: 1,
+            ease: 'power2.inOut'
+          });
+        }, 200);
 
         setTimeout(() => {
           this.gameCompleted = true;
           this.canAdvance = true;
           this.showReadyToAdvance('game');
-        }, 600);
+        }, 800);
       }
     } else {
-      // No match - flip back after delay
+      // No match - gentle shake then flip back
+      gsap.to([card1, card2], {
+        x: 4, duration: 0.08, yoyo: true, repeat: 3,
+        ease: 'power2.inOut',
+        onComplete: () => gsap.set([card1, card2], { clearProps: 'x' })
+      });
+
       setTimeout(() => {
         card1.classList.remove('flipped');
         card2.classList.remove('flipped');
@@ -1762,7 +1929,7 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid', 'love-tap-grid');
+    gameArea.classList.remove('memory-match-grid', 'love-meter-grid', 'catch-falling-grid', 'bubble-pop-grid');
     gameArea.classList.add('heart-burst-grid');
     this.gameCompleted = false;
     progressBar.style.width = '0%';
@@ -1896,7 +2063,7 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid');
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'catch-falling-grid', 'bubble-pop-grid');
     gameArea.classList.add('love-meter-grid');
     this.gameCompleted = false;
     progressBar.style.width = '0%';
@@ -1967,10 +2134,10 @@ class TwelveMonthsApp {
         currentTaps++;
         if (countEl) countEl.textContent = currentTaps;
 
-        // Instant pulse animation on tap
+        // Satisfying bounce animation on tap
         gsap.fromTo(heart,
-          { scale: 1.2 },
-          { scale: 1, duration: 0.1, ease: 'power2.out' }
+          { scale: 1.25 },
+          { scale: 1, duration: 0.2, ease: 'elastic.out(1.2, 0.4)' }
         );
 
         // Change emoji color and show milestone feedback
@@ -2067,15 +2234,15 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid');
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'bubble-pop-grid');
     gameArea.classList.add('catch-falling-grid');
     this.gameCompleted = false;
     this.gameCollected = 0;
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    const gameDuration = 10000; // 10 seconds game duration
-    const maxSpawns = 25;
+    const gameDuration = 12000; // 12 seconds for more enjoyable gameplay
+    const maxSpawns = 30;
 
     const container = document.createElement('div');
     container.className = 'catch-falling-container';
@@ -2093,28 +2260,37 @@ class TwelveMonthsApp {
       const scoreContainer = document.querySelector('.catch-falling-score');
       const fallingArea = document.querySelector('.catch-falling-area');
 
-      // Elegant text entrance
+      // Elegant text entrance with stagger
       gsap.fromTo(textEl,
-        { opacity: 0, y: -15, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.4)' }
+        { opacity: 0, y: -20, scale: 0.85 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(1.6)' }
       );
 
       gsap.fromTo(scoreContainer,
-        { opacity: 0, y: -10 },
-        { opacity: 1, y: 0, duration: 0.4, delay: 0.2, ease: 'power2.out' }
+        { opacity: 0, y: -10, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, delay: 0.25, ease: 'back.out(1.3)' }
       );
 
       // Smooth progress bar fills over game duration
       gsap.to(progressBar, {
         width: '100%',
         duration: gameDuration / 1000,
-        ease: 'power1.in'
+        ease: 'none'
       });
 
-      // Create particle burst on catch
+      // Milestone messages
+      const milestones = {
+        3: 'Giỏi lắm! 🌟',
+        6: 'Tuyệt vời! ✨',
+        10: 'Siêu sao! 💫',
+        15: 'Phi thường! 🎉',
+        20: 'Huyền thoại! 💕'
+      };
+
+      // Create beautiful particle burst on catch
       const createCatchBurst = (x, y) => {
-        const particles = ['✨', '💫', '🌟', '💗', '💖'];
-        const burstCount = 6;
+        const particles = ['✨', '💫', '🌟', '💗', '💖', '🩷'];
+        const burstCount = 8;
         for (let i = 0; i < burstCount; i++) {
           const particle = document.createElement('span');
           particle.className = 'catch-burst-particle';
@@ -2123,20 +2299,20 @@ class TwelveMonthsApp {
           particle.style.top = `${y}px`;
           fallingArea.appendChild(particle);
 
-          const angle = (i / burstCount) * Math.PI * 2 + (Math.random() * 0.5);
-          const distance = 35 + Math.random() * 30;
+          const angle = (i / burstCount) * Math.PI * 2 + (Math.random() * 0.3);
+          const distance = 40 + Math.random() * 35;
           const px = Math.cos(angle) * distance;
           const py = Math.sin(angle) * distance;
 
           gsap.fromTo(particle,
-            { opacity: 1, scale: 0.3, x: 0, y: 0 },
+            { opacity: 1, scale: 0.2, x: 0, y: 0 },
             {
               opacity: 0,
-              scale: 1.2,
+              scale: 1.4,
               x: px,
-              y: py,
-              duration: 0.5 + Math.random() * 0.2,
-              ease: 'power2.out',
+              y: py - 15, // Slight upward bias for elegance
+              duration: 0.6 + Math.random() * 0.3,
+              ease: 'power3.out',
               force3D: true,
               onComplete: () => particle.remove()
             }
@@ -2144,26 +2320,44 @@ class TwelveMonthsApp {
         }
       };
 
-      // Spawn falling hearts with improved effects
+      // Create a gentle glow ring effect on catch
+      const createGlowRing = (x, y) => {
+        const ring = document.createElement('div');
+        ring.className = 'catch-glow-ring';
+        ring.style.left = `${x}px`;
+        ring.style.top = `${y}px`;
+        fallingArea.appendChild(ring);
+
+        gsap.fromTo(ring,
+          { scale: 0.3, opacity: 0.8 },
+          {
+            scale: 2.5, opacity: 0,
+            duration: 0.6,
+            ease: 'power2.out',
+            onComplete: () => ring.remove()
+          }
+        );
+      };
+
+      // Spawn falling hearts with polished effects
       const spawnHeart = () => {
         if (this.gameCompleted) return;
 
         const heart = document.createElement('div');
         heart.className = 'falling-heart';
-        const emojis = ['💖', '💗', '💕', '❤️', '🩷'];
+        const emojis = ['💖', '💗', '💕', '❤️', '🩷', '💝'];
         heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
-        // Varied sizes for depth
-        const sizeScale = 0.7 + Math.random() * 0.6;
+        // Varied sizes for depth feel
+        const sizeScale = 0.75 + Math.random() * 0.5;
         heart.style.fontSize = `${2.8 * sizeScale}rem`;
-        heart.style.opacity = `${0.7 + sizeScale * 0.3}`;
 
-        // Get actual width, with better fallback
+        // Get actual width with better fallback
         const areaRect = fallingArea.getBoundingClientRect();
         const areaWidth = areaRect.width > 0 ? areaRect.width : (fallingArea.offsetWidth || 300);
 
-        // Ensure hearts spawn within visible area
-        const padding = 30;
+        // Ensure hearts spawn within visible area with good distribution
+        const padding = 35;
         const maxLeft = Math.max(padding, areaWidth - padding - 40);
         const startLeft = padding + Math.random() * (maxLeft - padding);
         heart.style.left = `${startLeft}px`;
@@ -2171,54 +2365,56 @@ class TwelveMonthsApp {
 
         fallingArea.appendChild(heart);
 
-        // Fall with gentle sway - using timeline for combined effects
-        const fallDuration = 2.5 + Math.random() * 2;
+        // Smoother fall with gentle sway
+        const fallDuration = 3.0 + Math.random() * 2.0;
         const areaHeight = fallingArea.offsetHeight || 300;
-        const swayAmount = 20 + Math.random() * 30;
+        const swayAmount = 15 + Math.random() * 25;
         const swayDirection = Math.random() > 0.5 ? 1 : -1;
 
-        // Main fall animation
+        // Main fall timeline
         const fallTl = gsap.timeline();
 
-        // Gentle entrance
+        // Gentle pop-in entrance
         fallTl.fromTo(heart,
-          { scale: 0.3, rotation: -15 * swayDirection },
-          { scale: sizeScale, rotation: 0, duration: 0.3, ease: 'back.out(1.5)' }
+          { scale: 0, rotation: -10 * swayDirection, opacity: 0 },
+          { scale: sizeScale, rotation: 0, opacity: 1, duration: 0.35, ease: 'back.out(2)' }
         );
 
-        // Fall with easing (slower at start, natural gravity feel)
+        // Smooth fall with natural gravity (starts slow, accelerates gently)
         fallTl.to(heart, {
-          y: areaHeight + 50,
+          y: areaHeight + 60,
           duration: fallDuration,
           ease: 'power1.in',
           force3D: true,
           onComplete: () => {
             if (!heart.classList.contains('caught')) {
-              // Fade out missed hearts
+              // Graceful fade out for missed hearts
               gsap.to(heart, {
                 opacity: 0,
-                scale: 0.5,
-                duration: 0.2,
+                scale: 0.3,
+                y: '+=10',
+                duration: 0.3,
+                ease: 'power2.in',
                 onComplete: () => heart.remove()
               });
             }
           }
-        }, 0.15);
+        }, 0.2);
 
-        // Sinusoidal sway while falling
+        // Smooth sinusoidal sway while falling
         gsap.to(heart, {
           x: swayAmount * swayDirection,
-          duration: 0.8 + Math.random() * 0.4,
-          repeat: Math.ceil(fallDuration / 0.8),
+          duration: 1.0 + Math.random() * 0.5,
+          repeat: Math.ceil(fallDuration / 1.0),
           yoyo: true,
           ease: 'sine.inOut',
           force3D: true
         });
 
-        // Gentle rotation while falling
+        // Very gentle rotation (not jarring)
         gsap.to(heart, {
-          rotation: 15 * swayDirection,
-          duration: 1.2,
+          rotation: 10 * swayDirection,
+          duration: 1.5,
           repeat: -1,
           yoyo: true,
           ease: 'sine.inOut'
@@ -2233,32 +2429,47 @@ class TwelveMonthsApp {
           heart.classList.add('caught');
           this.gameCollected++;
 
-          // Update score with pulse animation
+          // Update score with elastic pulse
           if (scoreEl) {
             scoreEl.textContent = this.gameCollected;
             gsap.fromTo(scoreEl,
-              { scale: 1.5, color: '#FF4D6D' },
-              { scale: 1, color: 'inherit', duration: 0.3, ease: 'elastic.out(1, 0.4)' }
+              { scale: 1.8, color: '#FF4D6D' },
+              { scale: 1, color: 'inherit', duration: 0.4, ease: 'elastic.out(1.2, 0.4)' }
             );
           }
 
-          // Get heart position for burst
+          // Show milestone messages
+          if (milestones[this.gameCollected]) {
+            gsap.to(textEl, {
+              opacity: 0, duration: 0.15,
+              onComplete: () => {
+                textEl.textContent = milestones[this.gameCollected];
+                gsap.fromTo(textEl,
+                  { opacity: 0, scale: 1.1 },
+                  { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.5)' }
+                );
+              }
+            });
+          }
+
+          // Get heart position for burst effects
           const heartRect = heart.getBoundingClientRect();
           const areaR = fallingArea.getBoundingClientRect();
           const burstX = heartRect.left - areaR.left + heartRect.width / 2;
           const burstY = heartRect.top - areaR.top + heartRect.height / 2;
 
-          // Create particle burst at catch position
+          // Particle burst + glow ring
           createCatchBurst(burstX, burstY);
+          createGlowRing(burstX, burstY);
 
           // Kill all animations and play catch effect
           gsap.killTweensOf(heart);
           gsap.to(heart, {
-            scale: 2,
+            scale: 1.8,
             opacity: 0,
-            y: '-=50',
-            rotation: 360,
-            duration: 0.4,
+            y: '-=40',
+            rotation: 180,
+            duration: 0.35,
             ease: 'power3.out',
             force3D: true,
             onComplete: () => heart.remove()
@@ -2271,14 +2482,15 @@ class TwelveMonthsApp {
         heart.addEventListener('pointerdown', handleCatch);
       };
 
-      // Spawn hearts at intervals — start slow, then faster
+      // Spawn hearts at intervals - smooth acceleration
       let spawnCount = 0;
-      const baseInterval = 500;
+      const baseInterval = 550;
       const scheduleNextSpawn = () => {
         if (this.gameCompleted || spawnCount >= maxSpawns) return;
 
-        // Gradually spawn faster as game progresses
-        const speedUp = Math.max(250, baseInterval - spawnCount * 10);
+        // Gradually spawn faster as game progresses (smoother curve)
+        const progress = spawnCount / maxSpawns;
+        const speedUp = Math.max(200, baseInterval * (1 - progress * 0.6));
         this.catchFallingInterval = setTimeout(() => {
           spawnHeart();
           spawnCount++;
@@ -2286,13 +2498,14 @@ class TwelveMonthsApp {
         }, speedUp);
       };
 
-      // Initial spawns
+      // Staggered initial spawns for smooth start
       spawnHeart();
-      setTimeout(() => spawnHeart(), 200);
-      spawnCount = 2;
+      setTimeout(() => spawnHeart(), 300);
+      setTimeout(() => spawnHeart(), 700);
+      spawnCount = 3;
       scheduleNextSpawn();
 
-      // End game after duration - celebration
+      // End game after duration - celebration sequence
       setTimeout(() => {
         if (this.gameCompleted) return;
 
@@ -2302,39 +2515,57 @@ class TwelveMonthsApp {
         }
         progressBar.classList.add('completed');
 
-        // Celebration with cascading hearts
-        const celebrationEmojis = ['💖', '💗', '💕', '🎉', '✨', '🌟'];
-        for (let i = 0; i < 8; i++) {
+        // Clean up any remaining falling hearts gracefully
+        const remainingHearts = fallingArea.querySelectorAll('.falling-heart:not(.caught)');
+        remainingHearts.forEach((h, i) => {
+          gsap.to(h, {
+            opacity: 0, scale: 0.3, duration: 0.3, delay: i * 0.05,
+            onComplete: () => h.remove()
+          });
+        });
+
+        // Celebration burst sequence
+        for (let i = 0; i < 10; i++) {
           setTimeout(() => {
             const areaRect = fallingArea.getBoundingClientRect();
-            const x = Math.random() * (areaRect.width || 300);
-            const y = Math.random() * (areaRect.height || 300) * 0.6;
+            const x = 30 + Math.random() * ((areaRect.width || 300) - 60);
+            const y = 30 + Math.random() * ((areaRect.height || 300) * 0.5);
             createCatchBurst(x, y);
-          }, i * 100);
+          }, i * 120);
         }
 
-        // Friendly message with animation
+        // Animated result message
         gsap.to(textEl, {
           opacity: 0,
           y: -10,
-          duration: 0.2,
+          duration: 0.25,
           onComplete: () => {
-            if (this.gameCollected > 0) {
+            if (this.gameCollected > 15) {
+              textEl.textContent = `Xuất sắc! Bắt được ${this.gameCollected} trái tim! 🌟💕`;
+            } else if (this.gameCollected > 0) {
               textEl.textContent = `Tuyệt vời! Bắt được ${this.gameCollected} trái tim! 💕`;
             } else {
               textEl.textContent = `Xong rồi! 💕`;
             }
             gsap.fromTo(textEl,
-              { opacity: 0, y: 10, scale: 0.9 },
-              { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.5)' }
+              { opacity: 0, y: 15, scale: 0.85 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.7)' }
             );
           }
         });
 
+        // Animate score count up effect
+        if (scoreEl && this.gameCollected > 0) {
+          gsap.fromTo(scoreEl,
+            { scale: 1 },
+            { scale: 1.3, duration: 0.3, yoyo: true, repeat: 1, ease: 'power2.inOut' }
+          );
+        }
+
         setTimeout(() => {
           this.canAdvance = true;
           this.showReadyToAdvance('game');
-        }, 800);
+        }, 1000);
       }, gameDuration);
     }, 250);
   }
@@ -2348,6 +2579,7 @@ class TwelveMonthsApp {
     gameArea.innerHTML = '';
     gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid');
     gameArea.classList.add('bubble-pop-grid');
+    this.gameCollected = 0;
     this.gameCompleted = false;
     this.gameCollected = 0;
     progressBar.style.width = '0%';
@@ -2459,20 +2691,29 @@ class TwelveMonthsApp {
           // Update score immediately
           if (scoreEl) scoreEl.textContent = this.gameCollected;
 
-          // Instant visual feedback + pop animation
+          // Instant visual feedback + satisfying pop animation
           gsap.killTweensOf(bubble);
 
           // Create mini burst particles
           this.createBubbleBurst(bubble, bubbleArea);
 
+          // Pop effect - quick expand then vanish
           gsap.to(bubble, {
-            scale: 2,
+            scale: 1.8,
             opacity: 0,
-            duration: 0.2,
-            ease: 'power2.out',
+            duration: 0.25,
+            ease: 'power3.out',
             force3D: true,
             onComplete: () => bubble.remove()
           });
+
+          // Pulse the score
+          if (scoreEl) {
+            gsap.fromTo(scoreEl,
+              { scale: 1.4 },
+              { scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.4)' }
+            );
+          }
         };
 
         // Multiple event types for best mobile responsiveness
@@ -2563,7 +2804,7 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid');
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid', 'bubble-pop-grid');
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
@@ -2578,18 +2819,18 @@ class TwelveMonthsApp {
 
     gameArea.appendChild(greetingContainer);
 
-    // Wait for CSS transition then animate greeting
+    // Wait for DOM ready then animate greeting
     setTimeout(() => {
-      // Smooth text entrance
+      // Smooth text entrance with more polish
       gsap.fromTo('.greeting-text',
-        { opacity: 0, y: 25, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'power3.out', force3D: true }
+        { opacity: 0, y: 30, scale: 0.85 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.4)', force3D: true }
       );
 
-      // Emoji entrance with bounce
+      // Emoji entrance with satisfying bounce
       gsap.fromTo('.greeting-emoji',
-        { opacity: 0, scale: 0.3, rotation: -30 },
-        { opacity: 1, scale: 1, rotation: 0, duration: 0.6, delay: 0.4, ease: 'back.out(2)', force3D: true }
+        { opacity: 0, scale: 0.2, rotation: -20 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 0.7, delay: 0.4, ease: 'back.out(2.2)', force3D: true }
       );
 
       // Gentle waving animation
@@ -2678,7 +2919,7 @@ class TwelveMonthsApp {
     const progressBar = document.querySelector('.game-step .progress-bar');
 
     gameArea.innerHTML = '';
-    gameArea.classList.remove('memory-match-grid');
+    gameArea.classList.remove('memory-match-grid', 'heart-burst-grid', 'love-meter-grid', 'catch-falling-grid', 'bubble-pop-grid');
 
     // Create simple greeting container
     const greetingContainer = document.createElement('div');
@@ -2886,14 +3127,21 @@ class TwelveMonthsApp {
   // ===== Ending Experience =====
   showEnding() {
     // Dramatic transition to ending screen - fade + scale down current view
+    const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
+      this.questionStep, this.revealStep, this.imageStep];
+
+    // Find the currently active step
+    const currentStepEl = allSteps.find(s => s.classList.contains('active')) || this.imageStep;
+
     const tl = gsap.timeline();
 
-    // Fade out current image step
-    tl.to(this.imageStep, {
+    // Fade out current step
+    tl.to(currentStepEl, {
       opacity: 0,
       scale: 0.95,
       duration: 0.5,
-      ease: 'power2.inOut'
+      ease: 'power2.inOut',
+      force3D: true
     });
 
     // Fade out progress indicator
@@ -2904,7 +3152,17 @@ class TwelveMonthsApp {
     }, '-=0.3');
 
     tl.call(() => {
-      gsap.set(this.imageStep, { clearProps: 'opacity,scale' });
+      // Hide ALL steps to prevent any leaking
+      allSteps.forEach(step => {
+        step.classList.remove('active');
+        step.style.opacity = '0';
+        step.style.visibility = 'hidden';
+        step.style.pointerEvents = 'none';
+        step.style.zIndex = '0';
+        gsap.set(step, { clearProps: 'opacity,scale,y,transform' });
+        step.style.opacity = '0';
+      });
+
       this.chapterScreen.classList.remove('active');
       this.progressContainer.classList.remove('visible');
       gsap.set(this.progressContainer, { clearProps: 'opacity' });
