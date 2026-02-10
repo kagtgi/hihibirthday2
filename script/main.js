@@ -1449,7 +1449,8 @@ class TwelveMonthsApp {
     });
 
     tl.call(() => {
-      // Clear GSAP inline styles - let CSS handle visibility via classes
+      // Remove active FIRST to prevent flash, then clear GSAP inline styles
+      this.imageStep.classList.remove('active');
       gsap.set(this.imageStep, { clearProps: 'opacity,scale' });
       this.loadChapter(this.currentChapter + 1);
       this.isTransitioningChapter = false;
