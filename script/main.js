@@ -629,13 +629,21 @@ class TwelveMonthsApp {
     // Check if it's animate type or question type
     const isAnimateType = chapter.minigameType === 'animate' || !chapter.question || chapter.question === '';
 
+    // Check if chapter has valid images
+    const hasValidImages = (chapter.image || []).some(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+    });
+
     if (isAnimateType) {
       // Animate type: show quote animation
       if (chapter.text && chapter.text !== '') {
         this.stepSequence.push('quote');
       }
-      // Show note if exists
+      // Show note if exists (or caption when no images)
       if (chapter.myNote && chapter.myNote !== '') {
+        this.stepSequence.push('note');
+      } else if (!hasValidImages && chapter.caption && chapter.caption !== '') {
         this.stepSequence.push('note');
       }
     } else {
@@ -643,14 +651,18 @@ class TwelveMonthsApp {
       this.stepSequence.push('game');
       this.stepSequence.push('question');
       this.stepSequence.push('reveal');
-      // Show note if exists
+      // Show note if exists (or caption when no images)
       if (chapter.myNote && chapter.myNote !== '') {
+        this.stepSequence.push('note');
+      } else if (!hasValidImages && chapter.caption && chapter.caption !== '') {
         this.stepSequence.push('note');
       }
     }
 
-    // Always end with image
-    this.stepSequence.push('image');
+    // Only add image step if chapter has valid images
+    if (hasValidImages) {
+      this.stepSequence.push('image');
+    }
   }
 
   updateTheme(monthStr) {
@@ -685,8 +697,18 @@ class TwelveMonthsApp {
     // Quote
     setText('.quote-text', chapter.text || '');
 
-    // Note
-    setText('.note-text', chapter.myNote || '');
+    // Note - merge caption into note when chapter has no valid images
+    const hasValidImages = (chapter.image || []).some(img => {
+      const ext = img.toLowerCase().split('.').pop();
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+    });
+
+    if (!hasValidImages && chapter.caption) {
+      const noteText = [chapter.myNote, chapter.caption].filter(t => t && t !== '').join('\n\n');
+      setText('.note-text', noteText);
+    } else {
+      setText('.note-text', chapter.myNote || '');
+    }
 
     // Game text and hint - dynamic based on game type
     setText('.game-text', chapter.text || this.getGameText(chapter.minigameType));
@@ -1084,21 +1106,22 @@ class TwelveMonthsApp {
     const stepName = this.stepSequence[stepIndex];
     const stepElement = this.getStepElement(stepName);
 
-    // Simple transition: remove all active, add to new step
-    // Let CSS handle all animations smoothly
+    // Remove tap hints from all steps
     allSteps.forEach(step => {
-      step.classList.remove('active');
       const hint = step.querySelector('.tap-hint');
       if (hint) hint.remove();
     });
 
-    // Double-rAF ensures the outgoing step's display:none is fully processed
-    // before the incoming step begins, preventing layout thrashing
-    requestAnimationFrame(() => {
+    // Find currently active step to animate out first
+    const currentActive = allSteps.find(s => s.classList.contains('active'));
+
+    const enterNewStep = () => {
+      // Ensure all steps are hidden
+      allSteps.forEach(step => step.classList.remove('active'));
+
       requestAnimationFrame(() => {
         if (stepElement) {
           stepElement.classList.add('active');
-          // Animate child elements after CSS transition starts
           this.animateStepEntrance(stepName, stepElement);
         }
 
@@ -1118,7 +1141,24 @@ class TwelveMonthsApp {
           this.resetGalleryAnimation();
         }
       });
-    });
+    };
+
+    if (currentActive && currentActive !== stepElement) {
+      // Fade out current step completely, THEN enter new step
+      gsap.to(currentActive, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+        onComplete: () => {
+          currentActive.classList.remove('active');
+          gsap.set(currentActive, { clearProps: 'opacity' });
+          enterNewStep();
+        }
+      });
+    } else {
+      // No current active step (first step of chapter), enter directly
+      enterNewStep();
+    }
   }
 
   setupStepTiming(stepName) {
@@ -1365,12 +1405,17 @@ class TwelveMonthsApp {
   advanceStep() {
     // Prevent double advance with debounce
     if (this.isAdvancing) return;
-    if (this.currentStep >= this.stepSequence.length - 1) return;
 
     // Check if we can advance (prevents skipping before content is viewed)
     const currentStepName = this.stepSequence[this.currentStep];
     if (!this.canAdvance) {
       this.showWaitIndicator();
+      return;
+    }
+
+    // If at the last step, advance to next chapter
+    if (this.currentStep >= this.stepSequence.length - 1) {
+      this.nextChapter();
       return;
     }
 
@@ -1438,10 +1483,13 @@ class TwelveMonthsApp {
     if (this.isTransitioningChapter) return;
     this.isTransitioningChapter = true;
 
-    // Smooth chapter transition with gentle fade + scale
+    // Animate the currently active step out (not always imageStep)
+    const currentStepName = this.stepSequence[this.currentStep];
+    const currentStepEl = this.getStepElement(currentStepName);
+
     const tl = gsap.timeline();
 
-    tl.to(this.imageStep, {
+    tl.to(currentStepEl, {
       opacity: 0,
       scale: 0.97,
       duration: 0.35,
@@ -1450,8 +1498,8 @@ class TwelveMonthsApp {
 
     tl.call(() => {
       // Remove active FIRST to prevent flash, then clear GSAP inline styles
-      this.imageStep.classList.remove('active');
-      gsap.set(this.imageStep, { clearProps: 'opacity,scale' });
+      currentStepEl.classList.remove('active');
+      gsap.set(currentStepEl, { clearProps: 'opacity,scale' });
       this.loadChapter(this.currentChapter + 1);
       this.isTransitioningChapter = false;
     });
