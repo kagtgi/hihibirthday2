@@ -486,13 +486,15 @@ class TwelveMonthsApp {
             x: '-102%',
             scaleX: 0.85,
             duration: 1.8,
-            ease: 'power2.inOut'
+            ease: 'power2.inOut',
+            force3D: true
           }, 0.2);
           curtainTl.to(curtainRight, {
             x: '102%',
             scaleX: 0.85,
             duration: 1.8,
-            ease: 'power2.inOut'
+            ease: 'power2.inOut',
+            force3D: true
           }, 0.2);
 
           // Subtle sway at the end - fabric settling
@@ -1002,7 +1004,7 @@ class TwelveMonthsApp {
     if (!container) return;
 
     const offset = -this.currentGalleryIndex * 100;
-    container.style.transform = `translateX(${offset}%)`;
+    container.style.transform = `translate3d(${offset}%, 0, 0)`;
   }
 
   selectAnswer(btn, selectedKey, correctKey, chapter) {
@@ -1090,29 +1092,32 @@ class TwelveMonthsApp {
       if (hint) hint.remove();
     });
 
-    // Small delay for CSS transition to complete on outgoing step
+    // Double-rAF ensures the outgoing step's display:none is fully processed
+    // before the incoming step begins, preventing layout thrashing
     requestAnimationFrame(() => {
-      if (stepElement) {
-        stepElement.classList.add('active');
-        // Animate child elements after CSS transition starts
-        this.animateStepEntrance(stepName, stepElement);
-      }
+      requestAnimationFrame(() => {
+        if (stepElement) {
+          stepElement.classList.add('active');
+          // Animate child elements after CSS transition starts
+          this.animateStepEntrance(stepName, stepElement);
+        }
 
-      // Set up advance timing based on step type
-      this.setupStepTiming(stepName);
+        // Set up advance timing based on step type
+        this.setupStepTiming(stepName);
 
-      // Special handling
-      if (stepName === 'game') {
-        this.startGame();
-      }
+        // Special handling
+        if (stepName === 'game') {
+          this.startGame();
+        }
 
-      if (stepName === 'quote') {
-        this.animateQuote();
-      }
+        if (stepName === 'quote') {
+          this.animateQuote();
+        }
 
-      if (stepName === 'image') {
-        this.resetGalleryAnimation();
-      }
+        if (stepName === 'image') {
+          this.resetGalleryAnimation();
+        }
+      });
     });
   }
 
@@ -1317,7 +1322,9 @@ class TwelveMonthsApp {
     const minReadTime = Math.max(2500, charCount * 50);
 
     // Smoother character animation with subtle Y transform for each char
-    gsap.fromTo('.quote-char',
+    // Use batch: true for better performance with many elements
+    const chars = document.querySelectorAll('.quote-char');
+    gsap.fromTo(chars,
       { opacity: 0, y: 4 },
       {
         opacity: 1,
@@ -1327,6 +1334,8 @@ class TwelveMonthsApp {
         ease: 'power2.out',
         force3D: true,
         onComplete: () => {
+          // Clean up will-change from all chars to free GPU memory
+          chars.forEach(c => c.style.willChange = 'auto');
           // After animation completes, wait for reading time then allow advance
           setTimeout(() => {
             this.canAdvance = true;
@@ -1340,11 +1349,16 @@ class TwelveMonthsApp {
 
   resetGalleryAnimation() {
     const images = document.querySelectorAll('.gallery-image');
+    // Remove animation in one frame, re-apply in next frame (avoids forced reflow)
     images.forEach(img => {
       img.style.animation = 'none';
-      // Force reflow for instant animation reset
-      img.offsetHeight;
-      img.style.animation = 'slowZoom 8s ease-in-out forwards';
+    });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        images.forEach(img => {
+          img.style.animation = 'slowZoom 8s ease-in-out forwards';
+        });
+      });
     });
   }
 
@@ -1573,7 +1587,8 @@ class TwelveMonthsApp {
           rotationY: 0,
           duration: 0.4,
           stagger: 0.08,
-          ease: 'back.out(1.4)'
+          ease: 'back.out(1.4)',
+          force3D: true
         }
       );
     }, 250);
@@ -2028,12 +2043,14 @@ class TwelveMonthsApp {
 
         fallingArea.appendChild(heart);
 
-        // Fall animation - slightly slower for easier catching
+        // Fall animation using y transform (GPU-accelerated) instead of top
         const fallDuration = 3 + Math.random() * 1.5;
+        const areaHeight = fallingArea.offsetHeight || 300;
         gsap.to(heart, {
-          top: '100%',
+          y: areaHeight + 40,
           duration: fallDuration,
           ease: 'none',
+          force3D: true,
           onComplete: () => {
             if (!heart.classList.contains('caught')) {
               heart.remove();
@@ -2058,9 +2075,10 @@ class TwelveMonthsApp {
           gsap.to(heart, {
             scale: 1.6,
             opacity: 0,
-            y: -40,
+            y: '-=40',
             duration: 0.25,
             ease: 'power2.out',
+            force3D: true,
             onComplete: () => heart.remove()
           });
         };
@@ -2180,30 +2198,27 @@ class TwelveMonthsApp {
         // Random size variation
         const scale = 0.8 + Math.random() * 0.6;
 
-        // Entrance animation
+        // Entrance animation, then start combined float loop
         gsap.fromTo(bubble,
           { opacity: 0, scale: 0 },
-          { opacity: 1, scale: scale, duration: 0.3, ease: 'back.out(1.5)' }
+          {
+            opacity: 1, scale: scale, duration: 0.3, ease: 'back.out(1.5)',
+            force3D: true,
+            onComplete: () => {
+              // Combined floating + pulsing in single tween for better perf
+              gsap.to(bubble, {
+                y: '+=15',
+                x: '+=' + (Math.random() * 10 - 5),
+                scale: scale * 1.15,
+                duration: 1.2 + Math.random() * 0.8,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut',
+                force3D: true
+              });
+            }
+          }
         );
-
-        // Floating animation - gentle bobbing
-        gsap.to(bubble, {
-          y: '+=15',
-          x: '+=' + (Math.random() * 10 - 5),
-          duration: 1.5 + Math.random() * 1,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut'
-        });
-
-        // Pulsing animation
-        gsap.to(bubble, {
-          scale: scale * 1.15,
-          duration: 0.8 + Math.random() * 0.4,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut'
-        });
 
         // Auto-remove after some time if not popped
         const autoRemoveTimer = setTimeout(() => {
@@ -2241,6 +2256,7 @@ class TwelveMonthsApp {
             opacity: 0,
             duration: 0.2,
             ease: 'power2.out',
+            force3D: true,
             onComplete: () => bubble.remove()
           });
         };
@@ -2629,34 +2645,25 @@ class TwelveMonthsApp {
       }
     });
 
-    // Entry animation
+    // Entry animation, then start float loop
     gsap.from(element, {
       scale: 0,
       rotation: -90,
       duration: 0.35,
       ease: 'back.out(1.4)',
-      force3D: true
-    });
-
-    // Floating animation
-    gsap.to(element, {
-      y: '+=10',
-      duration: 1.4 + Math.random() * 0.4,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: Math.random() * 0.3,
-      force3D: true
-    });
-
-    // Subtle rotation animation
-    gsap.to(element, {
-      rotation: '+=6',
-      duration: 2.2 + Math.random() * 0.6,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      force3D: true
+      force3D: true,
+      onComplete: () => {
+        // Combined floating + rotation in single tween for better perf
+        gsap.to(element, {
+          y: '+=10',
+          rotation: '+=6',
+          duration: 1.4 + Math.random() * 0.4,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+          force3D: true
+        });
+      }
     });
 
     gameArea.appendChild(element);
@@ -2724,7 +2731,8 @@ class TwelveMonthsApp {
     });
 
     // Dramatic collage entrance with cascading reveal
-    gsap.to('.collage-img', {
+    const collageImgs = document.querySelectorAll('.collage-img');
+    gsap.to(collageImgs, {
       opacity: 1,
       scale: 1,
       duration: 0.4,
@@ -2734,7 +2742,11 @@ class TwelveMonthsApp {
       },
       delay: 0.3,
       ease: 'back.out(1.2)',
-      force3D: true
+      force3D: true,
+      onComplete: () => {
+        // Release GPU layers after entrance animation
+        collageImgs.forEach(img => img.style.willChange = 'auto');
+      }
     });
 
     // Elegant ending content entrance
