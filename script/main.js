@@ -784,12 +784,8 @@ class TwelveMonthsApp {
 
     // Handle case where no valid images exist
     if (validImages.length === 0) {
-      const emptyMessage = document.createElement('div');
-      emptyMessage.className = 'gallery-image-wrapper';
-      emptyMessage.innerHTML = '<div class="image-skeleton image-error"><span class="error-icon">😢</span><span class="error-text">Không có ảnh</span></div>';
-      container.appendChild(emptyMessage);
-      this.galleryImageLoaded = [true];
-      this.updateGalleryNav(0);
+      container.innerHTML = '';
+      this.galleryImageLoaded = [];
       return;
     }
 
@@ -1101,7 +1097,7 @@ class TwelveMonthsApp {
 
   showStep(stepIndex) {
     const allSteps = [this.titleCard, this.quoteStep, this.noteStep, this.gameStep,
-      this.questionStep, this.revealStep, this.imageStep];
+    this.questionStep, this.revealStep, this.imageStep];
 
     const stepName = this.stepSequence[stepIndex];
     const stepElement = this.getStepElement(stepName);
@@ -1116,11 +1112,16 @@ class TwelveMonthsApp {
     const currentActive = allSteps.find(s => s.classList.contains('active'));
 
     const enterNewStep = () => {
-      // Ensure all steps are hidden
-      allSteps.forEach(step => step.classList.remove('active'));
+      // Ensure all steps are hidden and pushed behind
+      allSteps.forEach(step => {
+        step.classList.remove('active');
+        step.style.zIndex = '0';
+      });
 
       requestAnimationFrame(() => {
         if (stepElement) {
+          // Ensure new step is on top before making visible
+          stepElement.style.zIndex = '5';
           stepElement.classList.add('active');
           this.animateStepEntrance(stepName, stepElement);
         }
@@ -1151,6 +1152,7 @@ class TwelveMonthsApp {
         ease: 'power2.in',
         onComplete: () => {
           currentActive.classList.remove('active');
+          currentActive.style.zIndex = '0';
           gsap.set(currentActive, { clearProps: 'opacity' });
           enterNewStep();
         }
@@ -1200,8 +1202,8 @@ class TwelveMonthsApp {
 
       // Detect if touch device
       const isTouchDevice = ('ontouchstart' in window) ||
-                            (navigator.maxTouchPoints > 0) ||
-                            (window.matchMedia('(pointer: coarse)').matches);
+        (navigator.maxTouchPoints > 0) ||
+        (window.matchMedia('(pointer: coarse)').matches);
 
       hintText.textContent = isTouchDevice ? 'Chạm để tiếp tục' : 'Nhấn Enter để tiếp tục';
       hint.appendChild(hintText);
@@ -1241,13 +1243,17 @@ class TwelveMonthsApp {
         const month = stepElement.querySelector('.chapter-month');
         if (num) {
           gsap.fromTo(num, { opacity: 0, scale: 0.8 },
-            { opacity: 0.1, scale: 1, duration: 0.6, ease: 'power2.out', force3D: true,
-              clearProps: 'scale,force3D' });
+            {
+              opacity: 0.1, scale: 1, duration: 0.6, ease: 'power2.out', force3D: true,
+              clearProps: 'scale,force3D'
+            });
         }
         if (month) {
           gsap.fromTo(month, { opacity: 0, y: 15 },
-            { opacity: 1, y: 0, duration: 0.5, delay: 0.15, ease: 'power3.out', force3D: true,
-              clearProps: 'y,force3D' });
+            {
+              opacity: 1, y: 0, duration: 0.5, delay: 0.15, ease: 'power3.out', force3D: true,
+              clearProps: 'y,force3D'
+            });
         }
         break;
       }
@@ -1255,14 +1261,18 @@ class TwelveMonthsApp {
         const container = stepElement.querySelector('.note-container');
         if (container) {
           gsap.fromTo(container, { opacity: 0, y: 20, scale: 0.97 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out', force3D: true,
-              clearProps: 'transform,force3D' });
+            {
+              opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D'
+            });
         }
         const icon = stepElement.querySelector('.note-icon');
         if (icon) {
           gsap.fromTo(icon, { opacity: 0, scale: 0.5, rotation: -15 },
-            { opacity: 1, scale: 1, rotation: 0, duration: 0.4, delay: 0.2, ease: 'back.out(1.5)', force3D: true,
-              clearProps: 'transform,force3D' });
+            {
+              opacity: 1, scale: 1, rotation: 0, duration: 0.4, delay: 0.2, ease: 'back.out(1.5)', force3D: true,
+              clearProps: 'transform,force3D'
+            });
         }
         break;
       }
@@ -1273,23 +1283,31 @@ class TwelveMonthsApp {
         const myChoice = stepElement.querySelector('.my-choice');
         if (title) {
           gsap.fromTo(title, { opacity: 0, y: 12 },
-            { opacity: 0.8, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
-              clearProps: 'y,force3D' });
+            {
+              opacity: 0.8, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
+              clearProps: 'y,force3D'
+            });
         }
         if (herChoice) {
           gsap.fromTo(herChoice, { opacity: 0, x: -20, scale: 0.95 },
-            { opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.15, ease: 'power3.out', force3D: true,
-              clearProps: 'transform,force3D' });
+            {
+              opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.15, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D'
+            });
         }
         if (heartsIcon) {
           gsap.fromTo(heartsIcon, { opacity: 0, scale: 0.3 },
-            { opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: 'back.out(1.7)', force3D: true,
-              clearProps: 'transform,force3D' });
+            {
+              opacity: 1, scale: 1, duration: 0.4, delay: 0.3, ease: 'back.out(1.7)', force3D: true,
+              clearProps: 'transform,force3D'
+            });
         }
         if (myChoice) {
           gsap.fromTo(myChoice, { opacity: 0, x: 20, scale: 0.95 },
-            { opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.25, ease: 'power3.out', force3D: true,
-              clearProps: 'transform,force3D' });
+            {
+              opacity: 1, x: 0, scale: 1, duration: 0.45, delay: 0.25, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D'
+            });
         }
         break;
       }
@@ -1297,14 +1315,18 @@ class TwelveMonthsApp {
         const qText = stepElement.querySelector('.question-text');
         if (qText) {
           gsap.fromTo(qText, { opacity: 0, y: 12 },
-            { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
-              clearProps: 'y,force3D' });
+            {
+              opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', force3D: true,
+              clearProps: 'y,force3D'
+            });
         }
         const buttons = stepElement.querySelectorAll('.answer-btn');
         if (buttons.length > 0) {
           gsap.fromTo(buttons, { opacity: 0, y: 15, scale: 0.95 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.35, stagger: 0.08, delay: 0.15, ease: 'power3.out', force3D: true,
-              clearProps: 'transform,force3D' });
+            {
+              opacity: 1, y: 0, scale: 1, duration: 0.35, stagger: 0.08, delay: 0.15, ease: 'power3.out', force3D: true,
+              clearProps: 'transform,force3D'
+            });
         }
         break;
       }
@@ -1312,14 +1334,18 @@ class TwelveMonthsApp {
         const gallery = stepElement.querySelector('.image-gallery');
         if (gallery) {
           gsap.fromTo(gallery, { opacity: 0, y: 12 },
-            { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', force3D: true,
-              clearProps: 'y,force3D' });
+            {
+              opacity: 1, y: 0, duration: 0.45, ease: 'power2.out', force3D: true,
+              clearProps: 'y,force3D'
+            });
         }
         const caption = stepElement.querySelector('.image-caption');
         if (caption) {
           gsap.fromTo(caption, { opacity: 0 },
-            { opacity: 1, duration: 0.4, delay: 0.2, ease: 'power2.out',
-              clearProps: 'opacity' });
+            {
+              opacity: 1, duration: 0.4, delay: 0.2, ease: 'power2.out',
+              clearProps: 'opacity'
+            });
         }
         break;
       }
@@ -1443,9 +1469,9 @@ class TwelveMonthsApp {
       this.greetingHeartInterval = null;
     }
 
-    // Clear catch falling interval
+    // Clear catch falling timeout (now uses setTimeout chain)
     if (this.catchFallingInterval) {
-      clearInterval(this.catchFallingInterval);
+      clearTimeout(this.catchFallingInterval);
       this.catchFallingInterval = null;
     }
 
@@ -1626,18 +1652,20 @@ class TwelveMonthsApp {
     container.appendChild(grid);
     gameArea.appendChild(container);
 
-    // Entrance animation
+    // Entrance animation - staggered reveal with 3D perspective
     setTimeout(() => {
       gsap.fromTo('.memory-card',
-        { opacity: 0, scale: 0.5, rotationY: 180 },
+        { opacity: 0, scale: 0.3, rotationY: 180, y: 20 },
         {
           opacity: 1,
           scale: 1,
           rotationY: 0,
-          duration: 0.4,
-          stagger: 0.08,
-          ease: 'back.out(1.4)',
-          force3D: true
+          y: 0,
+          duration: 0.5,
+          stagger: { each: 0.06, from: 'random' },
+          ease: 'back.out(1.7)',
+          force3D: true,
+          clearProps: 'y,rotation'
         }
       );
     }, 250);
@@ -1646,9 +1674,9 @@ class TwelveMonthsApp {
   flipMemoryCard(card) {
     // Prevent flipping if locked, already flipped, or matched
     if (this.memoryLocked ||
-        card.classList.contains('flipped') ||
-        card.classList.contains('matched') ||
-        this.gameCompleted) {
+      card.classList.contains('flipped') ||
+      card.classList.contains('matched') ||
+      this.gameCompleted) {
       return;
     }
 
@@ -1656,13 +1684,15 @@ class TwelveMonthsApp {
     card.classList.add('flipped');
     this.flippedCards.push(card);
 
-    // Flip animation
+    // Smooth flip animation with elastic bounce
     gsap.to(card, {
-      scale: 1.05,
+      scale: 1.08,
       duration: 0.15,
       yoyo: true,
       repeat: 1,
-      ease: 'power2.out'
+      ease: 'elastic.out(1, 0.5)',
+      force3D: true,
+      clearProps: 'scale'
     });
 
     // Check for match when 2 cards are flipped
@@ -1683,13 +1713,15 @@ class TwelveMonthsApp {
       card1.classList.add('matched');
       card2.classList.add('matched');
 
-      // Match animation
+      // Match animation - satisfying bounce
       gsap.to([card1, card2], {
-        scale: 1.1,
-        duration: 0.2,
+        scale: 1.15,
+        duration: 0.25,
         yoyo: true,
         repeat: 1,
-        ease: 'power2.out'
+        ease: 'elastic.out(1, 0.3)',
+        force3D: true,
+        onComplete: () => gsap.set([card1, card2], { clearProps: 'scale' })
       });
 
       // Update progress
@@ -2042,8 +2074,8 @@ class TwelveMonthsApp {
     progressBar.style.width = '0%';
     progressBar.classList.remove('completed');
 
-    const gameDuration = 8000; // 8 seconds game duration
-    const maxSpawns = 20;
+    const gameDuration = 10000; // 10 seconds game duration
+    const maxSpawns = 25;
 
     const container = document.createElement('div');
     container.className = 'catch-falling-container';
@@ -2058,53 +2090,138 @@ class TwelveMonthsApp {
     setTimeout(() => {
       const textEl = document.querySelector('.catch-falling-text');
       const scoreEl = document.querySelector('.score-count');
+      const scoreContainer = document.querySelector('.catch-falling-score');
       const fallingArea = document.querySelector('.catch-falling-area');
 
+      // Elegant text entrance
       gsap.fromTo(textEl,
-        { opacity: 0, y: -10 },
-        { opacity: 1, y: 0, duration: 0.4 }
+        { opacity: 0, y: -15, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.4)' }
       );
 
-      // Progress bar fills over game duration
+      gsap.fromTo(scoreContainer,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.4, delay: 0.2, ease: 'power2.out' }
+      );
+
+      // Smooth progress bar fills over game duration
       gsap.to(progressBar, {
         width: '100%',
         duration: gameDuration / 1000,
-        ease: 'none'
+        ease: 'power1.in'
       });
 
-      // Spawn falling hearts
+      // Create particle burst on catch
+      const createCatchBurst = (x, y) => {
+        const particles = ['✨', '💫', '🌟', '💗', '💖'];
+        const burstCount = 6;
+        for (let i = 0; i < burstCount; i++) {
+          const particle = document.createElement('span');
+          particle.className = 'catch-burst-particle';
+          particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+          particle.style.left = `${x}px`;
+          particle.style.top = `${y}px`;
+          fallingArea.appendChild(particle);
+
+          const angle = (i / burstCount) * Math.PI * 2 + (Math.random() * 0.5);
+          const distance = 35 + Math.random() * 30;
+          const px = Math.cos(angle) * distance;
+          const py = Math.sin(angle) * distance;
+
+          gsap.fromTo(particle,
+            { opacity: 1, scale: 0.3, x: 0, y: 0 },
+            {
+              opacity: 0,
+              scale: 1.2,
+              x: px,
+              y: py,
+              duration: 0.5 + Math.random() * 0.2,
+              ease: 'power2.out',
+              force3D: true,
+              onComplete: () => particle.remove()
+            }
+          );
+        }
+      };
+
+      // Spawn falling hearts with improved effects
       const spawnHeart = () => {
         if (this.gameCompleted) return;
 
         const heart = document.createElement('div');
         heart.className = 'falling-heart';
-        heart.textContent = ['💖', '💗', '💕', '❤️', '🩷'][Math.floor(Math.random() * 5)];
+        const emojis = ['💖', '💗', '💕', '❤️', '🩷'];
+        heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // Varied sizes for depth
+        const sizeScale = 0.7 + Math.random() * 0.6;
+        heart.style.fontSize = `${2.8 * sizeScale}rem`;
+        heart.style.opacity = `${0.7 + sizeScale * 0.3}`;
 
         // Get actual width, with better fallback
         const areaRect = fallingArea.getBoundingClientRect();
         const areaWidth = areaRect.width > 0 ? areaRect.width : (fallingArea.offsetWidth || 300);
 
-        // Ensure hearts spawn within visible area with proper padding
+        // Ensure hearts spawn within visible area
         const padding = 30;
         const maxLeft = Math.max(padding, areaWidth - padding - 40);
-        heart.style.left = `${padding + Math.random() * (maxLeft - padding)}px`;
-        heart.style.top = '-40px';
+        const startLeft = padding + Math.random() * (maxLeft - padding);
+        heart.style.left = `${startLeft}px`;
+        heart.style.top = '-50px';
 
         fallingArea.appendChild(heart);
 
-        // Fall animation using y transform (GPU-accelerated) instead of top
-        const fallDuration = 3 + Math.random() * 1.5;
+        // Fall with gentle sway - using timeline for combined effects
+        const fallDuration = 2.5 + Math.random() * 2;
         const areaHeight = fallingArea.offsetHeight || 300;
-        gsap.to(heart, {
-          y: areaHeight + 40,
+        const swayAmount = 20 + Math.random() * 30;
+        const swayDirection = Math.random() > 0.5 ? 1 : -1;
+
+        // Main fall animation
+        const fallTl = gsap.timeline();
+
+        // Gentle entrance
+        fallTl.fromTo(heart,
+          { scale: 0.3, rotation: -15 * swayDirection },
+          { scale: sizeScale, rotation: 0, duration: 0.3, ease: 'back.out(1.5)' }
+        );
+
+        // Fall with easing (slower at start, natural gravity feel)
+        fallTl.to(heart, {
+          y: areaHeight + 50,
           duration: fallDuration,
-          ease: 'none',
+          ease: 'power1.in',
           force3D: true,
           onComplete: () => {
             if (!heart.classList.contains('caught')) {
-              heart.remove();
+              // Fade out missed hearts
+              gsap.to(heart, {
+                opacity: 0,
+                scale: 0.5,
+                duration: 0.2,
+                onComplete: () => heart.remove()
+              });
             }
           }
+        }, 0.15);
+
+        // Sinusoidal sway while falling
+        gsap.to(heart, {
+          x: swayAmount * swayDirection,
+          duration: 0.8 + Math.random() * 0.4,
+          repeat: Math.ceil(fallDuration / 0.8),
+          yoyo: true,
+          ease: 'sine.inOut',
+          force3D: true
+        });
+
+        // Gentle rotation while falling
+        gsap.to(heart, {
+          rotation: 15 * swayDirection,
+          duration: 1.2,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
         });
 
         // Catch handler - instant response
@@ -2116,17 +2233,33 @@ class TwelveMonthsApp {
           heart.classList.add('caught');
           this.gameCollected++;
 
-          // Update score display immediately
-          if (scoreEl) scoreEl.textContent = this.gameCollected;
+          // Update score with pulse animation
+          if (scoreEl) {
+            scoreEl.textContent = this.gameCollected;
+            gsap.fromTo(scoreEl,
+              { scale: 1.5, color: '#FF4D6D' },
+              { scale: 1, color: 'inherit', duration: 0.3, ease: 'elastic.out(1, 0.4)' }
+            );
+          }
 
-          // Instant visual feedback + catch animation
+          // Get heart position for burst
+          const heartRect = heart.getBoundingClientRect();
+          const areaR = fallingArea.getBoundingClientRect();
+          const burstX = heartRect.left - areaR.left + heartRect.width / 2;
+          const burstY = heartRect.top - areaR.top + heartRect.height / 2;
+
+          // Create particle burst at catch position
+          createCatchBurst(burstX, burstY);
+
+          // Kill all animations and play catch effect
           gsap.killTweensOf(heart);
           gsap.to(heart, {
-            scale: 1.6,
+            scale: 2,
             opacity: 0,
-            y: '-=40',
-            duration: 0.25,
-            ease: 'power2.out',
+            y: '-=50',
+            rotation: 360,
+            duration: 0.4,
+            ease: 'power3.out',
             force3D: true,
             onComplete: () => heart.remove()
           });
@@ -2138,42 +2271,74 @@ class TwelveMonthsApp {
         heart.addEventListener('pointerdown', handleCatch);
       };
 
-      // Spawn hearts at intervals
+      // Spawn hearts at intervals — start slow, then faster
       let spawnCount = 0;
-      this.catchFallingInterval = setInterval(() => {
-        if (this.gameCompleted || spawnCount >= maxSpawns) {
-          clearInterval(this.catchFallingInterval);
-          return;
-        }
-        spawnHeart();
-        spawnCount++;
-      }, 400);
+      const baseInterval = 500;
+      const scheduleNextSpawn = () => {
+        if (this.gameCompleted || spawnCount >= maxSpawns) return;
 
-      // Initial spawn
+        // Gradually spawn faster as game progresses
+        const speedUp = Math.max(250, baseInterval - spawnCount * 10);
+        this.catchFallingInterval = setTimeout(() => {
+          spawnHeart();
+          spawnCount++;
+          scheduleNextSpawn();
+        }, speedUp);
+      };
+
+      // Initial spawns
       spawnHeart();
+      setTimeout(() => spawnHeart(), 200);
+      spawnCount = 2;
+      scheduleNextSpawn();
 
-      // End game after duration - show final score
+      // End game after duration - celebration
       setTimeout(() => {
         if (this.gameCompleted) return;
 
         this.gameCompleted = true;
-        clearInterval(this.catchFallingInterval);
+        if (this.catchFallingInterval) {
+          clearTimeout(this.catchFallingInterval);
+        }
         progressBar.classList.add('completed');
 
-        // Friendly message regardless of score
-        if (this.gameCollected > 0) {
-          textEl.textContent = `Tuyệt vời! Bắt được ${this.gameCollected} trái tim! 💕`;
-        } else {
-          textEl.textContent = `Xong rồi! 💕`;
+        // Celebration with cascading hearts
+        const celebrationEmojis = ['💖', '💗', '💕', '🎉', '✨', '🌟'];
+        for (let i = 0; i < 8; i++) {
+          setTimeout(() => {
+            const areaRect = fallingArea.getBoundingClientRect();
+            const x = Math.random() * (areaRect.width || 300);
+            const y = Math.random() * (areaRect.height || 300) * 0.6;
+            createCatchBurst(x, y);
+          }, i * 100);
         }
+
+        // Friendly message with animation
+        gsap.to(textEl, {
+          opacity: 0,
+          y: -10,
+          duration: 0.2,
+          onComplete: () => {
+            if (this.gameCollected > 0) {
+              textEl.textContent = `Tuyệt vời! Bắt được ${this.gameCollected} trái tim! 💕`;
+            } else {
+              textEl.textContent = `Xong rồi! 💕`;
+            }
+            gsap.fromTo(textEl,
+              { opacity: 0, y: 10, scale: 0.9 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.5)' }
+            );
+          }
+        });
 
         setTimeout(() => {
           this.canAdvance = true;
           this.showReadyToAdvance('game');
-        }, 600);
+        }, 800);
       }, gameDuration);
     }, 250);
   }
+
 
   // ===== Bubble Pop Game (Pop floating bubbles) =====
   startBubblePopGame() {
